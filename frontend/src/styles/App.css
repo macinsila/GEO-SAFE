@@ -1,0 +1,213 @@
+/* App Styling */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+    "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
+    "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f5f5f5;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+}
+
+/* App Container */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #fafafa;
+}
+
+/* Header */
+.app-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 30px 20px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.app-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+
+.app-header p {
+  font-size: 1rem;
+  opacity: 0.95;
+  font-weight: 300;
+}
+
+/* Main Content */
+.app-main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 20px;
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Map Section */
+.map-section {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.map-section > div {
+  border-radius: 8px;
+}
+
+/* Coordinates Panel */
+.coordinates-panel {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+.coordinates-panel h3 {
+  color: #333;
+  font-size: 1.1rem;
+  margin-bottom: 15px;
+  border-bottom: 2px solid #667eea;
+  padding-bottom: 10px;
+}
+
+.coordinate-info {
+  flex: 1;
+  margin-bottom: 15px;
+}
+
+.coordinate-info p {
+  padding: 8px 0;
+  font-size: 0.95rem;
+  color: #555;
+  border-bottom: 1px solid #eee;
+}
+
+.coordinate-info p:last-child {
+  border-bottom: none;
+}
+
+.coordinate-info strong {
+  color: #333;
+  font-weight: 600;
+}
+
+.coordinate-copy {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.coordinate-copy code {
+  flex: 1;
+  background-color: #f0f0f0;
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  color: #333;
+  border: 1px solid #ddd;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.copy-button {
+  padding: 8px 16px;
+  background-color: #667eea;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+}
+
+.copy-button:hover {
+  background-color: #764ba2;
+}
+
+.copy-button:active {
+  transform: scale(0.98);
+}
+
+/* Footer */
+.app-footer {
+  background-color: #333;
+  color: #ccc;
+  padding: 20px;
+  text-align: center;
+  font-size: 0.9rem;
+  border-top: 1px solid #444;
+}
+
+.app-footer p {
+  margin: 5px 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .app-header h1 {
+    font-size: 2rem;
+  }
+
+  .app-main {
+    grid-template-columns: 1fr;
+    padding: 10px;
+    gap: 15px;
+  }
+
+  .coordinates-panel {
+    order: -1; /* Show panel above map on mobile */
+  }
+
+  .map-section {
+    min-height: 400px;
+  }
+}
+
+/* Leaflet overrides for Leaflet popup styling */
+.leaflet-popup-content-wrapper {
+  background-color: #fff !important;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2) !important;
+  border-radius: 4px !important;
+}
+
+.leaflet-popup-content {
+  font-size: 0.95rem;
+  color: #333;
+  max-width: 250px;
+}
+
+.leaflet-popup-content h3 {
+  color: #667eea;
+  font-size: 1rem;
+}
+
+.leaflet-popup-content p {
+  margin: 5px 0;
+  font-size: 0.9rem;
+}
+
+.leaflet-container {
+  background-color: #e0e0e0;
+}

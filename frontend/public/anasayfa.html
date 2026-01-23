@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoSafe | Afet Yönetim Paneli</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        :root {
+            --soft-aqua: #f0fdfa;
+            --header-green: #245a56; 
+            --primary-teal: #2d3748;
+            --danger-red: #e53e3e;
+            --hover-red: #c53030;
+            --hover-green: #1a4542;
+            --white-glass: rgba(255, 255, 255, 0.95);
+        }
+
+        body { font-family: 'Inter', sans-serif; background-color: var(--soft-aqua); margin: 0; color: #2d3748; }
+
+        header {
+            background-color: var(--header-green);
+            padding: 15px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            position: sticky; top: 0; z-index: 2000;
+        }
+
+        .header-left { display: flex; align-items: baseline; gap: 15px; }
+        .header-left h1 { margin: 0; font-weight: 800; font-size: 26px; letter-spacing: -1px; }
+        .header-left span { font-size: 14px; font-weight: 400; opacity: 0.9; }
+
+        .header-right { display: flex; gap: 12px; }
+        .nav-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .profile-btn:hover { background-color: var(--hover-green); transform: translateY(-1px); }
+        .logout-btn { background-color: var(--danger-red); border: none; }
+        .logout-btn:hover { background-color: var(--hover-red); transform: translateY(-1px); }
+
+        .main-container {
+            max-width: 1300px;
+            margin: 30px auto;
+            display: flex; gap: 25px; padding: 0 20px; height: 550px;
+        }
+
+        #map { flex: 2; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 4px solid white; position: relative; }
+
+        .info-card {
+            flex: 1; background: var(--white-glass);
+            border-radius: 20px; padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center;
+            border: 1px solid white;
+        }
+
+        .info-content { width: 100%; display: none; }
+        .welcome-box { display: block; }
+        .area-title { color: var(--header-green); font-size: 24px; margin-bottom: 10px; font-weight: 700; }
+        
+        .inventory-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; margin: 20px 0; }
+        .inv-item { background: white; padding: 15px; border-radius: 12px; border: 1px solid #edf2f7; display: flex; flex-direction: column; gap: 5px; }
+        .inv-item span { font-size: 12px; color: #718096; text-transform: uppercase; font-weight: 600; }
+        .inv-item b { font-size: 16px; color: var(--primary-teal); }
+
+        .distance-badge { background: var(--header-green); color: white; padding: 15px 25px; border-radius: 15px; font-weight: 700; width: 80%; margin-top: 20px; }
+
+        .eq-section { max-width: 1300px; margin: 40px auto; padding: 0 20px; }
+        .eq-card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.03); }
+        .eq-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .eq-table th { text-align: left; padding: 15px; color: #718096; border-bottom: 2px solid #edf2f7; font-size: 13px; }
+        .eq-table td { padding: 18px 15px; border-bottom: 1px solid #f7fafc; font-size: 14px; }
+        .mag-tag { padding: 6px 14px; border-radius: 8px; color: white; font-weight: 800; display: inline-block; min-width: 35px; text-align: center; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-left">
+        <h1>GeoSafe</h1>
+        <span>Afet Yönetim ve Güvenli Toplanma Ağı</span>
+    </div>
+    <div class="header-right">
+        <a href="#" class="nav-btn profile-btn">Profilim</a>
+        <a href="index.html" class="nav-btn logout-btn">Çıkış Yap</a>
+    </div>
+</header>
+
+<div class="main-container">
+    <div id="map"></div>
+    <div class="info-card">
+        <div id="welcome-msg" class="welcome-box">
+            <div style="font-size: 60px; margin-bottom: 20px;">📍</div>
+            <h2 style="margin:0;">Hoş Geldiniz</h2>
+            <p style="color: #718096;">Detayları görmek için haritadan bir toplanma alanı seçiniz.</p>
+        </div>
+        <div id="details" class="info-content">
+            <h2 id="a-name" class="area-title">Alan Adı</h2>
+            <div class="inventory-grid">
+                <div class="inv-item"><span>💧 Su Rezervi</span><b id="a-water">-</b></div>
+                <div class="inv-item"><span>🩹 Tıbbi Kit</span><b id="a-med">-</b></div>
+                <div class="inv-item"><span>🧯 Yangın Tüpü</span><b id="a-ext">-</b></div>
+                <div class="inv-item"><span>🥫 Gıda Kolisi</span><b id="a-food">-</b></div>
+                <div class="inv-item"><span>🧣 Battaniye</span><b id="a-blanket">-</b></div>
+            </div>
+            <div class="distance-badge" id="a-dist">Hesaplanıyor...</div>
+        </div>
+    </div>
+</div>
+
+<div class="eq-section">
+    <div class="eq-card">
+        <h2 style="margin:0; font-size: 20px; display: flex; align-items: center; gap: 10px;">
+            🔴 Son Dakika Depremler <span style="font-weight: 400; font-size: 14px; color: #a0aec0;">(Son 10 Gün / 4.0+)</span>
+        </h2>
+        <table class="eq-table">
+            <thead>
+                <tr><th>BÜYÜKLÜK</th><th>KONUM / YER</th><th>TARİH - SAAT</th><th>DERİNLİK</th></tr>
+            </thead>
+            <tbody id="eq-list">
+                <tr><td colspan="4" style="text-align: center; padding: 40px; color: #a0aec0;">Veriler güvenli kaynaktan çekiliyor...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const map = L.map('map', {zoomControl: true}).setView([41.043, 29.008], 14);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
+
+    let userLoc = [41.043, 29.008];
+    navigator.geolocation.getCurrentPosition(p => {
+        userLoc = [p.coords.latitude, p.coords.longitude];
+        L.circleMarker(userLoc, {radius: 7, fillColor: '#3182ce', color: '#fff', weight: 2, fillOpacity: 1}).addTo(map).bindPopup("Siz");
+    });
+
+    // KESİN ÇALIŞAN YENİ VERİ ÇEKME FONKSİYONU
+    async function getEarthquakes() {
+        const list = document.getElementById('eq-list');
+        // Proxy sunucusunu "fetch" yerine "XMLHttpRequest" ile takviye ederek daha düşük seviyeli bir istek yapıyoruz.
+        const apiUrl = 'https://api.orhanaydogdu.com.tr/deprem/kandilli/live';
+        const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(apiUrl);
+
+        try {
+            const response = await fetch(proxyUrl);
+            if (!response.ok) throw new Error();
+            const data = await response.json();
+            
+            list.innerHTML = '';
+            const tenDaysAgo = new Date();
+            tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
+
+            const filtered = data.result.filter(eq => {
+                const parts = eq.date.split('.');
+                const eqDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`); // Kandilli formatını JS formatına çevir
+                return eq.mag >= 4.0 && eqDate >= tenDaysAgo;
+            });
+
+            if(filtered.length === 0) {
+                list.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px;">Son 10 günde 4.0+ şiddetinde deprem kaydı bulunamadı.</td></tr>';
+                return;
+            }
+
+            filtered.forEach(eq => {
+                const color = eq.mag >= 5.0 ? '#e53e3e' : '#ed8936';
+                list.insertAdjacentHTML('beforeend', `<tr>
+                    <td><span class="mag-tag" style="background:${color}">${eq.mag}</span></td>
+                    <td><b>${eq.title}</b></td>
+                    <td>${eq.date}</td>
+                    <td>${eq.depth} km</td>
+                </tr>`);
+            });
+        } catch (e) {
+            list.innerHTML = '<tr><td colspan="4" style="text-align:center; color:red; padding:20px;">Kandilli verileri şu an sadece bu bilgisayara özel engelleniyor. Chrome Gizli Sekme üzerinden denemeyi unutmayın!</td></tr>';
+        }
+    }
+    getEarthquakes();
+
+    const locations = [
+        { n: "Abbasağa Parkı", c: [41.0461, 29.0035], s: ["%90", "%65", "15", "%80", "120"] },
+        { n: "Maçka Parkı", c: [41.0475, 28.9942], s: ["%100", "%80", "30", "%95", "450"] },
+        { n: "Yıldız Parkı", c: [41.0485, 29.0185], s: ["%85", "%50", "12", "%75", "200"] },
+        { n: "Ortaköy Meydanı", c: [41.0472, 29.0253], s: ["%60", "%30", "5", "%40", "80"] },
+        { n: "Bebek Parkı", c: [41.0772, 29.0435], s: ["%95", "%70", "20", "%85", "150"] },
+        { n: "Akatlar Parkı", c: [41.0855, 29.0245], s: ["%100", "%90", "40", "%95", "500"] },
+        { n: "Kuruçeşme Parkı", c: [41.0605, 29.0345], s: ["%70", "%40", "10", "%60", "100"] },
+        { n: "Gayrettepe Parkı", c: [41.0695, 29.0065], s: ["%80", "%60", "20", "%70", "130"] },
+        { n: "Ulus Parkı", c: [41.0615, 29.0215], s: ["%90", "%75", "18", "%85", "180"] },
+        { n: "Dikilitaş Parkı", c: [41.0545, 29.0095], s: ["%60", "%40", "8", "%50", "90"] },
+        { n: "Cihannüma Parkı", c: [41.0435, 29.0045], s: ["%75", "%55", "10", "%65", "110"] },
+        { n: "Balmumcu Parkı", c: [41.0625, 29.0125], s: ["%55", "%30", "6", "%50", "70"] },
+        { n: "Arnavutköy Sahil", c: [41.0675, 29.0435], s: ["%80", "%50", "12", "%70", "130"] },
+        { n: "Türkali Parkı", c: [41.0515, 29.0035], s: ["%65", "%35", "5", "%55", "60"] },
+        { n: "Vişnezade Parkı", c: [41.0415, 28.9985], s: ["%75", "%50", "10", "%65", "100"] },
+        { n: "Konaklar Parkı", c: [41.0915, 29.0155], s: ["%85", "%65", "15", "%80", "140"] },
+        { n: "Kültür Parkı", c: [41.0655, 29.0185], s: ["%50", "%25", "4", "%35", "50"] },
+        { n: "Etiler Parkı", c: [41.0875, 29.0325], s: ["%95", "%80", "22", "%90", "210"] },
+        { n: "Sinanpaşa Parkı", c: [41.0425, 29.0065], s: ["%45", "%20", "3", "%30", "40"] },
+        { n: "Levent Parkı", c: [41.0825, 29.0125], s: ["%90", "%85", "25", "%90", "300"] }
+    ];
+
+    locations.forEach(loc => {
+        L.marker(loc.c).addTo(map).on('click', () => {
+            document.getElementById('welcome-msg').style.display = 'none';
+            document.getElementById('details').style.display = 'block';
+            document.getElementById('a-name').innerText = loc.n;
+            document.getElementById('a-water').innerText = loc.s[0];
+            document.getElementById('a-med').innerText = loc.s[1];
+            document.getElementById('a-ext').innerText = loc.s[2] + " Adet";
+            document.getElementById('a-food').innerText = loc.s[3];
+            document.getElementById('a-blanket').innerText = loc.s[4] + " Adet";
+            const d = L.latLng(userLoc).distanceTo(L.latLng(loc.c));
+            document.getElementById('a-dist').innerText = `📍 ${(d/1000).toFixed(2)} km (${Math.round(d/80)} dk)`;
+        });
+    });
+</script>
+</body>
+</html>

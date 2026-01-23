@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database with PostGIS
+  db:
+    image: postgis/postgis:15-3.3
+    container_name: geosafe_db
+    environment:
+      POSTGRES_USER: geosafe_user
+      POSTGRES_PASSWORD: geosafe_pass
+      POSTGRES_DB: geosafe_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U geosafe_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - geosafe_network
+
+  # FastAPI Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: geosafe_backend
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://geosafe_user:geosafe_pass@db:5432/geosafe_db
+      DEBUG: "false"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - geosafe_network
+
+  # React Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: geosafe_frontend
+    ports:
+      - "3000:3000"
+    environment:
+      REACT_APP_API_BASE_URL: http://localhost:8000
+    volumes:
+      - ./frontend/src:/app/src
+    depends_on:
+      - backend
+    networks:
+      - geosafe_network
+
+volumes:
+  postgres_data:
+
+networks:
+  geosafe_network:
+    driver: bridge

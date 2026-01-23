@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>GeoSafe - Admin Paneli</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #f4f4f4; 
+            padding: 20px; 
+            display: none; /* Şifre girilene kadar içeriği gizliyoruz */
+        }
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #d32f2f;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #ddd; padding: 15px; text-align: left; }
+        th { background-color: #333; color: white; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        .btn-link { 
+            background: #fff; 
+            color: #d32f2f; 
+            padding: 8px 15px; 
+            text-decoration: none; 
+            border-radius: 5px; 
+            font-weight: bold; 
+        }
+        .btn-temizle {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <script>
+        // Sayfa yüklenir yüklenmez şifreyi soruyoruz
+        const adminSifre = "1234"; // Şifreni buradan değiştirebilirsin
+        let girilenSifre = prompt("GeoSafe Yönetici Paneline giriş için şifreyi yazın:");
+
+        if (girilenSifre === adminSifre) {
+            // Şifre doğruysa sayfayı göster
+            document.body.style.display = "block";
+        } else {
+            // Şifre yanlışsa uyarı ver ve ana sayfaya geri yolla
+            alert("Hatalı şifre! Erişim reddedildi.");
+            window.location.href = "index.html"; 
+        }
+    </script>
+
+    <div class="admin-header">
+        <h2>🚨 Acil Durum Bildirimleri</h2>
+        <a href="index.html" class="btn-link">Panelden Çık</a>
+    </div>
+
+    <table id="adminTablo">
+        <thead>
+            <tr>
+                <th>Durum</th>
+                <th>Zaman</th>
+                <th>Harita Konumu</th>
+            </tr>
+        </thead>
+        <tbody id="tabloGövdesi">
+            </tbody>
+    </table>
+
+    <button class="btn-temizle" onclick="verileriTemizle()">Tüm Kayıtları Sil</button>
+
+    <script>
+        // Hafızadaki verileri çekip tabloya basan fonksiyon
+        function verileriYukle() {
+            let bildirimler = JSON.parse(localStorage.getItem("acilDurumlar")) || [];
+            let tablo = document.getElementById("tabloGövdesi");
+            tablo.innerHTML = ""; 
+
+            if (bildirimler.length === 0) {
+                tablo.innerHTML = "<tr><td colspan='3' style='text-align:center;'>Henüz bildirim gelmedi.</td></tr>";
+            }
+
+            bildirimler.forEach(item => {
+                let satir = `<tr>
+                    <td><strong>${item.durum}</strong></td>
+                    <td>${item.saat}</td>
+                    <td><a href="${item.haritaLink}" target="_blank">Haritada Gör</a></td>
+                </tr>`;
+                tablo.innerHTML += satir;
+            });
+        }
+
+        // Test amaçlı verileri silme fonksiyonu
+        function verileriTemizle() {
+            if(confirm("Tüm bildirim geçmişini silmek istediğinize emin misiniz?")) {
+                localStorage.removeItem("acilDurumlar");
+                verileriYukle();
+            }
+        }
+
+        // Sayfa açıldığında verileri yükle
+        verileriYukle();
+    </script>
+</body>
+</html>
