@@ -1,0 +1,28 @@
+{
+  "name": "geosafe2-proje",
+  "version": "1.0.0",
+  "description": "**Neighborhood-based Disaster Safety & Logistics Management System**",
+  "homepage": "https://github.com/macinsila/GEO-SAFE#readme",
+  "bugs": {
+    "url": "https://github.com/macinsila/GEO-SAFE/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/macinsila/GEO-SAFE.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "axios": "^1.13.2",
+    "cors": "^2.8.6",
+    "express": "^5.2.1"
+  }
+}

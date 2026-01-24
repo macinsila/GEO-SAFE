@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GeoSafe | Afet Yönetim Paneli</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Montserrat:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
     <style>
@@ -21,6 +21,7 @@
 
         body { font-family: 'Inter', sans-serif; background-color: var(--soft-aqua); margin: 0; color: #2d3748; }
 
+        /* NAVBAR - Orijinal Boyutlara Geri Döndürüldü */
         header {
             background-color: var(--header-green);
             padding: 15px 50px;
@@ -51,10 +52,11 @@
         .logout-btn { background-color: var(--danger-red); border: none; }
         .logout-btn:hover { background-color: var(--hover-red); transform: translateY(-1px); }
 
+        /* ANA İÇERİK */
         .main-container {
             max-width: 1300px;
             margin: 30px auto;
-            display: flex; gap: 25px; padding: 0 20px; height: 550px;
+            display: flex; gap: 25px; padding: 0 20px; height: 500px;
         }
 
         #map { flex: 2; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 4px solid white; position: relative; }
@@ -79,12 +81,51 @@
 
         .distance-badge { background: var(--header-green); color: white; padding: 15px 25px; border-radius: 15px; font-weight: 700; width: 80%; margin-top: 20px; }
 
+        /* DEPREM TABLOSU */
         .eq-section { max-width: 1300px; margin: 40px auto; padding: 0 20px; }
         .eq-card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.03); }
         .eq-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         .eq-table th { text-align: left; padding: 15px; color: #718096; border-bottom: 2px solid #edf2f7; font-size: 13px; }
         .eq-table td { padding: 18px 15px; border-bottom: 1px solid #f7fafc; font-size: 14px; }
         .mag-tag { padding: 6px 14px; border-radius: 8px; color: white; font-weight: 800; display: inline-block; min-width: 35px; text-align: center; }
+
+        /* EĞİTİM PANELİ - SABİT KÜÇÜK BOYUT */
+        .edu-wrapper { max-width: 1100px; margin: 60px auto; padding: 0 20px; margin-bottom: 80px; }
+        .edu-header { margin-bottom: 25px; border-left: 4px solid var(--header-green); padding-left: 12px; }
+        .edu-header h2 { font-family: 'Montserrat', sans-serif; font-size: 20px; color: var(--header-green); text-transform: uppercase; margin: 0; }
+        
+        .video-grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 20px; 
+        }
+        
+        .video-card { 
+            width: 100%; 
+            border-radius: 16px; 
+            overflow: hidden; 
+            transition: all 0.3s ease; 
+            border: 1px solid rgba(255,255,255,0.8); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .card-1 { background-color: #b2d8d8; } .card-2 { background-color: #d1e7e0; } .card-3 { background-color: #a3c4bc; }
+        .card-4 { background-color: #9abfb6; } .card-5 { background-color: #c2dcd6; } .card-6 { background-color: #d8ece7; }
+
+        .video-card:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.08); }
+        .video-thumb { position: relative; width: 100%; padding-top: 56.25%; background: #000; }
+        .video-thumb iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+        
+        .card-content { padding: 15px; flex-grow: 1; }
+        .category-tag { font-size: 9px; text-transform: uppercase; font-weight: 800; color: var(--header-green); margin-bottom: 6px; display: block; opacity: 0.8; }
+        .video-title { font-size: 13.5px; color: var(--primary-teal); margin: 0; font-weight: 700; height: 2.8em; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4; }
+        .card-footer { margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(0,0,0,0.04); }
+        .view-btn { color: var(--header-green); font-size: 11px; text-decoration: none; font-weight: 700; display: flex; align-items: center; gap: 5px; }
+
+        @media (max-width: 900px) { .video-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px) { .video-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -104,9 +145,9 @@
     <div id="map"></div>
     <div class="info-card">
         <div id="welcome-msg" class="welcome-box">
-            <div style="font-size: 60px; margin-bottom: 20px;">📍</div>
-            <h2 style="margin:0;">Hoş Geldiniz</h2>
-            <p style="color: #718096;">Detayları görmek için haritadan bir toplanma alanı seçiniz.</p>
+            <div style="font-size: 50px; margin-bottom: 15px;">📍</div>
+            <h2 style="margin:0; font-size: 22px;">Hoş Geldiniz</h2>
+            <p style="color: #718096; font-size: 14px;">Detayları görmek için haritadan bir toplanma alanı seçiniz.</p>
         </div>
         <div id="details" class="info-content">
             <h2 id="a-name" class="area-title">Alan Adı</h2>
@@ -124,8 +165,8 @@
 
 <div class="eq-section">
     <div class="eq-card">
-        <h2 style="margin:0; font-size: 20px; display: flex; align-items: center; gap: 10px;">
-            🔴 Son Dakika Depremler <span style="font-weight: 400; font-size: 14px; color: #a0aec0;">(Son 10 Gün / 4.0+)</span>
+        <h2 style="margin:0; font-size: 18px; display: flex; align-items: center; gap: 10px;">
+            🔴 Son Dakika Depremler <span style="font-weight: 400; font-size: 13px; color: #a0aec0;">(Son 10 Gün / 4.0+)</span>
         </h2>
         <table class="eq-table">
             <thead>
@@ -135,6 +176,63 @@
                 <tr><td colspan="4" style="text-align: center; padding: 40px; color: #a0aec0;">Veriler güvenli kaynaktan çekiliyor...</td></tr>
             </tbody>
         </table>
+    </div>
+</div>
+
+<div class="edu-wrapper">
+    <div class="edu-header">
+        <h2>Afet Hazırlık Eğitimleri</h2>
+    </div>
+
+    <div class="video-grid">
+        <div class="video-card card-1">
+            <div class="video-thumb"><iframe id="player1" src="https://www.youtube.com/embed/K0keerAalYE?enablejsapi=1" allowfullscreen></iframe></div>
+            <div class="card-content">
+                <span class="category-tag">Hazırlık</span>
+                <h3 class="video-title">Afet ve Acil Durum Çantası Nasıl Hazırlanır?</h3>
+                <div class="card-footer"><a href="https://youtu.be/K0keerAalYE" target="_blank" class="view-btn">YouTube'da İzle ➜</a></div>
+            </div>
+        </div>
+        <div class="video-card card-2">
+            <div class="video-thumb"><iframe id="player2" src="https://www.youtube.com/embed/oZeI0X40EEY?enablejsapi=1" allowfullscreen></iframe></div>
+            <div class="card-content">
+                <span class="category-tag">Deprem</span>
+                <h3 class="video-title">Deprem Anında Yapılması Gerekenler</h3>
+                <div class="card-footer"><a href="https://youtu.be/oZeI0X40EEY" target="_blank" class="view-btn">YouTube'da İzle ➜</a></div>
+            </div>
+        </div>
+        <div class="video-card card-3">
+            <div class="video-thumb"><iframe id="player3" src="https://www.youtube.com/embed/yQjUhzNMNe8?enablejsapi=1" allowfullscreen></iframe></div>
+            <div class="card-content">
+                <span class="category-tag">Yangın</span>
+                <h3 class="video-title">Yangın Anında Yapılması Gerekenler</h3>
+                <div class="card-footer"><a href="https://youtu.be/yQjUhzNMNe8" target="_blank" class="view-btn">YouTube'da İzle ➜</a></div>
+            </div>
+        </div>
+        <div class="video-card card-4">
+            <div class="video-thumb"><iframe id="player4" src="https://www.youtube.com/embed/jy2yf7a5A10?enablejsapi=1" allowfullscreen></iframe></div>
+            <div class="card-content">
+                <span class="category-tag">Sel</span>
+                <h3 class="video-title">Sel Anında Yapılması Gerekenler</h3>
+                <div class="card-footer"><a href="https://youtu.be/jy2yf7a5A10" target="_blank" class="view-btn">YouTube'da İzle ➜</a></div>
+            </div>
+        </div>
+        <div class="video-card card-5">
+            <div class="video-thumb"><iframe id="player5" src="https://www.youtube.com/embed/IPkQdDeW6Xg?enablejsapi=1" allowfullscreen></iframe></div>
+            <div class="card-content">
+                <span class="category-tag">Farkındalık</span>
+                <h3 class="video-title">Afet Farkındalık Eğitimi</h3>
+                <div class="card-footer"><a href="https://youtu.be/IPkQdDeW6Xg" target="_blank" class="view-btn">YouTube'da İzle ➜</a></div>
+            </div>
+        </div>
+        <div class="video-card card-6">
+            <div class="video-thumb"><iframe id="player6" src="https://www.youtube.com/embed/eYLu7dh6nUI?enablejsapi=1" allowfullscreen></iframe></div>
+            <div class="card-content">
+                <span class="category-tag">İlk Yardım</span>
+                <h3 class="video-title">İlk Yardım Eğitimi</h3>
+                <div class="card-footer"><a href="https://youtu.be/eYLu7dh6nUI" target="_blank" class="view-btn">YouTube'da İzle ➜</a></div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -149,33 +247,24 @@
         L.circleMarker(userLoc, {radius: 7, fillColor: '#3182ce', color: '#fff', weight: 2, fillOpacity: 1}).addTo(map).bindPopup("Siz");
     });
 
-    // KESİN ÇALIŞAN YENİ VERİ ÇEKME FONKSİYONU
     async function getEarthquakes() {
         const list = document.getElementById('eq-list');
-        // Proxy sunucusunu "fetch" yerine "XMLHttpRequest" ile takviye ederek daha düşük seviyeli bir istek yapıyoruz.
         const apiUrl = 'https://api.orhanaydogdu.com.tr/deprem/kandilli/live';
         const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(apiUrl);
-
         try {
             const response = await fetch(proxyUrl);
-            if (!response.ok) throw new Error();
             const data = await response.json();
-            
             list.innerHTML = '';
-            const tenDaysAgo = new Date();
-            tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
-
+            const tenDaysAgo = new Date(); tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
             const filtered = data.result.filter(eq => {
                 const parts = eq.date.split('.');
-                const eqDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`); // Kandilli formatını JS formatına çevir
+                const eqDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
                 return eq.mag >= 4.0 && eqDate >= tenDaysAgo;
             });
-
             if(filtered.length === 0) {
                 list.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px;">Son 10 günde 4.0+ şiddetinde deprem kaydı bulunamadı.</td></tr>';
                 return;
             }
-
             filtered.forEach(eq => {
                 const color = eq.mag >= 5.0 ? '#e53e3e' : '#ed8936';
                 list.insertAdjacentHTML('beforeend', `<tr>
@@ -185,9 +274,7 @@
                     <td>${eq.depth} km</td>
                 </tr>`);
             });
-        } catch (e) {
-            list.innerHTML = '<tr><td colspan="4" style="text-align:center; color:red; padding:20px;">Kandilli verileri şu an sadece bu bilgisayara özel engelleniyor. Chrome Gizli Sekme üzerinden denemeyi unutmayın!</td></tr>';
-        }
+        } catch (e) { list.innerHTML = '<tr><td colspan="4" style="text-align:center; color:red; padding:20px;">Veri çekilemedi.</td></tr>'; }
     }
     getEarthquakes();
 
@@ -228,6 +315,25 @@
             document.getElementById('a-dist').innerText = `📍 ${(d/1000).toFixed(2)} km (${Math.round(d/80)} dk)`;
         });
     });
+
+    var tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    var firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    var players = [];
+    function onYouTubeIframeAPIReady() {
+        var iframes = document.querySelectorAll('.video-thumb iframe');
+        iframes.forEach(function(iframe, index) {
+            players[index] = new YT.Player(iframe.id, { events: { 'onStateChange': onPlayerStateChange } });
+        });
+    }
+    function onPlayerStateChange(event) {
+        if (event.data == YT.PlayerState.PLAYING) {
+            players.forEach(function(player) {
+                if (player !== event.target && player.pauseVideo) { player.pauseVideo(); }
+            });
+        }
+    }
 </script>
 </body>
 </html>
