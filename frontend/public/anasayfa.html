@@ -21,7 +21,7 @@
 
         body { font-family: 'Inter', sans-serif; background-color: var(--soft-aqua); margin: 0; color: #2d3748; }
 
-        /* NAVBAR - Orijinal Boyutlara Geri Döndürüldü */
+        /* NAVBAR */
         header {
             background-color: var(--header-green);
             padding: 15px 50px;
@@ -37,7 +37,44 @@
         .header-left h1 { margin: 0; font-weight: 800; font-size: 26px; letter-spacing: -1px; }
         .header-left span { font-size: 14px; font-weight: 400; opacity: 0.9; }
 
-        .header-right { display: flex; gap: 12px; }
+        .header-right { display: flex; gap: 12px; align-items: center; }
+        
+        /* PROFIL DROPDOWN CSS */
+        .profile-container { position: relative; padding-bottom: 10px; margin-bottom: -10px; }
+        
+        .profile-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 300px;
+            background: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            padding: 20px;
+            margin-top: 5px;
+            z-index: 3000;
+            color: #2d3748;
+            border: 2px solid var(--soft-aqua);
+        }
+        
+        .profile-container:hover .profile-dropdown { display: block; }
+
+        .profile-dropdown h3 { margin: 0 0 15px 0; font-size: 16px; color: var(--header-green); border-bottom: 2px solid var(--soft-aqua); padding-bottom: 8px; }
+        .profile-form { display: flex; flex-direction: column; gap: 8px; text-align: left; }
+        .profile-form label { font-size: 10px; font-weight: 700; color: #718096; text-transform: uppercase; }
+        .profile-form input { width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; box-sizing: border-box; background: #f8fafc; }
+        .profile-form input:focus { outline: none; border-color: var(--header-green); background-color: #fff; }
+        .profile-form input[readonly] { background-color: #f1f5f9; cursor: not-allowed; }
+        
+        .note-text { font-size: 11px; color: #e53e3e; font-style: italic; margin-top: 5px; line-height: 1.2; }
+
+        .button-group { display: flex; gap: 8px; margin-top: 10px; }
+        .action-btn { flex: 1; border: none; padding: 10px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 12px; }
+        .update-mode-btn { background-color: #edf2f7; color: var(--primary-teal); border: 1px solid #cbd5e0; }
+        .save-btn { background-color: var(--header-green); color: white; }
+        .save-btn:hover { background-color: var(--hover-green); transform: translateY(-1px); }
+
         .nav-btn {
             padding: 10px 20px;
             border-radius: 8px;
@@ -47,10 +84,12 @@
             transition: all 0.2s ease;
             color: white;
             border: 1px solid rgba(255,255,255,0.3);
+            display: inline-flex;
+            align-items: center;
         }
-        .profile-btn:hover { background-color: var(--hover-green); transform: translateY(-1px); }
+        .profile-btn:hover { background-color: var(--hover-green); }
         .logout-btn { background-color: var(--danger-red); border: none; }
-        .logout-btn:hover { background-color: var(--hover-red); transform: translateY(-1px); }
+        .logout-btn:hover { background-color: var(--hover-red); }
 
         /* ANA İÇERİK */
         .main-container {
@@ -89,27 +128,13 @@
         .eq-table td { padding: 18px 15px; border-bottom: 1px solid #f7fafc; font-size: 14px; }
         .mag-tag { padding: 6px 14px; border-radius: 8px; color: white; font-weight: 800; display: inline-block; min-width: 35px; text-align: center; }
 
-        /* EĞİTİM PANELİ - SABİT KÜÇÜK BOYUT */
+        /* EĞİTİM PANELİ */
         .edu-wrapper { max-width: 1100px; margin: 60px auto; padding: 0 20px; margin-bottom: 80px; }
         .edu-header { margin-bottom: 25px; border-left: 4px solid var(--header-green); padding-left: 12px; }
         .edu-header h2 { font-family: 'Montserrat', sans-serif; font-size: 20px; color: var(--header-green); text-transform: uppercase; margin: 0; }
         
-        .video-grid { 
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
-            gap: 20px; 
-        }
-        
-        .video-card { 
-            width: 100%; 
-            border-radius: 16px; 
-            overflow: hidden; 
-            transition: all 0.3s ease; 
-            border: 1px solid rgba(255,255,255,0.8); 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
-            display: flex;
-            flex-direction: column;
-        }
+        .video-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .video-card { width: 100%; border-radius: 16px; overflow: hidden; transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.8); box-shadow: 0 4px 12px rgba(0,0,0,0.04); display: flex; flex-direction: column; }
         
         .card-1 { background-color: #b2d8d8; } .card-2 { background-color: #d1e7e0; } .card-3 { background-color: #a3c4bc; }
         .card-4 { background-color: #9abfb6; } .card-5 { background-color: #c2dcd6; } .card-6 { background-color: #d8ece7; }
@@ -136,7 +161,25 @@
         <span>Afet Yönetim ve Güvenli Toplanma Ağı</span>
     </div>
     <div class="header-right">
-        <a href="#" class="nav-btn profile-btn">Profilim</a>
+        <div class="profile-container">
+            <a href="#" class="nav-btn profile-btn">Profilim</a>
+            <div class="profile-dropdown">
+                <h3>Kişisel Bilgiler</h3>
+                <div class="profile-form">
+                    <div><label>Ad - Soyad</label><input type="text" id="u-name" placeholder="Ad Soyad" readonly></div>
+                    <div><label>Kan Grubu</label><input type="text" id="u-blood" placeholder="0 Rh+" readonly></div>
+                    <div><label>Kronik Rahatsızlık</label><input type="text" id="u-chronic" placeholder="Varsa belirtin" readonly></div>
+                    <div><label>Kullanılan İlaçlar</label><input type="text" id="u-meds" placeholder="İlaçlarınız" readonly></div>
+                    <div><label>Alerjiler</label><input type="text" id="u-allergy" placeholder="Alerjileriniz" readonly></div>
+                    <div><label>Yakın Telefon No</label><input type="tel" id="u-phone" placeholder="05xx" readonly></div>
+                    <p class="note-text">Not : Girdiğiniz bilgileri kaydetmek için 'Kaydet' butonuna basınız.</p>
+                    <div class="button-group">
+                        <button type="button" class="action-btn update-mode-btn" onclick="enableEdit()">Bilgileri Güncelle</button>
+                        <button type="button" class="action-btn save-btn" onclick="saveProfile()">Kaydet</button>
+                    </div>
+                </div>
+            </div>
+        </div>
         <a href="index.html" class="nav-btn logout-btn">Çıkış Yap</a>
     </div>
 </header>
@@ -150,7 +193,7 @@
             <p style="color: #718096; font-size: 14px;">Detayları görmek için haritadan bir toplanma alanı seçiniz.</p>
         </div>
         <div id="details" class="info-content">
-            <h2 id="a-name" class="area-title">Alan Adı</h2>
+            <h2 id="a-name" class="area-title">-</h2>
             <div class="inventory-grid">
                 <div class="inv-item"><span>💧 Su Rezervi</span><b id="a-water">-</b></div>
                 <div class="inv-item"><span>🩹 Tıbbi Kit</span><b id="a-med">-</b></div>
@@ -238,6 +281,7 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+    // HARİTA VE DEPREM FONKSİYONLARI (KORUNAN TAM HALİ)
     const map = L.map('map', {zoomControl: true}).setView([41.043, 29.008], 14);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
 
@@ -316,6 +360,7 @@
         });
     });
 
+    // YOUTUBE API
     var tag = document.createElement('script');
     tag.src = "https://www.youtube.com/iframe_api";
     var firstScriptTag = document.getElementsByTagName('script')[0];
@@ -333,6 +378,34 @@
                 if (player !== event.target && player.pauseVideo) { player.pauseVideo(); }
             });
         }
+    }
+
+    // PROFİL YÖNETİMİ (İSTEDİĞİN GÜNCEL HALİ)
+    const profileFields = ['u-name', 'u-blood', 'u-chronic', 'u-meds', 'u-allergy', 'u-phone'];
+
+    window.addEventListener('load', () => {
+        profileFields.forEach(field => {
+            const savedValue = localStorage.getItem(field);
+            if (savedValue) { document.getElementById(field).value = savedValue; }
+        });
+    });
+
+    function enableEdit() {
+        profileFields.forEach(field => {
+            document.getElementById(field).removeAttribute('readonly');
+            document.getElementById(field).style.background = "#fff";
+        });
+        document.getElementById('u-name').focus();
+    }
+
+    function saveProfile() {
+        profileFields.forEach(field => {
+            const val = document.getElementById(field).value;
+            localStorage.setItem(field, val);
+            document.getElementById(field).setAttribute('readonly', true);
+            document.getElementById(field).style.background = "#f1f5f9";
+        });
+        alert("Bilgileriniz başarıyla kaydedildi!");
     }
 </script>
 </body>
