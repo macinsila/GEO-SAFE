@@ -17,6 +17,7 @@
             --hover-red: #c53030;
             --hover-green: #1a4542;
             --white-glass: rgba(255, 255, 255, 0.95);
+            --go-blue: #3182ce; /* Git butonu için mavi tonu */
         }
 
         body { font-family: 'Inter', sans-serif; background-color: var(--soft-aqua); margin: 0; color: #2d3748; }
@@ -118,6 +119,11 @@
         .inv-item span { font-size: 12px; color: #718096; text-transform: uppercase; font-weight: 600; }
         .inv-item b { font-size: 16px; color: var(--primary-teal); }
 
+        /* GİT BUTONU KUTUCUĞU */
+        .inv-item.go-btn-box { background: var(--go-blue); color: white; cursor: pointer; transition: 0.2s; border: none; justify-content: center; align-items: center; }
+        .inv-item.go-btn-box:hover { background: #2b6cb0; transform: translateY(-2px); }
+        .inv-item.go-btn-box b { color: white; font-size: 18px; }
+
         .distance-badge { background: var(--header-green); color: white; padding: 15px 25px; border-radius: 15px; font-weight: 700; width: 80%; margin-top: 20px; }
 
         /* DEPREM TABLOSU */
@@ -148,6 +154,37 @@
         .video-title { font-size: 13.5px; color: var(--primary-teal); margin: 0; font-weight: 700; height: 2.8em; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4; }
         .card-footer { margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(0,0,0,0.04); }
         .view-btn { color: var(--header-green); font-size: 11px; text-decoration: none; font-weight: 700; display: flex; align-items: center; gap: 5px; }
+
+        /* SOS BUTONU VE SEÇENEK PANELİ */
+        .sos-btn {
+            position: fixed; bottom: 30px; right: 30px;
+            width: 80px; height: 80px;
+            background: var(--danger-red); color: white;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 18px; cursor: pointer;
+            box-shadow: 0 0 0 0 rgba(229, 62, 62, 0.7);
+            animation: pulse-red 2s infinite; z-index: 9999; border: 4px solid white;
+        }
+        @keyframes pulse-red {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(229, 62, 62, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(229, 62, 62, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(229, 62, 62, 0); }
+        }
+
+        .sos-options-panel {
+            display: none; position: fixed; bottom: 120px; right: 30px;
+            background: white; border-radius: 20px; padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2); z-index: 9998;
+            width: 280px; flex-direction: column; gap: 10px; border: 2px solid var(--danger-red);
+        }
+        .sos-option {
+            padding: 15px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer;
+            transition: 0.2s; display: flex; align-items: center; gap: 10px; font-size: 14px;
+            text-align: left;
+        }
+        .opt-call { background: #fee2e2; color: #b91c1c; }
+        .opt-route { background: #ebf8ff; color: #2b6cb0; }
+        .sos-option:hover { transform: translateX(-5px); filter: brightness(0.95); }
 
         @media (max-width: 900px) { .video-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 600px) { .video-grid { grid-template-columns: 1fr; } }
@@ -200,6 +237,7 @@
                 <div class="inv-item"><span>🧯 Yangın Tüpü</span><b id="a-ext">-</b></div>
                 <div class="inv-item"><span>🥫 Gıda Kolisi</span><b id="a-food">-</b></div>
                 <div class="inv-item"><span>🧣 Battaniye</span><b id="a-blanket">-</b></div>
+                <div class="inv-item go-btn-box" id="direct-go-btn"><b>GİT</b></div>
             </div>
             <div class="distance-badge" id="a-dist">Hesaplanıyor...</div>
         </div>
@@ -279,9 +317,15 @@
     </div>
 </div>
 
+<div class="sos-btn" onclick="toggleSOS()">SOS</div>
+<div id="sos-panel" class="sos-options-panel">
+    <button class="sos-option opt-call" onclick="sosCall()">📞 Yakın Telefon Numarasını Ara</button>
+    <button class="sos-option opt-route" onclick="sosFindAndRoute()">🏃 En Yakın Toplanma Alanına Git</button>
+</div>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    // HARİTA VE DEPREM FONKSİYONLARI (KORUNAN TAM HALİ)
+    // HARİTA VE DEPREM FONKSİYONLARI
     const map = L.map('map', {zoomControl: true}).setView([41.043, 29.008], 14);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
 
@@ -357,8 +401,45 @@
             document.getElementById('a-blanket').innerText = loc.s[4] + " Adet";
             const d = L.latLng(userLoc).distanceTo(L.latLng(loc.c));
             document.getElementById('a-dist').innerText = `📍 ${(d/1000).toFixed(2)} km (${Math.round(d/80)} dk)`;
+            
+            // BİLGİ KUTUSU GİT BUTONU İŞLEVİ
+            document.getElementById('direct-go-btn').onclick = () => {
+                window.open(`https://www.google.com/maps/dir/?api=1&origin=${userLoc[0]},${userLoc[1]}&destination=${loc.c[0]},${loc.c[1]}&travelmode=walking`, '_blank');
+            };
         });
     });
+
+    // SOS SEÇENEK PANELİ FONKSİYONLARI
+    function toggleSOS() {
+        const panel = document.getElementById('sos-panel');
+        panel.style.display = panel.style.display === 'flex' ? 'none' : 'flex';
+    }
+
+    function sosCall() {
+        const phone = localStorage.getItem('u-phone');
+        if(phone && phone.trim() !== "") {
+            window.location.href = "tel:" + phone;
+        } else {
+            alert("Profilinizde kayıtlı bir 'Yakın Telefon Numarası' bulunamadı! Lütfen profilinizden güncelleyin.");
+        }
+    }
+
+    function sosFindAndRoute() {
+        let nearest = null;
+        let minDist = Infinity;
+        
+        locations.forEach(loc => {
+            const d = L.latLng(userLoc).distanceTo(L.latLng(loc.c));
+            if (d < minDist) {
+                minDist = d;
+                nearest = loc;
+            }
+        });
+
+        if (nearest) {
+            window.open(`https://www.google.com/maps/dir/?api=1&origin=${userLoc[0]},${userLoc[1]}&destination=${nearest.c[0]},${nearest.c[1]}&travelmode=walking`, '_blank');
+        }
+    }
 
     // YOUTUBE API
     var tag = document.createElement('script');
@@ -380,7 +461,7 @@
         }
     }
 
-    // PROFİL YÖNETİMİ (İSTEDİĞİN GÜNCEL HALİ)
+    // PROFİL YÖNETİMİ
     const profileFields = ['u-name', 'u-blood', 'u-chronic', 'u-meds', 'u-allergy', 'u-phone'];
 
     window.addEventListener('load', () => {
