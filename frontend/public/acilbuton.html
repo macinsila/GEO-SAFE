@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <title>GeoSafe - Acil Durum Paneli v3</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 <style>
     /* Senin mevcut CSS kodların aynen kalıyor */
     * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
@@ -198,30 +201,49 @@
 </div>
 
 <script>
-    function acilDurumGonder(durumTipi) {
-        // 1. Konum alıyoruz
-        navigator.geolocation.getCurrentPosition((position) => {
+    // FIREBASE YAPILANDIRMASI BAŞLANGIÇ
+    const firebaseConfig = {
+        apiKey: "AIzaSyDhAAgpr6CoXW9SbMeHyzAx4vsno3IaOk4",
+        authDomain: "geo-safe-88c2e.firebaseapp.com",
+        projectId: "geo-safe-88c2e",
+        storageBucket: "geo-safe-88c2e.firebasestorage.app",
+        messagingSenderId: "253320517159",
+        appId: "1:253320517159:web:e8be67fab0c451caffe002",
+        measurementId: "G-CW944821RX"
+    };
+
+    // Firebase'i başlatıyoruz
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+    // FIREBASE YAPILANDIRMASI BİTİŞ
+
+    async function acilDurumGonder(durumTipi) {
+        navigator.geolocation.getCurrentPosition(async (position) => {
             const enlem = position.coords.latitude;
             const boylam = position.coords.longitude;
             const saat = new Date().toLocaleString('tr-TR');
             const haritaLink = `https://www.google.com/maps?q=${enlem},${boylam}`;
 
-            // 2. Hafızadaki verileri çek
-            let bildirimler = JSON.parse(localStorage.getItem("acilDurumlar")) || [];
+            try {
+                // VERİYİ FIREBASE'E GÖNDERİYORUZ
+                await db.collection("acilBildirimler").add({
+                    durum: durumTipi,
+                    saat: saat,
+                    konum: { enlem, boylam },
+                    haritaLink: haritaLink,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
 
-            // 3. Yeni bildirimi ekle
-            bildirimler.unshift({
-                durum: durumTipi,
-                saat: saat,
-                haritaLink: haritaLink
-            });
+                alert("BİLGİ: " + durumTipi + " durumu BULUT veritabanına iletildi.");
+            } catch (error) {
+                console.error("Hata oluştu: ", error);
+                alert("Veri gönderilemedi, Firebase bağlantısını kontrol et.");
+            }
 
-            // 4. Hafızaya geri yaz
-            localStorage.setItem("acilDurumlar", JSON.stringify(bildirimler));
-
-            alert("BİLGİ: " + durumTipi + " durumu admin paneline iletildi.");
         }, (error) => {
-            alert("Hata: Konum izni verilmedi. Lütfen tarayıcıdan konuma izin verin.");
+            alert("Hata: Konum izni verilmedi.");
         });
     }
 </script>

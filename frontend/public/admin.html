@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>GeoSafe - Admin Paneli</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
     <style>
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
@@ -47,21 +51,36 @@
 
     <script>
         // Sayfa yüklenir yüklenmez şifreyi soruyoruz
-        const adminSifre = "1234"; // Şifreni buradan değiştirebilirsin
+        const adminSifre = "1234"; 
         let girilenSifre = prompt("GeoSafe Yönetici Paneline giriş için şifreyi yazın:");
 
         if (girilenSifre === adminSifre) {
-            // Şifre doğruysa sayfayı göster
             document.body.style.display = "block";
         } else {
-            // Şifre yanlışsa uyarı ver ve ana sayfaya geri yolla
             alert("Hatalı şifre! Erişim reddedildi.");
             window.location.href = "index.html"; 
         }
     </script>
 
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDhAAgpr6CoXW9SbMeHyzAx4vsno3IaOk4",
+            authDomain: "geo-safe-88c2e.firebaseapp.com",
+            projectId: "geo-safe-88c2e",
+            storageBucket: "geo-safe-88c2e.firebasestorage.app",
+            messagingSenderId: "253320517159",
+            appId: "1:253320517159:web:e8be67fab0c451caffe002",
+            measurementId: "G-CW944821RX"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+    </script>
+
     <div class="admin-header">
-        <h2>🚨 Acil Durum Bildirimleri</h2>
+        <h2>🚨 Acil Durum Bildirimleri (Canlı)</h2>
         <a href="index.html" class="btn-link">Panelden Çık</a>
     </div>
 
@@ -80,35 +99,55 @@
     <button class="btn-temizle" onclick="verileriTemizle()">Tüm Kayıtları Sil</button>
 
     <script>
-        // Hafızadaki verileri çekip tabloya basan fonksiyon
+        // Firebase'den verileri CANLI (real-time) çeken fonksiyon
         function verileriYukle() {
-            let bildirimler = JSON.parse(localStorage.getItem("acilDurumlar")) || [];
             let tablo = document.getElementById("tabloGövdesi");
-            tablo.innerHTML = ""; 
 
-            if (bildirimler.length === 0) {
-                tablo.innerHTML = "<tr><td colspan='3' style='text-align:center;'>Henüz bildirim gelmedi.</td></tr>";
-            }
+            // acilBildirimler koleksiyonunu zaman damgasına göre sıralayıp dinliyoruz
+            db.collection("acilBildirimler").orderBy("timestamp", "desc")
+                .onSnapshot((snapshot) => {
+                    tablo.innerHTML = ""; 
 
-            bildirimler.forEach(item => {
-                let satir = `<tr>
-                    <td><strong>${item.durum}</strong></td>
-                    <td>${item.saat}</td>
-                    <td><a href="${item.haritaLink}" target="_blank">Haritada Gör</a></td>
-                </tr>`;
-                tablo.innerHTML += satir;
-            });
+                    if (snapshot.empty) {
+                        tablo.innerHTML = "<tr><td colspan='3' style='text-align:center;'>Henüz bildirim gelmedi.</td></tr>";
+                        return;
+                    }
+
+                    snapshot.forEach(doc => {
+                        let item = doc.data();
+                        let satir = `<tr>
+                            <td><strong>${item.durum}</strong></td>
+                            <td>${item.saat}</td>
+                            <td><a href="${item.haritaLink}" target="_blank">Haritada Gör</a></td>
+                        </tr>`;
+                        tablo.innerHTML += satir;
+                    });
+                }, (error) => {
+                    console.error("Veri çekme hatası: ", error);
+                });
         }
 
-        // Test amaçlı verileri silme fonksiyonu
-        function verileriTemizle() {
-            if(confirm("Tüm bildirim geçmişini silmek istediğinize emin misiniz?")) {
-                localStorage.removeItem("acilDurumlar");
-                verileriYukle();
+        // Firebase'deki tüm kayıtları temizleme fonksiyonu
+        async function verileriTemizle() {
+            if(confirm("Tüm bildirim geçmişini BULUT üzerinden silmek istediğinize emin misiniz?")) {
+                try {
+                    const snapshot = await db.collection("acilBildirimler").get();
+                    const batch = db.batch();
+                    
+                    snapshot.docs.forEach((doc) => {
+                        batch.delete(doc.ref);
+                    });
+                    
+                    await batch.commit();
+                    alert("Tüm kayıtlar silindi.");
+                } catch (error) {
+                    alert("Silme işlemi sırasında hata oluştu.");
+                    console.error(error);
+                }
             }
         }
 
-        // Sayfa açıldığında verileri yükle
+        // Sayfa açıldığında dinlemeyi başlat
         verileriYukle();
     </script>
 </body>

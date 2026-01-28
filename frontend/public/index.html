@@ -5,207 +5,35 @@
     <title>GeoSafe | Güvenli Portal</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
     <style>
-        * {
-            box-sizing: border-box;
-            font-family: 'Inter', "Segoe UI", sans-serif;
-        }
-
-        body {
-            margin: 0;
-            min-height: 100vh;
-            background-color: #e8efee;
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(184, 222, 217, 0.5) 0px, transparent 50%),
-                radial-gradient(at 100% 0%, rgba(207, 234, 230, 0.5) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(227, 240, 238, 0.5) 0px, transparent 50%),
-                radial-gradient(at 0% 100%, rgba(168, 213, 207, 0.5) 0px, transparent 50%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-        }
-
-        .bg-blur {
-            position: absolute;
-            width: 500px;
-            height: 500px;
-            background: #b8ded9;
-            filter: blur(100px);
-            z-index: 1;
-            border-radius: 50%;
-            opacity: 0.5;
-            animation: move 25s infinite alternate;
-        }
-
-        @keyframes move {
-            from { transform: translate(-10%, -10%); }
-            to { transform: translate(20%, 20%); }
-        }
-
-        .container {
-            position: relative;
-            z-index: 2;
-            width: 90%;
-            max-width: 400px;
-            background: rgba(255, 255, 255, 0.75);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border-radius: 28px;
-            padding: 40px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-        }
-
-        .logo {
-            text-align: center;
-            font-size: 30px;
-            font-weight: 800;
-            color: #245a56;
-            letter-spacing: -1px;
-            margin-bottom: 5px;
-        }
-
-        .subtitle {
-            text-align: center;
-            font-size: 14px;
-            color: #618783;
-            margin-bottom: 30px;
-            font-weight: 400;
-        }
-
-        .tabs {
-            display: flex;
-            background: rgba(0, 0, 0, 0.04);
-            padding: 5px;
-            border-radius: 14px;
-            margin-bottom: 25px;
-        }
-
-        .tab {
-            flex: 1;
-            text-align: center;
-            padding: 10px;
-            cursor: pointer;
-            font-size: 14px;
-            color: #5f7f7c;
-            border-radius: 10px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .tab.active {
-            background: #ffffff;
-            color: #2f6f6b;
-            font-weight: 600;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-
-        form {
-            display: none;
-            transition: opacity 0.3s;
-        }
-
-        form.active {
-            display: block;
-        }
-
-        label {
-            font-size: 13px;
-            font-weight: 600;
-            color: #4a6f6c;
-            margin: 0 0 8px 4px;
-            display: block;
-        }
-
-        input {
-            width: 100%;
-            padding: 14px 16px;
-            border-radius: 14px;
-            border: 1px solid rgba(0, 0, 0, 0.08);
-            margin-bottom: 20px;
-            font-size: 15px;
-            background: rgba(255, 255, 255, 0.5);
-            transition: all 0.3s;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: #2f6f6b;
-            background: #ffffff;
-            box-shadow: 0 0 0 4px rgba(47, 111, 107, 0.1);
-        }
-
-        .login-options {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: -10px;
-            margin-bottom: 20px;
-            font-size: 13px;
-            color: #618783;
-        }
-
-        .remember-me {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-        }
-
-        .remember-me input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-            margin: 0;
-            accent-color: #2f6f6b;
-        }
-
-        .forgot-password {
-            text-decoration: none;
-            color: #2f6f6b;
-            font-weight: 600;
-        }
-
-        button {
-            width: 100%;
-            padding: 15px;
-            background: #2f6f6b;
-            color: #ffffff;
-            border: none;
-            border-radius: 14px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.3s;
-            box-shadow: 0 10px 20px -5px rgba(47, 111, 107, 0.4);
-        }
-
-        button:hover {
-            background: #245a56;
-            transform: translateY(-2px);
-        }
-
-        .emergency {
-            margin-top: 30px;
-            padding: 15px;
-            text-align: center;
-            border-top: 1px solid rgba(0, 0, 0, 0.05);
-        }
-
-        .emergency a {
-            color: #2f6f6b;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 700;
-        }
-
-        .footer {
-            margin-top: 25px;
-            text-align: center;
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #9eb5b2;
-        }
+        /* Senin mevcut CSS kodların aynen kalıyor, dokunmadım */
+        * { box-sizing: border-box; font-family: 'Inter', "Segoe UI", sans-serif; }
+        body { margin: 0; min-height: 100vh; background-color: #e8efee; background-image: radial-gradient(at 0% 0%, rgba(184, 222, 217, 0.5) 0px, transparent 50%), radial-gradient(at 100% 0%, rgba(207, 234, 230, 0.5) 0px, transparent 50%), radial-gradient(at 100% 100%, rgba(227, 240, 238, 0.5) 0px, transparent 50%), radial-gradient(at 0% 100%, rgba(168, 213, 207, 0.5) 0px, transparent 50%); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .bg-blur { position: absolute; width: 500px; height: 500px; background: #b8ded9; filter: blur(100px); z-index: 1; border-radius: 50%; opacity: 0.5; animation: move 25s infinite alternate; }
+        @keyframes move { from { transform: translate(-10%, -10%); } to { transform: translate(20%, 20%); } }
+        .container { position: relative; z-index: 2; width: 90%; max-width: 400px; background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border-radius: 28px; padding: 40px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08); border: 1px solid rgba(255, 255, 255, 0.4); }
+        .logo { text-align: center; font-size: 30px; font-weight: 800; color: #245a56; letter-spacing: -1px; margin-bottom: 5px; }
+        .subtitle { text-align: center; font-size: 14px; color: #618783; margin-bottom: 30px; font-weight: 400; }
+        .tabs { display: flex; background: rgba(0, 0, 0, 0.04); padding: 5px; border-radius: 14px; margin-bottom: 25px; }
+        .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; font-size: 14px; color: #5f7f7c; border-radius: 10px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .tab.active { background: #ffffff; color: #2f6f6b; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        form { display: none; transition: opacity 0.3s; }
+        form.active { display: block; }
+        label { font-size: 13px; font-weight: 600; color: #4a6f6c; margin: 0 0 8px 4px; display: block; }
+        input { width: 100%; padding: 14px 16px; border-radius: 14px; border: 1px solid rgba(0, 0, 0, 0.08); margin-bottom: 20px; font-size: 15px; background: rgba(255, 255, 255, 0.5); transition: all 0.3s; }
+        input:focus { outline: none; border-color: #2f6f6b; background: #ffffff; box-shadow: 0 0 0 4px rgba(47, 111, 107, 0.1); }
+        .login-options { display: flex; justify-content: space-between; align-items: center; margin-top: -10px; margin-bottom: 20px; font-size: 13px; color: #618783; }
+        .remember-me { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .remember-me input[type="checkbox"] { width: 16px; height: 16px; margin: 0; accent-color: #2f6f6b; }
+        .forgot-password { text-decoration: none; color: #2f6f6b; font-weight: 600; cursor: pointer; }
+        button { width: 100%; padding: 15px; background: #2f6f6b; color: #ffffff; border: none; border-radius: 14px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 20px -5px rgba(47, 111, 107, 0.4); }
+        button:hover { background: #245a56; transform: translateY(-2px); }
+        .emergency { margin-top: 30px; padding: 15px; text-align: center; border-top: 1px solid rgba(0, 0, 0, 0.05); }
+        .emergency a { color: #2f6f6b; text-decoration: none; font-size: 14px; font-weight: 700; }
+        .footer { margin-top: 25px; text-align: center; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #9eb5b2; }
     </style>
 </head>
 <body>
@@ -223,30 +51,30 @@
 
     <form id="login" class="active">
         <label>E-posta</label>
-        <input type="email" name="email" id="loginEmail" placeholder="E-posta adresiniz" required>
+        <input type="email" id="loginEmail" placeholder="E-posta adresiniz" required>
 
         <label>Şifre</label>
-        <input type="password" name="password" placeholder="••••••••" required>
+        <input type="password" id="loginPassword" placeholder="••••••••" required>
 
         <div class="login-options">
             <label class="remember-me">
-                <input type="checkbox" name="remember" id="rememberCheck"> Beni Hatırla
+                <input type="checkbox" id="rememberCheck"> Beni Hatırla
             </label>
-            <a href="#" class="forgot-password">Şifremi Unuttum?</a>
+            <span class="forgot-password" onclick="sifremiUnuttum()">Şifremi Unuttum?</span>
         </div>
 
         <button type="submit">Sisteme Giriş Yap</button>
     </form>
 
     <form id="register">
-        <label>Tam Adınız</label>
-        <input type="text" name="name" placeholder="Ad Soyad" required>
+        <label>Tam Adınız (İsteğe Bağlı)</label>
+        <input type="text" id="regName" placeholder="Ad Soyad">
 
         <label>E-posta</label>
-        <input type="email" name="email" placeholder="example@mail.com" required>
+        <input type="email" id="regEmail" placeholder="example@mail.com" required>
 
         <label>Şifre Seçin</label>
-        <input type="password" name="password" placeholder="••••••••" required>
+        <input type="password" id="regPassword" placeholder="••••••••" required>
 
         <button type="submit">Hesabı Oluştur</button>
     </form>
@@ -266,27 +94,24 @@
 </div>
 
 <script>
-    // --- 1. SAYFA YÜKLENDİĞİNDE HATIRLA ---
-    document.addEventListener('DOMContentLoaded', () => {
-        const savedEmail = localStorage.getItem('geosafe_saved_email');
-        const emailInput = document.getElementById('loginEmail');
-        const rememberCheckbox = document.getElementById('rememberCheck');
+    // 2. FIREBASE YAPILANDIRMASI
+    const firebaseConfig = {
+        apiKey: "AIzaSyDhAAgpr6CoXW9SbMeHyzAx4vsno3IaOk4",
+        authDomain: "geo-safe-88c2e.firebaseapp.com",
+        projectId: "geo-safe-88c2e",
+        storageBucket: "geo-safe-88c2e.firebasestorage.app",
+        messagingSenderId: "253320517159",
+        appId: "1:253320517159:web:e8be67fab0c451caffe002",
+        measurementId: "G-CW944821RX"
+    };
 
-        if (savedEmail && emailInput) {
-            emailInput.value = savedEmail;
-            rememberCheckbox.checked = true;
-        }
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
 
-        const registerForm = document.getElementById('register');
-        const loginForm = document.getElementById('login');
-        if(registerForm) registerForm.addEventListener('submit', (e) => handleFormSubmit(e, 'register'));
-        if(loginForm) loginForm.addEventListener('submit', (e) => handleFormSubmit(e, 'login'));
-    });
-
+    // Form Gösterim Mantığı
     function showForm(formId) {
         document.querySelectorAll(".tab").forEach(tab => tab.classList.remove("active"));
         document.querySelectorAll("form").forEach(form => form.classList.remove("active"));
-
         if (formId === "login") {
             document.querySelectorAll(".tab")[0].classList.add("active");
         } else {
@@ -295,50 +120,68 @@
         document.getElementById(formId).classList.add("active");
     }
 
-    async function handleFormSubmit(event, endpoint) {
-        event.preventDefault();
-        
-        const formData = new FormData(event.target);
-        const data = Object.fromEntries(formData.entries());
+    // --- 3. KAYIT OLMA İŞLEMİ ---
+    document.getElementById('register').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = document.getElementById('regEmail').value;
+        const password = document.getElementById('regPassword').value;
 
-        try {
-            // Önce sunucuya veriyi gönderiyoruz
-            const response = await fetch(`http://127.0.0.1:8000/auth/${endpoint}`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data),
+        auth.createUserWithEmailAndPassword(email, password)
+            .then((userCredential) => {
+                alert("Hesap başarıyla oluşturuldu! Şimdi giriş yapabilirsiniz.");
+                showForm('login');
+            })
+            .catch((error) => {
+                alert("Kayıt Hatası: " + error.message);
             });
+    });
 
-            const result = await response.json();
+    // --- 4. GİRİŞ YAPMA İŞLEMİ ---
+    document.getElementById('login').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+        const remember = document.getElementById('rememberCheck').checked;
 
-            // --- SUNUCUDAN CEVAP GELDİKTEN SONRA BURASI ÇALIŞIR ---
-            if (response.ok) {
-                if (endpoint === 'login') {
-                    // Beni Hatırla Kontrolü
-                    if (data.remember) {
-                        localStorage.setItem('geosafe_saved_email', data.email);
-                    } else {
-                        localStorage.removeItem('geosafe_saved_email');
-                    }
-
-                    // Giriş Başarılı Vizesi
-                    localStorage.setItem('isLoggedIn', 'true');
-                    alert("Giriş Başarılı! Anasayfaya yönlendiriliyorsunuz...");
-                    
-                    // YÖNLENDİRME
-                    window.location.href = "anasayfa.html"; 
-                } else if (endpoint === 'register') {
-                    alert("Kaydınız başarıyla oluşturuldu! Şimdi giriş yapabilirsiniz.");
-                    showForm('login'); // Kayıttan sonra giriş ekranına atar
+        auth.signInWithEmailAndPassword(email, password)
+            .then((userCredential) => {
+                if (remember) {
+                    localStorage.setItem('geosafe_saved_email', email);
+                } else {
+                    localStorage.removeItem('geosafe_saved_email');
                 }
-            } else {
-                alert("Hata: " + (result.detail || "İşlem başarısız."));
-            }
-        } catch (error) {
-            console.error("Hata detayı:", error);
-            alert("Sunucuya ulaşılamıyor! Docker'ın çalıştığından emin ol.");
+                alert("Giriş Başarılı!");
+                window.location.href = "anasayfa.html";
+            })
+            .catch((error) => {
+                alert("Giriş Hatası: " + error.message);
+            });
+    });
+
+    // --- 5. ŞİFREMİ UNUTTUM (SORDUĞUN ÖZELLİK) ---
+    function sifremiUnuttum() {
+        const email = document.getElementById('loginEmail').value;
+        if (!email) {
+            alert("Lütfen önce e-posta adresinizi yazın.");
+            return;
         }
+        auth.sendPasswordResetEmail(email)
+            .then(() => {
+                alert("Şifre sıfırlama bağlantısı e-postanıza gönderildi!");
+            })
+            .catch((error) => {
+                alert("Hata: " + error.message);
+            });
     }
+
+    // Sayfa Yüklendiğinde Hatırlanan E-postayı Getir
+    document.addEventListener('DOMContentLoaded', () => {
+        const savedEmail = localStorage.getItem('geosafe_saved_email');
+        if (savedEmail) {
+            document.getElementById('loginEmail').value = savedEmail;
+            document.getElementById('rememberCheck').checked = true;
+        }
+    });
 </script>
 
 </body>
