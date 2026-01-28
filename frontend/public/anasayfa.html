@@ -17,7 +17,7 @@
             --hover-red: #c53030;
             --hover-green: #1a4542;
             --white-glass: rgba(255, 255, 255, 0.95);
-            --go-blue: #3182ce; /* Git butonu için mavi tonu */
+            --go-blue: #3182ce;
         }
 
         body { font-family: 'Inter', sans-serif; background-color: var(--soft-aqua); margin: 0; color: #2d3748; }
@@ -40,7 +40,6 @@
 
         .header-right { display: flex; gap: 12px; align-items: center; }
         
-        /* PROFIL DROPDOWN CSS */
         .profile-container { position: relative; padding-bottom: 10px; margin-bottom: -10px; }
         
         .profile-dropdown {
@@ -99,7 +98,7 @@
             display: flex; gap: 25px; padding: 0 20px; height: 500px;
         }
 
-        #map { flex: 2; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 4px solid white; position: relative; }
+        #map { flex: 2; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 4px solid white; position: relative; z-index: 100;}
 
         .info-card {
             flex: 1; background: var(--white-glass);
@@ -119,7 +118,6 @@
         .inv-item span { font-size: 12px; color: #718096; text-transform: uppercase; font-weight: 600; }
         .inv-item b { font-size: 16px; color: var(--primary-teal); }
 
-        /* GİT BUTONU KUTUCUĞU */
         .inv-item.go-btn-box { background: var(--go-blue); color: white; cursor: pointer; transition: 0.2s; border: none; justify-content: center; align-items: center; }
         .inv-item.go-btn-box:hover { background: #2b6cb0; transform: translateY(-2px); }
         .inv-item.go-btn-box b { color: white; font-size: 18px; }
@@ -217,7 +215,7 @@
                 </div>
             </div>
         </div>
-        <a href="index.html" class="nav-btn logout-btn">Çıkış Yap</a>
+        <button id="logoutBtn" class="nav-btn logout-btn" style="cursor: pointer;">Çıkış Yap</button>
     </div>
 </header>
 
@@ -324,14 +322,142 @@
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDhAAgpr6CoXW9SbMeHyzAx4vsno3IaOk4",
+      authDomain: "geo-safe-88c2e.firebaseapp.com",
+      projectId: "geo-safe-88c2e",
+      storageBucket: "geo-safe-88c2e.firebasestorage.app",
+      messagingSenderId: "253320517159",
+      appId: "1:253320517159:web:e8be67fab0c451caffe002",
+      measurementId: "G-CW944821RX"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    window.bolgeListesi = [];
+
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            const docRef = doc(db, "users", user.uid);
+            try {
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    document.getElementById('u-name').value = data.name || "";
+                    document.getElementById('u-blood').value = data.blood || "";
+                    document.getElementById('u-chronic').value = data.chronic || "";
+                    document.getElementById('u-meds').value = data.meds || "";
+                    document.getElementById('u-allergy').value = data.allergy || "";
+                    document.getElementById('u-phone').value = data.phone || "";
+                }
+            } catch (error) {
+                console.error("Hata:", error);
+            }
+        } else {
+            // login.html olmadığı için burada bir yönlendirme yapmıyoruz veya index.html'e çekiyoruz
+            console.log("Kullanıcı oturumu kapalı.");
+        }
+    });
+
+    async function yukleGuvenliBolgeler() {
+        try {
+            const querySnapshot = await getDocs(collection(db, "guvenliBolgeler"));
+            window.bolgeListesi = []; 
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                window.bolgeListesi.push(data);
+                
+                const marker = L.marker(data.c).addTo(map);
+
+                marker.on('click', () => {
+                    document.getElementById('welcome-msg').style.display = 'none';
+                    document.getElementById('details').style.display = 'block';
+                    
+                    document.getElementById('a-name').innerText = data.n;
+                    document.getElementById('a-water').innerText = data.water;
+                    document.getElementById('a-med').innerText = data.med;
+                    document.getElementById('a-ext').innerText = data.ext + " Adet";
+                    document.getElementById('a-food').innerText = data.food;
+                    document.getElementById('a-blanket').innerText = data.blanket + " Adet";
+
+                    const d = L.latLng(userLoc).distanceTo(L.latLng(data.c));
+                    document.getElementById('a-dist').innerText = `📍 ${(d/1000).toFixed(2)} km (${Math.round(d/80)} dk)`;
+                    
+                    document.getElementById('direct-go-btn').onclick = () => {
+                        window.open(`https://www.google.com/maps/dir/?api=1&origin=${userLoc[0]},${userLoc[1]}&destination=${data.c[0]},${data.c[1]}&travelmode=walking`, '_blank');
+                    };
+                });
+            });
+        } catch (e) {
+            console.error("Bölgeler yüklenirken hata oluştu:", e);
+        }
+    }
+
+    yukleGuvenliBolgeler();
+
+    window.saveProfile = async function() {
+        const user = auth.currentUser;
+        if (!user) {
+            alert("Kullanıcı oturumu bulunamadı.");
+            return;
+        }
+
+        const profileData = {
+            name: document.getElementById('u-name').value,
+            blood: document.getElementById('u-blood').value,
+            chronic: document.getElementById('u-chronic').value,
+            meds: document.getElementById('u-meds').value,
+            allergy: document.getElementById('u-allergy').value,
+            phone: document.getElementById('u-phone').value,
+            updatedAt: new Date()
+        };
+
+        try {
+            await setDoc(doc(db, "users", user.uid), profileData, { merge: true });
+            alert("Bilgiler buluta başarıyla kaydedildi!");
+            ['u-name', 'u-blood', 'u-chronic', 'u-meds', 'u-allergy', 'u-phone'].forEach(field => {
+                document.getElementById(field).setAttribute('readonly', true);
+                document.getElementById(field).style.background = "#f1f5f9";
+            });
+        } catch (e) {
+            alert("Kaydetme hatası: " + e.message);
+        }
+    };
+
+    window.enableEdit = function() {
+        ['u-name', 'u-blood', 'u-chronic', 'u-meds', 'u-allergy', 'u-phone'].forEach(field => {
+            document.getElementById(field).removeAttribute('readonly');
+            document.getElementById(field).style.background = "#fff";
+        });
+        document.getElementById('u-name').focus();
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        signOut(auth).then(() => {
+            // login.html yerine index.html yönlendirmesi yapıldı
+            window.location.href = "index.html"; 
+        }).catch((error) => {
+            console.error("Çıkış hatası:", error);
+        });
+    });
+</script>
+
 <script>
-    // HARİTA VE DEPREM FONKSİYONLARI
     const map = L.map('map', {zoomControl: true}).setView([41.043, 29.008], 14);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
 
     let userLoc = [41.043, 29.008];
     navigator.geolocation.getCurrentPosition(p => {
         userLoc = [p.coords.latitude, p.coords.longitude];
+        map.setView(userLoc, 14);
         L.circleMarker(userLoc, {radius: 7, fillColor: '#3182ce', color: '#fff', weight: 2, fillOpacity: 1}).addTo(map).bindPopup("Siz");
     });
 
@@ -366,88 +492,51 @@
     }
     getEarthquakes();
 
-    const locations = [
-        { n: "Abbasağa Parkı", c: [41.0461, 29.0035], s: ["%90", "%65", "15", "%80", "120"] },
-        { n: "Maçka Parkı", c: [41.0475, 28.9942], s: ["%100", "%80", "30", "%95", "450"] },
-        { n: "Yıldız Parkı", c: [41.0485, 29.0185], s: ["%85", "%50", "12", "%75", "200"] },
-        { n: "Ortaköy Meydanı", c: [41.0472, 29.0253], s: ["%60", "%30", "5", "%40", "80"] },
-        { n: "Bebek Parkı", c: [41.0772, 29.0435], s: ["%95", "%70", "20", "%85", "150"] },
-        { n: "Akatlar Parkı", c: [41.0855, 29.0245], s: ["%100", "%90", "40", "%95", "500"] },
-        { n: "Kuruçeşme Parkı", c: [41.0605, 29.0345], s: ["%70", "%40", "10", "%60", "100"] },
-        { n: "Gayrettepe Parkı", c: [41.0695, 29.0065], s: ["%80", "%60", "20", "%70", "130"] },
-        { n: "Ulus Parkı", c: [41.0615, 29.0215], s: ["%90", "%75", "18", "%85", "180"] },
-        { n: "Dikilitaş Parkı", c: [41.0545, 29.0095], s: ["%60", "%40", "8", "%50", "90"] },
-        { n: "Cihannüma Parkı", c: [41.0435, 29.0045], s: ["%75", "%55", "10", "%65", "110"] },
-        { n: "Balmumcu Parkı", c: [41.0625, 29.0125], s: ["%55", "%30", "6", "%50", "70"] },
-        { n: "Arnavutköy Sahil", c: [41.0675, 29.0435], s: ["%80", "%50", "12", "%70", "130"] },
-        { n: "Türkali Parkı", c: [41.0515, 29.0035], s: ["%65", "%35", "5", "%55", "60"] },
-        { n: "Vişnezade Parkı", c: [41.0415, 28.9985], s: ["%75", "%50", "10", "%65", "100"] },
-        { n: "Konaklar Parkı", c: [41.0915, 29.0155], s: ["%85", "%65", "15", "%80", "140"] },
-        { n: "Kültür Parkı", c: [41.0655, 29.0185], s: ["%50", "%25", "4", "%35", "50"] },
-        { n: "Etiler Parkı", c: [41.0875, 29.0325], s: ["%95", "%80", "22", "%90", "210"] },
-        { n: "Sinanpaşa Parkı", c: [41.0425, 29.0065], s: ["%45", "%20", "3", "%30", "40"] },
-        { n: "Levent Parkı", c: [41.0825, 29.0125], s: ["%90", "%85", "25", "%90", "300"] }
-    ];
-
-    locations.forEach(loc => {
-        L.marker(loc.c).addTo(map).on('click', () => {
-            document.getElementById('welcome-msg').style.display = 'none';
-            document.getElementById('details').style.display = 'block';
-            document.getElementById('a-name').innerText = loc.n;
-            document.getElementById('a-water').innerText = loc.s[0];
-            document.getElementById('a-med').innerText = loc.s[1];
-            document.getElementById('a-ext').innerText = loc.s[2] + " Adet";
-            document.getElementById('a-food').innerText = loc.s[3];
-            document.getElementById('a-blanket').innerText = loc.s[4] + " Adet";
-            const d = L.latLng(userLoc).distanceTo(L.latLng(loc.c));
-            document.getElementById('a-dist').innerText = `📍 ${(d/1000).toFixed(2)} km (${Math.round(d/80)} dk)`;
-            
-            // BİLGİ KUTUSU GİT BUTONU İŞLEVİ
-            document.getElementById('direct-go-btn').onclick = () => {
-                window.open(`https://www.google.com/maps/dir/?api=1&origin=${userLoc[0]},${userLoc[1]}&destination=${loc.c[0]},${loc.c[1]}&travelmode=walking`, '_blank');
-            };
-        });
-    });
-
-    // SOS SEÇENEK PANELİ FONKSİYONLARI
-    function toggleSOS() {
+    window.toggleSOS = function() {
         const panel = document.getElementById('sos-panel');
         panel.style.display = panel.style.display === 'flex' ? 'none' : 'flex';
     }
 
-    function sosCall() {
-        const phone = localStorage.getItem('u-phone');
+    window.sosCall = function() {
+        const phone = document.getElementById('u-phone').value;
         if(phone && phone.trim() !== "") {
             window.location.href = "tel:" + phone;
         } else {
-            alert("Profilinizde kayıtlı bir 'Yakın Telefon Numarası' bulunamadı! Lütfen profilinizden güncelleyin.");
+            alert("Yakın telefon numarası bulunamadı.");
         }
     }
 
-    function sosFindAndRoute() {
-        let nearest = null;
-        let minDist = Infinity;
-        
-        locations.forEach(loc => {
-            const d = L.latLng(userLoc).distanceTo(L.latLng(loc.c));
-            if (d < minDist) {
-                minDist = d;
-                nearest = loc;
+    window.sosFindAndRoute = function() {
+        if (!window.bolgeListesi || window.bolgeListesi.length === 0) {
+            alert("Bölgeler henüz yüklenmedi, lütfen bekleyin...");
+            return;
+        }
+
+        let enYakinMesafe = Infinity;
+        let enYakinBolge = null;
+
+        window.bolgeListesi.forEach(bolge => {
+            const mesafe = L.latLng(userLoc).distanceTo(L.latLng(bolge.c));
+            if (mesafe < enYakinMesafe) {
+                enYakinMesafe = mesafe;
+                enYakinBolge = bolge;
             }
         });
 
-        if (nearest) {
-            window.open(`https://www.google.com/maps/dir/?api=1&origin=${userLoc[0]},${userLoc[1]}&destination=${nearest.c[0]},${nearest.c[1]}&travelmode=walking`, '_blank');
+        if (enYakinBolge) {
+            alert(`En yakın bölge bulundu: ${enYakinBolge.n}. Navigasyon başlatılıyor...`);
+            window.open(`https://www.google.com/maps/dir/?api=1&origin=${userLoc[0]},${userLoc[1]}&destination=${enYakinBolge.c[0]},${enYakinBolge.c[1]}&travelmode=walking`, '_blank');
+        } else {
+            alert("En yakın bölge hesaplanamadı.");
         }
     }
 
-    // YOUTUBE API
     var tag = document.createElement('script');
     tag.src = "https://www.youtube.com/iframe_api";
     var firstScriptTag = document.getElementsByTagName('script')[0];
     firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
     var players = [];
-    function onYouTubeIframeAPIReady() {
+    window.onYouTubeIframeAPIReady = function() {
         var iframes = document.querySelectorAll('.video-thumb iframe');
         iframes.forEach(function(iframe, index) {
             players[index] = new YT.Player(iframe.id, { events: { 'onStateChange': onPlayerStateChange } });
@@ -459,34 +548,6 @@
                 if (player !== event.target && player.pauseVideo) { player.pauseVideo(); }
             });
         }
-    }
-
-    // PROFİL YÖNETİMİ
-    const profileFields = ['u-name', 'u-blood', 'u-chronic', 'u-meds', 'u-allergy', 'u-phone'];
-
-    window.addEventListener('load', () => {
-        profileFields.forEach(field => {
-            const savedValue = localStorage.getItem(field);
-            if (savedValue) { document.getElementById(field).value = savedValue; }
-        });
-    });
-
-    function enableEdit() {
-        profileFields.forEach(field => {
-            document.getElementById(field).removeAttribute('readonly');
-            document.getElementById(field).style.background = "#fff";
-        });
-        document.getElementById('u-name').focus();
-    }
-
-    function saveProfile() {
-        profileFields.forEach(field => {
-            const val = document.getElementById(field).value;
-            localStorage.setItem(field, val);
-            document.getElementById(field).setAttribute('readonly', true);
-            document.getElementById(field).style.background = "#f1f5f9";
-        });
-        alert("Bilgileriniz başarıyla kaydedildi!");
     }
 </script>
 </body>

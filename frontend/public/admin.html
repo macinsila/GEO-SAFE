@@ -12,7 +12,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             background: #f4f4f4; 
             padding: 20px; 
-            display: none; /* Şifre girilene kadar içeriği gizliyoruz */
+            display: none; 
         }
         .admin-header {
             display: flex;
@@ -24,10 +24,27 @@
             border-radius: 8px;
             margin-bottom: 20px;
         }
-        table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        th, td { border: 1px solid #ddd; padding: 15px; text-align: left; }
-        th { background-color: #333; color: white; }
+        .section-title {
+            background: #333;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin-top: 40px;
+            margin-bottom: 15px;
+        }
+        table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #444; color: white; font-size: 14px; }
         tr:nth-child(even) { background-color: #f9f9f9; }
+        
+        .stok-input {
+            width: 70px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
         .btn-link { 
             background: #fff; 
             color: #d32f2f; 
@@ -45,12 +62,24 @@
             border-radius: 5px;
             margin-top: 10px;
         }
+        .btn-guncelle {
+            background: #2e7d32;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .btn-guncelle:hover { background: #1b5e20; }
+        .sos-durum { color: #d32f2f; font-weight: bold; animation: blinker 1.5s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
 
     <script>
-        // Sayfa yüklenir yüklenmez şifreyi soruyoruz
+        // Şifre kontrolü
         const adminSifre = "1234"; 
         let girilenSifre = prompt("GeoSafe Yönetici Paneline giriş için şifreyi yazın:");
 
@@ -60,17 +89,15 @@
             alert("Hatalı şifre! Erişim reddedildi.");
             window.location.href = "index.html"; 
         }
-    </script>
 
-    <script>
+        // Firebase Yapılandırması
         const firebaseConfig = {
             apiKey: "AIzaSyDhAAgpr6CoXW9SbMeHyzAx4vsno3IaOk4",
             authDomain: "geo-safe-88c2e.firebaseapp.com",
             projectId: "geo-safe-88c2e",
             storageBucket: "geo-safe-88c2e.firebasestorage.app",
             messagingSenderId: "253320517159",
-            appId: "1:253320517159:web:e8be67fab0c451caffe002",
-            measurementId: "G-CW944821RX"
+            appId: "1:253320517159:web:e8be67fab0c451caffe002"
         };
 
         if (!firebase.apps.length) {
@@ -80,10 +107,11 @@
     </script>
 
     <div class="admin-header">
-        <h2>🚨 Acil Durum Bildirimleri (Canlı)</h2>
+        <h2>GeoSafe Yönetim Paneli</h2>
         <a href="index.html" class="btn-link">Panelden Çık</a>
     </div>
 
+    <h3 class="section-title">🚨 Canlı Acil Durum Bildirimleri</h3>
     <table id="adminTablo">
         <thead>
             <tr>
@@ -93,62 +121,119 @@
             </tr>
         </thead>
         <tbody id="tabloGövdesi">
-            </tbody>
+            <tr><td colspan="3" style="text-align:center;">Bildirimler bekleniyor...</td></tr>
+        </tbody>
+    </table>
+    <button class="btn-temizle" onclick="verileriTemizle()">Bildirim Geçmişini Temizle</button>
+
+    <h3 class="section-title">📦 Güvenli Bölge Stok Yönetimi</h3>
+    <table id="stokTablo">
+        <thead>
+            <tr>
+                <th>Bölge Adı</th>
+                <th>Su (%)</th>
+                <th>Gıda (%)</th>
+                <th>İlaç (%)</th>
+                <th>Battaniye (Adet)</th>
+                <th>Y. Tüpü (Adet)</th>
+                <th>İşlem</th>
+            </tr>
+        </thead>
+        <tbody id="stokGövdesi">
+            <tr><td colspan="7" style="text-align:center;">Bölgeler yükleniyor...</td></tr>
+        </tbody>
     </table>
 
-    <button class="btn-temizle" onclick="verileriTemizle()">Tüm Kayıtları Sil</button>
-
     <script>
-        // Firebase'den verileri CANLI (real-time) çeken fonksiyon
+        // --- ACİL DURUM BİLDİRİMLERİ (CANLI DİNLEME) ---
         function verileriYukle() {
             let tablo = document.getElementById("tabloGövdesi");
-
-            // acilBildirimler koleksiyonunu zaman damgasına göre sıralayıp dinliyoruz
+            
+            // onSnapshot sayesinde acil durum sayfasına tıklandığı an buraya veri düşer
             db.collection("acilBildirimler").orderBy("timestamp", "desc")
                 .onSnapshot((snapshot) => {
                     tablo.innerHTML = ""; 
-
                     if (snapshot.empty) {
                         tablo.innerHTML = "<tr><td colspan='3' style='text-align:center;'>Henüz bildirim gelmedi.</td></tr>";
                         return;
                     }
-
                     snapshot.forEach(doc => {
                         let item = doc.data();
-                        let satir = `<tr>
-                            <td><strong>${item.durum}</strong></td>
-                            <td>${item.saat}</td>
-                            <td><a href="${item.haritaLink}" target="_blank">Haritada Gör</a></td>
+                        tablo.innerHTML += `<tr>
+                            <td><span class="sos-durum">${item.durum}</span></td>
+                            <td>${item.saat || 'Belirtilmedi'}</td>
+                            <td><a href="${item.haritaLink}" target="_blank" style="color: blue; font-weight:bold;">Haritada Gör</a></td>
                         </tr>`;
-                        tablo.innerHTML += satir;
                     });
                 }, (error) => {
-                    console.error("Veri çekme hatası: ", error);
+                    console.error("Firestore Dinleme Hatası:", error);
                 });
         }
 
-        // Firebase'deki tüm kayıtları temizleme fonksiyonu
         async function verileriTemizle() {
-            if(confirm("Tüm bildirim geçmişini BULUT üzerinden silmek istediğinize emin misiniz?")) {
+            if(confirm("Tüm bildirim geçmişini silmek istediğinize emin misiniz?")) {
                 try {
                     const snapshot = await db.collection("acilBildirimler").get();
                     const batch = db.batch();
-                    
-                    snapshot.docs.forEach((doc) => {
-                        batch.delete(doc.ref);
-                    });
-                    
+                    snapshot.docs.forEach((doc) => batch.delete(doc.ref));
                     await batch.commit();
-                    alert("Tüm kayıtlar silindi.");
-                } catch (error) {
-                    alert("Silme işlemi sırasında hata oluştu.");
-                    console.error(error);
+                    alert("Bildirimler başarıyla temizlendi.");
+                } catch (e) {
+                    alert("Hata: " + e.message);
                 }
             }
         }
 
-        // Sayfa açıldığında dinlemeyi başlat
+        // --- STOK YÖNETİMİ ---
+        function stoklariYukle() {
+            let stokGövdesi = document.getElementById("stokGövdesi");
+
+            db.collection("guvenliBolgeler").get().then((snapshot) => {
+                if (snapshot.empty) {
+                    stokGövdesi.innerHTML = "<tr><td colspan='7' style='text-align:center;'>Kayıtlı bölge bulunamadı.</td></tr>";
+                    return;
+                }
+                
+                stokGövdesi.innerHTML = ""; 
+                snapshot.forEach(doc => {
+                    let data = doc.data();
+                    let id = doc.id;
+                    
+                    stokGövdesi.innerHTML += `
+                        <tr>
+                            <td><b>${data.n || 'İsimsiz Bölge'}</b></td>
+                            <td><input type="text" id="water-${id}" class="stok-input" value="${data.water || '%0'}"></td>
+                            <td><input type="text" id="food-${id}" class="stok-input" value="${data.food || '%0'}"></td>
+                            <td><input type="text" id="med-${id}" class="stok-input" value="${data.med || '%0'}"></td>
+                            <td><input type="number" id="blanket-${id}" class="stok-input" value="${data.blanket || 0}"></td>
+                            <td><input type="number" id="ext-${id}" class="stok-input" value="${data.ext || 0}"></td>
+                            <td><button class="btn-guncelle" onclick="stokGuncelle('${id}')">Güncelle</button></td>
+                        </tr>
+                    `;
+                });
+            }).catch((error) => {
+                stokGövdesi.innerHTML = "<tr><td colspan='7' style='color:red; text-align:center;'>Hata: " + error.message + "</td></tr>";
+            });
+        }
+
+        async function stokGuncelle(id) {
+            try {
+                await db.collection("guvenliBolgeler").doc(id).update({
+                    water: document.getElementById(`water-${id}`).value,
+                    food: document.getElementById(`food-${id}`).value,
+                    med: document.getElementById(`med-${id}`).value,
+                    blanket: document.getElementById(`blanket-${id}`).value,
+                    ext: document.getElementById(`ext-${id}`).value
+                });
+                alert("Stoklar güncellendi!");
+            } catch (error) {
+                alert("Güncelleme hatası: " + error.message);
+            }
+        }
+
+        // Başlat
         verileriYukle();
+        stoklariYukle();
     </script>
 </body>
 </html>

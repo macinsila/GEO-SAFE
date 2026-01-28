@@ -1,147 +1,31 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8">
-<title>GeoSafe - Acil Durum Paneli v3</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-<style>
-    /* Senin mevcut CSS kodların aynen kalıyor */
-    * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
-
-    body {
-        background-color: #FFF0F5;
-        height: 100vh;
-        width: 100vw;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-        position: relative;
-    }
-
-    .bg-grid {
-        position: absolute;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        display: grid;
-        grid-template-columns: repeat(6, 1fr);
-        grid-template-rows: repeat(5, 1fr);
-        z-index: 0;
-        pointer-events: none;
-    }
-    .bg-grid span {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 85px;
-        font-weight: 900;
-        color: rgba(211, 47, 47, 0.15);
-        animation: pulse 6s ease-in-out infinite; 
-    }
-
-    @keyframes pulse {
-        0%, 100% { opacity: 0.3; transform: scale(1); }
-        50% { opacity: 0.6; transform: scale(1.05); }
-    }
-
-    h1 {
-        z-index: 2;
-        color: #b71c1c;
-        margin-bottom: 25px;
-        font-size: 2.5rem;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-    }
-
-    .quick-buttons {
-        display: flex;
-        gap: 25px;
-        margin-bottom: 40px;
-        z-index: 2;
-    }
-    .quick-buttons button {
-        padding: 20px 40px;
-        border: none;
-        border-radius: 60px;
-        font-weight: 800;
-        font-size: 20px;
-        cursor: pointer;
-        background-color: #d32f2f;
-        color: white;
-        box-shadow: 0 6px 20px rgba(211, 47, 47, 0.4);
-        transition: 0.3s;
-        text-transform: uppercase;
-    }
-    .quick-buttons button:hover { 
-        transform: translateY(-5px) scale(1.05); 
-        background-color: #f44336;
-        box-shadow: 0 10px 25px rgba(211, 47, 47, 0.5);
-    }
-
-    .cards-container {
-        display: flex;
-        justify-content: center;
-        gap: 20px;
-        width: 95%;
-        max-width: 1300px;
-        z-index: 2;
-        flex-wrap: wrap;
-    }
-
-    .card {
-        flex: 1 1 240px; 
-        background: linear-gradient(135deg, #ffffff, #ffe4e1);
-        border-radius: 20px;
-        padding: 20px;
-        box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        border: 1px solid #ffdde1;
-        transition: transform 0.3s;
-    }
-    .card:hover { transform: translateY(-5px); }
-
-    .card img {
-        width: 100%;
-        height: 160px;
-        object-fit: cover;
-        border-radius: 15px;
-        margin-bottom: 15px;
-        border: 1px solid #eee;
-    }
-
-    .card h2 {
-        font-size: 24px;
-        color: #b71c1c;
-        margin-bottom: 12px;
-        font-weight: 800;
-    }
-
-    .card ul {
-        list-style: none;
-        text-align: left;
-        font-size: 16px;
-        color: #222;
-        font-weight: 600;
-        line-height: 1.6;
-    }
-
-    .card ul li {
-        margin-bottom: 8px;
-    }
-    .card ul li::before {
-        content: "•";
-        color: #d32f2f;
-        margin-right: 8px;
-        font-size: 20px;
-    }
-</style>
+    <meta charset="UTF-8">
+    <title>GeoSafe - Acil Durum Paneli v3</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <style>
+        /* CSS kodların aynen korundu */
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
+        body { background-color: #FFF0F5; height: 100vh; width: 100vw; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+        .bg-grid { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(5, 1fr); z-index: 0; pointer-events: none; }
+        .bg-grid span { display: flex; align-items: center; justify-content: center; font-size: 85px; font-weight: 900; color: rgba(211, 47, 47, 0.15); animation: pulse 6s ease-in-out infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.05); } }
+        h1 { z-index: 2; color: #b71c1c; margin-bottom: 25px; font-size: 2.5rem; text-transform: uppercase; letter-spacing: 2px; }
+        .quick-buttons { display: flex; gap: 25px; margin-bottom: 40px; z-index: 2; }
+        .quick-buttons button { padding: 20px 40px; border: none; border-radius: 60px; font-weight: 800; font-size: 20px; cursor: pointer; background-color: #d32f2f; color: white; box-shadow: 0 6px 20px rgba(211, 47, 47, 0.4); transition: 0.3s; text-transform: uppercase; }
+        .quick-buttons button:hover { transform: translateY(-5px) scale(1.05); background-color: #f44336; box-shadow: 0 10px 25px rgba(211, 47, 47, 0.5); }
+        .cards-container { display: flex; justify-content: center; gap: 20px; width: 95%; max-width: 1300px; z-index: 2; flex-wrap: wrap; }
+        .card { flex: 1 1 240px; background: linear-gradient(135deg, #ffffff, #ffe4e1); border-radius: 20px; padding: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); display: flex; flex-direction: column; align-items: center; text-align: center; border: 1px solid #ffdde1; transition: transform 0.3s; }
+        .card:hover { transform: translateY(-5px); }
+        .card img { width: 100%; height: 160px; object-fit: cover; border-radius: 15px; margin-bottom: 15px; border: 1px solid #eee; }
+        .card h2 { font-size: 24px; color: #b71c1c; margin-bottom: 12px; font-weight: 800; }
+        .card ul { list-style: none; text-align: left; font-size: 16px; color: #222; font-weight: 600; line-height: 1.6; }
+        .card ul li { margin-bottom: 8px; }
+        .card ul li::before { content: "•"; color: #d32f2f; margin-right: 8px; font-size: 20px; }
+    </style>
 </head>
 <body>
 
@@ -156,97 +40,58 @@
 <h1>Acil Durum Yönetimi</h1>
 
 <div class="quick-buttons">
-    <button onclick="acilDurumGonder('Enkaz Altındayım')">🚨 Enkaz Altındayım</button>
-    <button onclick="acilDurumGonder('Yaralıyım')">🏥 Yaralıyım</button>
-    <button onclick="acilDurumGonder('Yangın Var')">🔥 Yangın Var</button>
+    <button onclick="acilDurumGonder('🚨 Enkaz Altındayım')">🚨 Enkaz Altındayım</button>
+    <button onclick="acilDurumGonder('🏥 Yaralıyım')">🏥 Yaralıyım</button>
+    <button onclick="acilDurumGonder('🔥 Yangın Var')">🔥 Yangın Var</button>
 </div>
 
 <div class="cards-container">
-    <div class="card">
-        <img src="deprem.webp" alt="Deprem Görseli">
-        <h2>Deprem</h2>
-        <ul>
-            <li>Çök-Kapan-Tutun yap.</li>
-            <li>Pencerelerden uzak dur.</li>
-            <li>Tahliye ol.</li>
-        </ul>
-    </div>
-    <div class="card">
-        <img src="yanggın.jpg" alt="Yangın Görseli">
-        <h2>Yangın</h2>
-        <ul>
-            <li>Yere yakın hareket et.</li>
-            <li>Asansörü kullanma.</li>
-            <li>112'yi ara.</li>
-        </ul>
-    </div>
-    <div class="card">
-        <img src="sel.jpg" alt="Sel Görseli">
-        <h2>Sel</h2>
-        <ul>
-            <li>Yükseklere çık.</li>
-            <li>Elektrikleri kapat.</li>
-            <li>Suya girme.</li>
-        </ul>
-    </div>
-    <div class="card">
-        <img src="fırtına.jpg" alt="Fırtına Görseli">
-        <h2>Fırtına</h2>
-        <ul>
-            <li>İç odalara geç.</li>
-            <li>Camlardan uzak dur.</li>
-            <li>Eşyaları sabitle.</li>
-        </ul>
-    </div>
+    <div class="card"><img src="deprem.webp"><h2>Deprem</h2><ul><li>Çök-Kapan-Tutun yap.</li><li>Pencerelerden uzak dur.</li><li>Tahliye ol.</li></ul></div>
+    <div class="card"><img src="yanggın.jpg"><h2>Yangın</h2><ul><li>Yere yakın hareket et.</li><li>Asansörü kullanma.</li><li>112'yi ara.</li></ul></div>
+    <div class="card"><img src="sel.jpg"><h2>Sel</h2><ul><li>Yükseklere çık.</li><li>Elektrikleri kapat.</li><li>Suya girme.</li></ul></div>
+    <div class="card"><img src="fırtına.jpg"><h2>Fırtına</h2><ul><li>İç odalara geç.</li><li>Camlardan uzak dur.</li><li>Eşyaları sabitle.</li></ul></div>
 </div>
 
 <script>
-    // FIREBASE YAPILANDIRMASI BAŞLANGIÇ
     const firebaseConfig = {
         apiKey: "AIzaSyDhAAgpr6CoXW9SbMeHyzAx4vsno3IaOk4",
         authDomain: "geo-safe-88c2e.firebaseapp.com",
         projectId: "geo-safe-88c2e",
         storageBucket: "geo-safe-88c2e.firebasestorage.app",
         messagingSenderId: "253320517159",
-        appId: "1:253320517159:web:e8be67fab0c451caffe002",
-        measurementId: "G-CW944821RX"
+        appId: "1:253320517159:web:e8be67fab0c451caffe002"
     };
 
-    // Firebase'i başlatıyoruz
     if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
     }
     const db = firebase.firestore();
-    // FIREBASE YAPILANDIRMASI BİTİŞ
 
     async function acilDurumGonder(durumTipi) {
+        // Konum izni alarak veriyi gönderiyoruz
         navigator.geolocation.getCurrentPosition(async (position) => {
             const enlem = position.coords.latitude;
             const boylam = position.coords.longitude;
             const saat = new Date().toLocaleString('tr-TR');
+            
+            // Hata düzeltildi: ${} yapısı eklendi
             const haritaLink = `https://www.google.com/maps?q=${enlem},${boylam}`;
 
             try {
-                // VERİYİ FIREBASE'E GÖNDERİYORUZ
                 await db.collection("acilBildirimler").add({
                     durum: durumTipi,
                     saat: saat,
-                    konum: { enlem, boylam },
                     haritaLink: haritaLink,
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
-
-                alert("BİLGİ: " + durumTipi + " durumu BULUT veritabanına iletildi.");
+                alert("YARDIM ÇAĞRISI GÖNDERİLDİ: " + durumTipi);
             } catch (error) {
-                console.error("Hata oluştu: ", error);
-                alert("Veri gönderilemedi, Firebase bağlantısını kontrol et.");
+                alert("Firebase Hatası: " + error.message);
             }
-
         }, (error) => {
-            alert("Hata: Konum izni verilmedi.");
+            alert("Hata: Konum izni verilmediği için bildirim gönderilemiyor.");
         });
     }
 </script>
-
 </body>
 </html>
