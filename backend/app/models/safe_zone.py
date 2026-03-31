@@ -9,7 +9,6 @@ Geometry type = Polygon (a closed ring of coordinates defining a boundary)
 
 from sqlalchemy import Column, Integer, String, DateTime, JSON
 from sqlalchemy.sql import func
-from geoalchemy2 import Geometry
 
 from .base import Base
 
@@ -23,7 +22,7 @@ class SafeZone(Base):
     # PostGIS geometry: Polygon in lat/lon (SRID 4326)
     # The app will store coordinates as GeoJSON or WKT
     # nullable=True for SQLite compatibility (no PostGIS support)
-    geometry = Column(Geometry(geometry_type="Polygon", srid=4326), nullable=True)
+    geometry = Column(String, nullable=True)
     
     capacity = Column(Integer, nullable=True, comment="Max people this zone can accommodate")
     capacity_type = Column(String(50), default="persons", comment="persons, tons, etc.")

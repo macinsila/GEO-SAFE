@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>GeoSafe | Güvenli Portal</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; font-family: 'Inter', "Segoe UI", sans-serif; }
+        body { margin: 0; min-height: 100vh; background-color: #e8efee; background-image: radial-gradient(at 0% 0%, rgba(184, 222, 217, 0.5) 0px, transparent 50%), radial-gradient(at 100% 0%, rgba(207, 234, 230, 0.5) 0px, transparent 50%), radial-gradient(at 100% 100%, rgba(227, 240, 238, 0.5) 0px, transparent 50%), radial-gradient(at 0% 100%, rgba(168, 213, 207, 0.5) 0px, transparent 50%); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .bg-blur { position: absolute; width: 500px; height: 500px; background: #b8ded9; filter: blur(100px); z-index: 1; border-radius: 50%; opacity: 0.5; animation: move 25s infinite alternate; }
+        @keyframes move { from { transform: translate(-10%, -10%); } to { transform: translate(20%, 20%); } }
+        .container { position: relative; z-index: 2; width: 90%; max-width: 400px; background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border-radius: 28px; padding: 40px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08); border: 1px solid rgba(255, 255, 255, 0.4); }
+        .logo { text-align: center; font-size: 30px; font-weight: 800; color: #245a56; letter-spacing: -1px; margin-bottom: 5px; }
+        .subtitle { text-align: center; font-size: 14px; color: #618783; margin-bottom: 30px; font-weight: 400; }
+        .tabs { display: flex; background: rgba(0, 0, 0, 0.04); padding: 5px; border-radius: 14px; margin-bottom: 25px; }
+        .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; font-size: 14px; color: #5f7f7c; border-radius: 10px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .tab.active { background: #ffffff; color: #2f6f6b; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        form { display: none; }
+        form.active { display: block; }
+        label { font-size: 13px; font-weight: 600; color: #4a6f6c; margin: 0 0 8px 4px; display: block; }
+        input[type="text"], input[type="email"], input[type="password"] { width: 100%; padding: 14px 16px; border-radius: 14px; border: 1px solid rgba(0, 0, 0, 0.08); margin-bottom: 20px; font-size: 15px; background: rgba(255, 255, 255, 0.5); transition: all 0.3s; }
+        input:focus { outline: none; border-color: #2f6f6b; background: #ffffff; box-shadow: 0 0 0 4px rgba(47, 111, 107, 0.1); }
+        .login-options { display: flex; justify-content: space-between; align-items: center; margin-top: -10px; margin-bottom: 20px; font-size: 13px; color: #618783; }
+        .remember-me { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .remember-me input[type="checkbox"] { width: 16px; height: 16px; margin: 0; accent-color: #2f6f6b; }
+        .forgot-password { text-decoration: none; color: #2f6f6b; font-weight: 600; cursor: pointer; }
+        .submit-btn { width: 100%; padding: 15px; background: #2f6f6b; color: #ffffff; border: none; border-radius: 14px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 20px -5px rgba(47, 111, 107, 0.4); }
+        .submit-btn:hover { background: #245a56; transform: translateY(-2px); }
+        .submit-btn:disabled { background: #9eb5b2; box-shadow: none; transform: none; cursor: not-allowed; }
+        .mesaj { display: none; padding: 12px 16px; border-radius: 12px; font-size: 14px; font-weight: 500; margin-bottom: 16px; text-align: center; }
+        .mesaj.basari { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+        .mesaj.hata { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+        .emergency { margin-top: 30px; padding: 15px; text-align: center; border-top: 1px solid rgba(0, 0, 0, 0.05); }
+        .emergency a { color: #2f6f6b; text-decoration: none; font-size: 14px; font-weight: 700; }
+        .footer { margin-top: 25px; text-align: center; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #9eb5b2; }
+    </style>
+</head>
+<body>
+
+<div class="bg-blur"></div>
+
+<div class="container">
+    <div class="logo">GeoSafe</div>
+    <div class="subtitle">Güvenliğiniz bizim önceliğimiz.</div>
+
+    <div class="tabs">
+        <div class="tab active" onclick="showForm('login')">Giriş</div>
+        <div class="tab" onclick="showForm('register')">Yeni Kayıt</div>
+    </div>
+
+    <div id="login-mesaj" class="mesaj"></div>
+    <div id="register-mesaj" class="mesaj"></div>
+
+    <form id="login" class="active">
+        <label>E-posta</label>
+        <input type="email" id="loginEmail" placeholder="E-posta adresiniz" required>
+        <label>Şifre</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" required>
+        <div class="login-options">
+            <label class="remember-me">
+                <input type="checkbox" id="rememberCheck"> Beni Hatırla
+            </label>
+            <span class="forgot-password" onclick="sifremiUnuttum()">Şifremi Unuttum?</span>
+        </div>
+        <button type="submit" class="submit-btn" id="loginBtn">Sisteme Giriş Yap</button>
+    </form>
+
+    <form id="register">
+        <label>Tam Adınız</label>
+        <input type="text" id="regName" placeholder="Ad Soyad">
+        <label>E-posta</label>
+        <input type="email" id="regEmail" placeholder="example@mail.com" required>
+        <label>Şifre Seçin</label>
+        <input type="password" id="regPassword" placeholder="••••••••" required>
+        <button type="submit" class="submit-btn" id="registerBtn">Hesabı Oluştur</button>
+    </form>
+
+    <div class="emergency">
+        <p>Yardıma mı ihtiyacınız var?</p>
+        <a href="acilbuton.html">🚨 ACİL DURUM PANELİ</a>
+    </div>
+    <div style="text-align: center; margin-top: 15px;">
+        <a href="admin.html" style="font-size: 11px; color: #9eb5b2; text-decoration: none; font-style: italic; transition: 0.3s;" onmouseover="this.style.color='#2f6f6b'" onmouseout="this.style.color='#9eb5b2'">
+            🔒 Personel Girişi
+        </a>
+    </div>
+    <div class="footer">© 2026 GEOSAFE GLOBAL</div>
+</div>
+
+<script>
+    const firebaseConfig = {
+    apiKey: "AIzaSyDhAAgpr6CoXW9SbMeHyzAx4vsno3IaOk4",
+    authDomain: "geo-safe-88c2e.firebaseapp.com",
+    projectId: "geo-safe-88c2e",
+    storageBucket: "geo-safe-88c2e.firebasestorage.app",
+    messagingSenderId: "253320517159",
+    appId: "1:253320517159:web:e8be67fab0c451caffe002"
+};
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const API = "http://localhost:8000";
+
+    function showForm(formId) {
+        document.querySelectorAll(".tab").forEach(tab => tab.classList.remove("active"));
+        document.querySelectorAll("form").forEach(form => form.classList.remove("active"));
+        document.getElementById('login-mesaj').style.display = 'none';
+        document.getElementById('register-mesaj').style.display = 'none';
+        if (formId === "login") {
+            document.querySelectorAll(".tab")[0].classList.add("active");
+        } else {
+            document.querySelectorAll(".tab")[1].classList.add("active");
+        }
+        document.getElementById(formId).classList.add("active");
+    }
+
+    function mesajGoster(id, tip, metin) {
+        const el = document.getElementById(id);
+        el.className = `mesaj ${tip}`;
+        el.innerText = metin;
+        el.style.display = 'block';
+    }
+
+    document.getElementById('login').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+        const remember = document.getElementById('rememberCheck').checked;
+        const btn = document.getElementById('loginBtn');
+
+        btn.disabled = true;
+        btn.innerText = 'Giriş yapılıyor...';
+
+        try {
+            const res = await fetch(`${API}/auth/token`, {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: `username=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                sessionStorage.setItem('geosafe_token', data.access_token);
+                if (remember) {
+                    localStorage.setItem('geosafe_saved_email', email);
+                } else {
+                    localStorage.removeItem('geosafe_saved_email');
+                }
+                mesajGoster('login-mesaj', 'basari', '✅ Giriş başarılı! Yönlendiriliyorsunuz...');
+                setTimeout(() => { window.location.href = "anasayfa.html"; }, 1000);
+            } else {
+                mesajGoster('login-mesaj', 'hata', '❌ E-posta veya şifre hatalı.');
+                btn.disabled = false;
+                btn.innerText = 'Sisteme Giriş Yap';
+            }
+        } catch(e) {
+            mesajGoster('login-mesaj', 'hata', '❌ Sunucuya bağlanılamadı.');
+            btn.disabled = false;
+            btn.innerText = 'Sisteme Giriş Yap';
+        }
+    });
+
+    document.getElementById('register').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('regName').value || "Kullanıcı";
+        const email = document.getElementById('regEmail').value;
+        const password = document.getElementById('regPassword').value;
+        const btn = document.getElementById('registerBtn');
+
+        btn.disabled = true;
+        btn.innerText = 'Hesap oluşturuluyor...';
+
+        try {
+            const res = await fetch(`${API}/auth/register`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, email, password })
+            });
+
+            if (res.ok) {
+                mesajGoster('register-mesaj', 'basari', '✅ Hesap oluşturuldu! Giriş yapabilirsiniz.');
+                setTimeout(() => { showForm('login'); }, 1500);
+            } else {
+                const data = await res.json();
+                mesajGoster('register-mesaj', 'hata', `❌ ${data.detail || 'Kayıt başarısız.'}`);
+            }
+        } catch(e) {
+            mesajGoster('register-mesaj', 'hata', '❌ Sunucuya bağlanılamadı.');
+        }
+
+        btn.disabled = false;
+        btn.innerText = 'Hesabı Oluştur';
+    });
+
+    function sifremiUnuttum() {
+    const email = document.getElementById('loginEmail').value;
+    if (!email) {
+        mesajGoster('login-mesaj', 'hata', '❌ Lütfen önce e-posta adresinizi yazın.');
+        return;
+    }
+    auth.sendPasswordResetEmail(email)
+        .then(() => {
+            mesajGoster('login-mesaj', 'basari', '✅ Şifre sıfırlama bağlantısı e-postanıza gönderildi!');
+        })
+        .catch((error) => {
+            mesajGoster('login-mesaj', 'hata', '❌ Hata: ' + error.message);
+        });
+}
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const savedEmail = localStorage.getItem('geosafe_saved_email');
+        if (savedEmail) {
+            document.getElementById('loginEmail').value = savedEmail;
+            document.getElementById('rememberCheck').checked = true;
+        }
+    });
+</script>
+</body>
+</html>

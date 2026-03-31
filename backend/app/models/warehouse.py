@@ -8,7 +8,6 @@ Geometry type = Point (a single lon/lat pair)
 
 from sqlalchemy import Column, Integer, String, DateTime, JSON
 from sqlalchemy.sql import func
-from geoalchemy2 import Geometry
 
 from .base import Base
 
@@ -22,8 +21,7 @@ class Warehouse(Base):
     # PostGIS geometry: Point in lat/lon (SRID 4326)
     # Stores a single (longitude, latitude) coordinate
     # nullable=True for SQLite compatibility (no PostGIS support)
-    location = Column(Geometry(geometry_type="Point", srid=4326), nullable=True)
-    
+    location = Column(String, nullable=True)
     address = Column(String(500), nullable=True)
     capacity = Column(Integer, nullable=True, comment="Max storage capacity (e.g., tons)")
     status = Column(String(50), default="active", comment="active, inactive, maintenance")

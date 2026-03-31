@@ -7,14 +7,19 @@ import os
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
-DATABASE_URL = "sqlite+aiosqlite:///./geosafe.db"
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./geosafe.db")
+
+# SQLite mi Postgres mu otomatik anla
+is_sqlite = DATABASE_URL.startswith("sqlite")
+
+connect_args = {"check_same_thread": False} if is_sqlite else {}
 
 # Async engine: allows non-blocking DB operations
 engine = create_async_engine(
     DATABASE_URL,
     echo=False,
     future=True,
-    connect_args={"check_same_thread": False} # SQLite için bunu eklemek iyidir
+    connect_args=connect_args
 )
 
 # Session factory: creates new session instances

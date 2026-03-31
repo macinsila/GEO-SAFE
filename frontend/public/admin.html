@@ -3,112 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <title>GeoSafe - Admin Paneli</title>
-    
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
     <style>
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background: #f4f4f4; 
-            padding: 20px; 
-            display: none; 
-        }
-        .admin-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #d32f2f;
-            color: white;
-            padding: 15px 25px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        .section-title {
-            background: #333;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            margin-top: 40px;
-            margin-bottom: 15px;
-        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f4f4; padding: 20px; }
+        #icerik { display: none; }
+        .admin-header { display: flex; justify-content: space-between; align-items: center; background: #d32f2f; color: white; padding: 15px 25px; border-radius: 8px; margin-bottom: 20px; }
+        .section-title { background: #333; color: white; padding: 10px 20px; border-radius: 5px; margin-top: 40px; margin-bottom: 15px; }
         table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
         th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
         th { background-color: #444; color: white; font-size: 14px; }
         tr:nth-child(even) { background-color: #f9f9f9; }
-        
-        .stok-input {
-            width: 70px;
-            padding: 5px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-weight: bold;
-        }
-
-        .btn-link { 
-            background: #fff; 
-            color: #d32f2f; 
-            padding: 8px 15px; 
-            text-decoration: none; 
-            border-radius: 5px; 
-            font-weight: bold; 
-        }
-        .btn-temizle {
-            background: #333;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            cursor: pointer;
-            border-radius: 5px;
-            margin-top: 10px;
-        }
-        .btn-guncelle {
-            background: #2e7d32;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            cursor: pointer;
-            border-radius: 4px;
-            font-weight: bold;
-        }
+        .stok-input { width: 70px; padding: 5px; border: 1px solid #ccc; border-radius: 4px; font-weight: bold; }
+        .btn-link { background: #fff; color: #d32f2f; padding: 8px 15px; text-decoration: none; border-radius: 5px; font-weight: bold; }
+        .btn-temizle { background: #333; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px; margin-top: 10px; }
+        .btn-guncelle { background: #2e7d32; color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px; font-weight: bold; }
         .btn-guncelle:hover { background: #1b5e20; }
         .sos-durum { color: #d32f2f; font-weight: bold; animation: blinker 1.5s linear infinite; }
         @keyframes blinker { 50% { opacity: 0; } }
+        #sifre-ekrani { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        #sifre-kutu { background: white; padding: 40px; border-radius: 12px; text-align: center; }
+        #sifre-kutu h2 { margin-bottom: 20px; color: #d32f2f; }
+        #sifre-input { padding: 10px; font-size: 18px; border: 2px solid #ddd; border-radius: 8px; width: 200px; text-align: center; letter-spacing: 4px; }
+        #sifre-btn { margin-top: 15px; padding: 10px 30px; background: #d32f2f; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; display: block; margin: 15px auto 0; }
+        #sifre-hata { color: red; margin-top: 10px; display: none; }
     </style>
 </head>
 <body>
 
-    <script>
-        // Şifre kontrolü
-        const adminSifre = "1234"; 
-        let girilenSifre = prompt("GeoSafe Yönetici Paneline giriş için şifreyi yazın:");
+<div id="sifre-ekrani">
+    <div id="sifre-kutu">
+        <h2>🔒 Yönetici Girişi</h2>
+        <input type="password" id="sifre-input" placeholder="Şifre">
+        <br>
+        <button id="sifre-btn">Giriş</button>
+        <p id="sifre-hata">Hatalı şifre!</p>
+    </div>
+</div>
 
-        if (girilenSifre === adminSifre) {
-            document.body.style.display = "block";
-        } else {
-            alert("Hatalı şifre! Erişim reddedildi.");
-            window.location.href = "index.html"; 
-        }
-
-        // Firebase Yapılandırması
-        const firebaseConfig = {
-            apiKey: "AIzaSyDhAAgpr6CoXW9SbMeHyzAx4vsno3IaOk4",
-            authDomain: "geo-safe-88c2e.firebaseapp.com",
-            projectId: "geo-safe-88c2e",
-            storageBucket: "geo-safe-88c2e.firebasestorage.app",
-            messagingSenderId: "253320517159",
-            appId: "1:253320517159:web:e8be67fab0c451caffe002"
-        };
-
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        const db = firebase.firestore();
-    </script>
-
+<div id="icerik">
     <div class="admin-header">
         <h2>GeoSafe Yönetim Paneli</h2>
-        <a href="index.html" class="btn-link">Panelden Çık</a>
+        <a href="login.html" class="btn-link">Panelden Çık</a>
     </div>
 
     <h3 class="section-title">🚨 Canlı Acil Durum Bildirimleri</h3>
@@ -143,97 +77,148 @@
             <tr><td colspan="7" style="text-align:center;">Bölgeler yükleniyor...</td></tr>
         </tbody>
     </table>
+</div>
 
-    <script>
-        // --- ACİL DURUM BİLDİRİMLERİ (CANLI DİNLEME) ---
-        function verileriYukle() {
-            let tablo = document.getElementById("tabloGövdesi");
-            
-            // onSnapshot sayesinde acil durum sayfasına tıklandığı an buraya veri düşer
-            db.collection("acilBildirimler").orderBy("timestamp", "desc")
-                .onSnapshot((snapshot) => {
-                    tablo.innerHTML = ""; 
-                    if (snapshot.empty) {
-                        tablo.innerHTML = "<tr><td colspan='3' style='text-align:center;'>Henüz bildirim gelmedi.</td></tr>";
-                        return;
-                    }
-                    snapshot.forEach(doc => {
-                        let item = doc.data();
-                        tablo.innerHTML += `<tr>
-                            <td><span class="sos-durum">${item.durum}</span></td>
-                            <td>${item.saat || 'Belirtilmedi'}</td>
-                            <td><a href="${item.haritaLink}" target="_blank" style="color: blue; font-weight:bold;">Haritada Gör</a></td>
-                        </tr>`;
-                    });
-                }, (error) => {
-                    console.error("Firestore Dinleme Hatası:", error);
-                });
-        }
+<script>
+    const API = "http://localhost:8000";
 
-        async function verileriTemizle() {
-            if(confirm("Tüm bildirim geçmişini silmek istediğinize emin misiniz?")) {
-                try {
-                    const snapshot = await db.collection("acilBildirimler").get();
-                    const batch = db.batch();
-                    snapshot.docs.forEach((doc) => batch.delete(doc.ref));
-                    await batch.commit();
-                    alert("Bildirimler başarıyla temizlendi.");
-                } catch (e) {
-                    alert("Hata: " + e.message);
-                }
+    if (sessionStorage.getItem('admin_giris') === '1') {
+    document.getElementById('sifre-ekrani').style.display = 'none';
+    document.getElementById('icerik').style.display = 'block';
+    verileriYukle();
+    stoklariYukle();
+}
+
+    document.getElementById('sifre-btn').addEventListener('click', sifreKontrol);
+    document.getElementById('sifre-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sifreKontrol();
+    });
+
+    function sifreKontrol() {
+    const girilen = document.getElementById('sifre-input').value;
+    if (girilen === "1234") {
+        sessionStorage.setItem('admin_giris', '1');
+        document.getElementById('sifre-ekrani').style.display = 'none';
+        document.getElementById('icerik').style.display = 'block';
+        verileriYukle();
+        stoklariYukle();
+    } else {
+        document.getElementById('sifre-hata').style.display = 'block';
+    }
+}
+
+    async function getToken() {
+    let token = sessionStorage.getItem('geosafe_token');
+    if (token) return token;
+    
+    const res = await fetch(`${API}/auth/token`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "username=admin@geosafe.com&password=admin123"
+    });
+    const data = await res.json();
+    if (data.access_token) {
+        sessionStorage.setItem('geosafe_token', data.access_token);
+        return data.access_token;
+    }
+    return null;
+}
+
+    async function verileriYukle() {
+        const tablo = document.getElementById("tabloGövdesi");
+        try {
+            const res = await fetch(`${API}/api/emergency`);
+            const bildirimler = await res.json();
+            if (bildirimler.length === 0) {
+                tablo.innerHTML = "<tr><td colspan='3' style='text-align:center;'>Henüz bildirim gelmedi.</td></tr>";
+                return;
             }
-        }
-
-        // --- STOK YÖNETİMİ ---
-        function stoklariYukle() {
-            let stokGövdesi = document.getElementById("stokGövdesi");
-
-            db.collection("guvenliBolgeler").get().then((snapshot) => {
-                if (snapshot.empty) {
-                    stokGövdesi.innerHTML = "<tr><td colspan='7' style='text-align:center;'>Kayıtlı bölge bulunamadı.</td></tr>";
-                    return;
-                }
-                
-                stokGövdesi.innerHTML = ""; 
-                snapshot.forEach(doc => {
-                    let data = doc.data();
-                    let id = doc.id;
-                    
-                    stokGövdesi.innerHTML += `
-                        <tr>
-                            <td><b>${data.n || 'İsimsiz Bölge'}</b></td>
-                            <td><input type="text" id="water-${id}" class="stok-input" value="${data.water || '%0'}"></td>
-                            <td><input type="text" id="food-${id}" class="stok-input" value="${data.food || '%0'}"></td>
-                            <td><input type="text" id="med-${id}" class="stok-input" value="${data.med || '%0'}"></td>
-                            <td><input type="number" id="blanket-${id}" class="stok-input" value="${data.blanket || 0}"></td>
-                            <td><input type="number" id="ext-${id}" class="stok-input" value="${data.ext || 0}"></td>
-                            <td><button class="btn-guncelle" onclick="stokGuncelle('${id}')">Güncelle</button></td>
-                        </tr>
-                    `;
-                });
-            }).catch((error) => {
-                stokGövdesi.innerHTML = "<tr><td colspan='7' style='color:red; text-align:center;'>Hata: " + error.message + "</td></tr>";
+            tablo.innerHTML = "";
+            bildirimler.forEach(b => {
+                tablo.innerHTML += `<tr>
+                    <td><span class="sos-durum">${b.durum}</span></td>
+                    <td>${b.saat}</td>
+                    <td><a href="${b.harita_link}" target="_blank" style="color:blue; font-weight:bold;">Haritada Gör</a></td>
+                </tr>`;
             });
+        } catch(e) {
+            tablo.innerHTML = "<tr><td colspan='3' style='color:red; text-align:center;'>Bağlantı hatası.</td></tr>";
         }
+    }
 
-        async function stokGuncelle(id) {
-            try {
-                await db.collection("guvenliBolgeler").doc(id).update({
+    async function verileriTemizle() {
+    if(confirm("Tüm bildirim geçmişini silmek istediğinize emin misiniz?")) {
+        try {
+            await fetch(`${API}/api/emergency`, { method: "DELETE" });
+            document.getElementById("tabloGövdesi").innerHTML =
+                "<tr><td colspan='3' style='text-align:center;'>Henüz bildirim gelmedi.</td></tr>";
+        } catch(e) {
+            alert("Hata: " + e.message);
+        }
+    }
+}
+
+    async function stoklariYukle() {
+        const stokGövdesi = document.getElementById("stokGövdesi");
+        try {
+            const res = await fetch(`${API}/api/safe-zones`);
+            const bolgeler = await res.json();
+            stokGövdesi.innerHTML = "";
+            for (const bolge of bolgeler) {
+                const id = bolge.id;
+                const stokRes = await fetch(`${API}/api/inventory/safe-zone/${id}`);
+                const stok = await stokRes.json();
+                stokGövdesi.innerHTML += `
+                    <tr>
+                        <td><b>${bolge.name}</b></td>
+                        <td><input type="text" id="water-${id}" class="stok-input" value="${stok.water}"></td>
+                        <td><input type="text" id="food-${id}" class="stok-input" value="${stok.food}"></td>
+                        <td><input type="text" id="med-${id}" class="stok-input" value="${stok.med}"></td>
+                        <td><input type="number" id="blanket-${id}" class="stok-input" value="${stok.blanket}"></td>
+                        <td><input type="number" id="ext-${id}" class="stok-input" value="${stok.ext}"></td>
+                        <td><button class="btn-guncelle" onclick="stokGuncelle(${id})">Güncelle</button></td>
+                    </tr>
+                `;
+            }
+        } catch(e) {
+            stokGövdesi.innerHTML = "<tr><td colspan='7' style='color:red; text-align:center;'>Bağlantı hatası.</td></tr>";
+        }
+    }
+
+    async function stokGuncelle(id) {
+        event.preventDefault();
+        event.stopPropagation();
+        try {
+            const token = await getToken();
+            const res = await fetch(`${API}/api/inventory/safe-zone/${id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
                     water: document.getElementById(`water-${id}`).value,
                     food: document.getElementById(`food-${id}`).value,
                     med: document.getElementById(`med-${id}`).value,
-                    blanket: document.getElementById(`blanket-${id}`).value,
-                    ext: document.getElementById(`ext-${id}`).value
-                });
-                alert("Stoklar güncellendi!");
-            } catch (error) {
-                alert("Güncelleme hatası: " + error.message);
+                    blanket: parseInt(document.getElementById(`blanket-${id}`).value),
+                    ext: parseInt(document.getElementById(`ext-${id}`).value)
+                })
+            });
+            if (res.ok) {
+                const btn = document.querySelector(`button[onclick="stokGuncelle(${id})"]`);
+                if (btn) {
+                    btn.innerText = "✓ Güncellendi";
+                    btn.style.background = "#1b5e20";
+                    setTimeout(() => {
+                        btn.innerText = "Güncelle";
+                        btn.style.background = "#2e7d32";
+                    }, 2000);
+                }
             }
+        } catch(e) {
+            alert("Bağlantı hatası: " + e.message);
         }
-
-        // Başlat
-        verileriYukle();
-        stoklariYukle();
-    </script>
+    }
+</script>
 </body>
 </html>

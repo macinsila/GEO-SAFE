@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import warehouses, safe_zones, auth
+from app.api import warehouses, safe_zones, auth, emergency, inventory, earthquakes, profile
 from app.db.session import engine
 from app.models.base import Base
 # Tüm modelleri import et - Base.metadata.registry'ye kayıtlı olmalarını sağla
@@ -35,9 +35,15 @@ async def on_startup():
 app.include_router(auth.router)
 app.include_router(warehouses.router, prefix="/api/warehouses", tags=["warehouses"])
 app.include_router(safe_zones.router, prefix="/api/safe-zones", tags=["safe-zones"])
+app.include_router(emergency.router)
+app.include_router(inventory.router)
+app.include_router(earthquakes.router)
+app.include_router(profile.router)
 
 @app.get("/")
 async def root():
     return {"status": "ok", "message": "GeoSafe backend is running"}
 
-app.include_router(auth.router)
+@app.get("/health")
+async def health():
+    return {"status": "healthy"}
