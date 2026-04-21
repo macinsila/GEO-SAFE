@@ -4,126 +4,1222 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GeoSafe | Afet Yönetim Paneli</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Montserrat:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root {
-            --soft-aqua: #f0fdfa;
-            --header-green: #245a56;
-            --primary-teal: #2d3748;
-            --danger-red: #e53e3e;
-            --hover-red: #c53030;
-            --hover-green: #1a4542;
-            --white-glass: rgba(255, 255, 255, 0.95);
-            --go-blue: #3182ce;
+            --primary:       #0d9488;
+            --primary-dark:  #0f766e;
+            --primary-light: #14b8a6;
+            --accent:        #f59e0b;
+            --accent-soft:   #fef3c7;
+            --bg:            #ffffff;
+            --surface:       #ffffff;
+            --surface-alt:   #f0fdfa;
+            --border:        #ccfbf1;
+            --text:          #134e4a;
+            --text-secondary:#5c7a75;
+            --text-muted:    #94a3b0;
+            --danger:        #ef4444;
+            --danger-soft:   #fef2f2;
+            --info:          #3b82f6;
+            --info-soft:     #eff6ff;
+            --radius-sm:     8px;
+            --radius-md:     12px;
+            --radius-lg:     16px;
+            --shadow-sm:     0 2px 8px rgba(13,148,136,0.1);
+            --shadow-md:     0 8px 24px rgba(13,148,136,0.15);
+            --shadow-lg:     0 16px 48px rgba(13,148,136,0.2);
         }
-        * { box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background-color: var(--soft-aqua); margin: 0; color: #2d3748; }
 
-        header { background-color: var(--header-green); padding: 12px 40px; display: flex; justify-content: space-between; align-items: center; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 2000; }
-        .header-left { display: flex; align-items: baseline; gap: 12px; }
-        .header-left h1 { margin: 0; font-weight: 800; font-size: 24px; letter-spacing: -1px; }
-        .header-left span { font-size: 13px; font-weight: 400; opacity: 0.85; }
-        .header-right { display: flex; gap: 10px; align-items: center; }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #ecfeff 0%, #f0fdfa 25%, #dcfce7 50%, #fef9c3 75%, #ffedd5 100%);
+            background-attachment: fixed;
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ════════════════════════════════════
+           HEADER
+        ════════════════════════════════════ */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 2000;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-bottom: 2px solid var(--primary);
+            padding: 0 40px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 20px rgba(13,148,136,0.15);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-emblem {
+            width: 46px;
+            height: 46px;
+            background: linear-gradient(135deg, #14b8a6 0%, #0d9488 50%, #0f766e 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(13,148,136,0.4), inset 0 1px 0 rgba(255,255,255,0.3);
+        }
+
+        .logo-emblem::before {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            background: rgba(255,255,255,0.25);
+            border-radius: 50%;
+            top: 5px;
+            left: 5px;
+        }
+
+        .logo-emblem svg {
+            width: 24px;
+            height: 24px;
+            fill: none;
+            stroke: #fff;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .brand-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .brand-name {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(90deg, #0f766e, #14b8a6, #0d9488);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .brand-sub {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* ─ Profile ─ */
         .profile-container { position: relative; }
+
+        .profile-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border: 2px solid var(--primary);
+            border-radius: var(--radius-md);
+            color: var(--text);
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .profile-btn:hover, .profile-btn.active {
+            background: linear-gradient(135deg, #ccfbf1, #99f6e4);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(13,148,136,0.3);
+        }
+
+        .profile-btn .avatar {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #14b8a6, #0d9488);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #fff;
+        }
+
+        /* ─ Dropdown ─ */
         .profile-dropdown {
             display: none;
             position: absolute;
             top: calc(100% + 8px);
             right: 0;
-            width: 290px;
-            background: #ffffff;
-            border-radius: 14px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
-            padding: 18px;
+            width: 280px;
+            background: var(--surface);
+            border: 2px solid var(--primary);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 12px 40px rgba(13,148,136,0.25);
             z-index: 3000;
-            color: #2d3748;
-            border: 1px solid #e2e8f0;
         }
-        .profile-dropdown.open { display: block; }
-        .profile-dropdown h3 { margin: 0 0 12px 0; font-size: 15px; color: var(--header-green); border-bottom: 1px solid #edf2f7; padding-bottom: 8px; }
-        .profile-form { display: flex; flex-direction: column; gap: 7px; text-align: left; }
-        .profile-form label { font-size: 10px; font-weight: 700; color: #718096; text-transform: uppercase; }
-        .profile-form input { width: 100%; padding: 7px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; box-sizing: border-box; background: #f8fafc; }
-        .profile-form input:focus { outline: none; border-color: var(--header-green); background-color: #fff; }
-        .profile-form input[readonly] { background-color: #f1f5f9; cursor: not-allowed; }
-        .note-text { font-size: 10px; color: #e53e3e; font-style: italic; margin-top: 4px; line-height: 1.3; }
-        .button-group { display: flex; gap: 8px; margin-top: 8px; }
-        .action-btn { flex: 1; border: none; padding: 9px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 11px; }
-        .update-mode-btn { background-color: #edf2f7; color: var(--primary-teal); border: 1px solid #cbd5e0; }
-        .save-btn { background-color: var(--header-green); color: white; }
-        .save-btn:hover { background-color: var(--hover-green); }
-        .nav-btn { padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 13px; transition: all 0.2s ease; color: white; border: 1px solid rgba(255,255,255,0.3); display: inline-flex; align-items: center; cursor: pointer; background: transparent; }
-        .profile-btn:hover { background-color: var(--hover-green); }
-        .logout-btn { background-color: var(--danger-red); border: none; }
-        .logout-btn:hover { background-color: var(--hover-red); }
 
-        .main-container { max-width: 1300px; margin: 24px auto; display: flex; gap: 20px; padding: 0 20px; height: 480px; }
-        #map { flex: 2; border-radius: 18px; box-shadow: 0 8px 20px rgba(0,0,0,0.06); border: 3px solid white; position: relative; z-index: 100; }
-        .info-card { flex: 1; background: var(--white-glass); border-radius: 18px; padding: 24px; box-shadow: 0 8px 24px rgba(0,0,0,0.04); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; border: 1px solid white; overflow-y: auto; }
-        .info-content { width: 100%; display: none; }
-        .welcome-box { display: block; }
-        .area-title { color: var(--header-green); font-size: 20px; margin-bottom: 8px; font-weight: 700; }
-        .inventory-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin: 16px 0; }
-        .inv-item { background: white; padding: 12px; border-radius: 10px; border: 1px solid #edf2f7; display: flex; flex-direction: column; gap: 4px; }
-        .inv-item span { font-size: 11px; color: #718096; text-transform: uppercase; font-weight: 600; }
-        .inv-item b { font-size: 14px; color: var(--primary-teal); }
-        .inv-item.go-btn-box { background: var(--go-blue); color: white; cursor: pointer; transition: 0.2s; border: none; justify-content: center; align-items: center; }
-        .inv-item.go-btn-box:hover { background: #2b6cb0; transform: translateY(-2px); }
-        .inv-item.go-btn-box b { color: white; font-size: 16px; }
-        .distance-badge { background: var(--header-green); color: white; padding: 12px 20px; border-radius: 12px; font-weight: 700; font-size: 13px; width: 85%; margin-top: 16px; }
-
-        .eq-section { max-width: 1300px; margin: 32px auto; padding: 0 20px; }
-        .eq-card { background: white; border-radius: 18px; padding: 22px; box-shadow: 0 8px 20px rgba(0,0,0,0.03); overflow-x: auto; }
-        .kandilli-badge { background: #e6f1fb; color: #185fa5; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-left: 8px; }
-        .eq-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-        .eq-table th { text-align: left; padding: 12px; color: #718096; border-bottom: 2px solid #edf2f7; font-size: 12px; }
-        .eq-table td { padding: 14px 12px; border-bottom: 1px solid #f7fafc; font-size: 13px; }
-        .mag-tag { padding: 5px 12px; border-radius: 8px; color: white; font-weight: 800; display: inline-block; min-width: 32px; text-align: center; font-size: 13px; }
-
-        .edu-wrapper { max-width: 1100px; margin: 48px auto 80px; padding: 0 20px; }
-        .edu-header { margin-bottom: 20px; border-left: 4px solid var(--header-green); padding-left: 12px; }
-        .edu-header h2 { font-family: 'Montserrat', sans-serif; font-size: 18px; color: var(--header-green); text-transform: uppercase; margin: 0; }
-        .video-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-        .video-card { width: 100%; border-radius: 14px; overflow: hidden; transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.8); box-shadow: 0 3px 10px rgba(0,0,0,0.04); display: flex; flex-direction: column; }
-        .card-1 { background-color: #b2d8d8; } .card-2 { background-color: #d1e7e0; } .card-3 { background-color: #a3c4bc; }
-        .card-4 { background-color: #9abfb6; } .card-5 { background-color: #c2dcd6; } .card-6 { background-color: #d8ece7; }
-        .video-card:hover { transform: translateY(-3px); box-shadow: 0 8px 18px rgba(0,0,0,0.08); }
-        .video-thumb { position: relative; width: 100%; padding-top: 56.25%; background: #000; }
-        .video-thumb iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
-        .card-content { padding: 13px; flex-grow: 1; }
-        .category-tag { font-size: 9px; text-transform: uppercase; font-weight: 800; color: var(--header-green); margin-bottom: 5px; display: block; opacity: 0.8; }
-        .video-title { font-size: 13px; color: var(--primary-teal); margin: 0; font-weight: 700; height: 2.8em; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4; }
-        .card-footer { margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(0,0,0,0.04); }
-        .view-btn { color: var(--header-green); font-size: 11px; text-decoration: none; font-weight: 700; display: flex; align-items: center; gap: 5px; }
-
-        .sos-btn { position: fixed; bottom: 24px; right: 24px; width: 64px; height: 64px; background: var(--danger-red); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; cursor: pointer; box-shadow: 0 0 0 0 rgba(229, 62, 62, 0.7); animation: pulse-red 2s infinite; z-index: 9999; border: 3px solid white; }
-        @keyframes pulse-red { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(229, 62, 62, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 16px rgba(229, 62, 62, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(229, 62, 62, 0); } }
-        .sos-options-panel { display: none; position: fixed; bottom: 100px; right: 24px; background: white; border-radius: 16px; padding: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); z-index: 9998; width: 260px; flex-direction: column; gap: 8px; border: 2px solid var(--danger-red); }
-        .sos-option { padding: 12px; border-radius: 10px; border: none; font-weight: 700; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 10px; font-size: 13px; text-align: left; }
-        .opt-call { background: #fee2e2; color: #b91c1c; }
-        .opt-route { background: #ebf8ff; color: #2b6cb0; }
-        .sos-option:hover { transform: translateX(-4px); filter: brightness(0.95); }
-
-        @media (max-width: 900px) {
-            header { padding: 12px 16px; }
-            .header-left span { display: none; }
-            .main-container { flex-direction: column; height: auto; padding: 0 12px; margin: 16px auto; }
-            #map { height: 300px; }
-            .info-card { min-height: 180px; padding: 18px; }
-            .video-grid { grid-template-columns: repeat(2, 1fr); }
-            .eq-section { padding: 0 12px; }
-            .edu-wrapper { padding: 0 12px; }
+        .profile-dropdown.open { 
+            display: block; 
+            animation: dropIn 0.2s ease;
         }
-        @media (max-width: 600px) {
-            .header-left h1 { font-size: 18px; }
-            .nav-btn { padding: 7px 10px; font-size: 12px; }
+
+        @keyframes dropIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .pd-header {
+            padding: 14px 16px 10px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(180deg, #f0fdfa, #fff);
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        }
+
+        .pd-avatar {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #14b8a6, #0d9488);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .pd-header-text h3 {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .pd-header-text p {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .pd-body {
+            padding: 12px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .pf-row { display: flex; flex-direction: column; gap: 4px; }
+        
+        .pf-row label {
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+        }
+
+        .pf-row input {
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 12px;
+            font-family: 'DM Sans', sans-serif;
+            color: var(--text);
+            background: #f0fdfa;
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+        .pf-row input:focus { 
+            outline: none; 
+            border-color: var(--primary); 
+            background: #fff; 
+        }
+
+        .pf-row input[readonly] { 
+            cursor: not-allowed; 
+            color: var(--text-secondary);
+            background: #f8fafc;
+        }
+
+        .pf-row input:not([readonly]) { 
+            background: #fff; 
+            border-color: var(--primary);
+        }
+
+        .pd-note {
+            font-size: 10px;
+            color: #b91c1c;
+            font-style: italic;
+            line-height: 1.4;
+            padding: 8px;
+            background: #fef2f2;
+            border-radius: 6px;
+            border-left: 3px solid #ef4444;
+        }
+
+        .pd-msg {
+            display: none;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            text-align: center;
+            border: 1px solid transparent;
+        }
+
+        .pd-actions { display: flex; gap: 8px; }
+        
+        .pd-btn {
+            flex: 1;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            font-family: 'Outfit', sans-serif;
+            transition: all 0.2s;
+        }
+
+        .pd-btn:hover { transform: translateY(-1px); }
+        .pd-btn-secondary { background: #f0fdfa; color: var(--text); border: 1px solid var(--border) !important; }
+        .pd-btn-primary   { background: linear-gradient(135deg, #14b8a6, #0d9488); color: #fff; }
+        .pd-btn-primary:hover { box-shadow: 0 3px 10px rgba(13,148,136,0.3); }
+
+        /* ─ Logout ─ */
+        .logout-btn {
+            padding: 8px 14px;
+            border-radius: var(--radius-md);
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .logout-btn:hover { 
+            background: #fee2e2; 
+            transform: translateY(-1px);
+        }
+
+        /* ════════════════════════════════════
+    STATUS BAR (Orijinal Açık Renk)
+════════════════════════════════════ */
+.status-bar {
+    display: flex;
+    justify-content: space-between; /* Yazıları köşelere dengeli yayar */
+    align-items: center;
+    padding: 12px 40px;
+    background: #ffffff; /* Arka plan tekrar beyaz */
+    border-bottom: 1px solid var(--border); /* Navbar'dan ayıran ince çizgi */
+    box-shadow: var(--shadow-sm);
+}
+
+.status-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    background: #4ade80;
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px rgba(74,222,128,0.3);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50%      { transform: scale(1.2); opacity: 0.7; }
+}
+
+.status-text {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text); /* Beyaz yerine koyu teala rengi */
+    letter-spacing: 0.3px;
+}
+
+.status-right {
+    display: flex;
+    gap: 25px;
+}
+
+.status-hint {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: var(--text-secondary); /* Okunabilir gri-yeşil tonu */
+    font-weight: 500;
+}
+
+.status-hint span:first-child { font-size: 14px; }
+
+        /* ════════════════════════════════════
+           MAIN LAYOUT
+        ════════════════════════════════════ */
+        .main-wrapper {
+            max-width: 1400px;
+            margin: 24px auto;
+            padding: 0 32px;
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 20px;
+            min-height: 480px;
+        }
+
+        /* ─ Map ─ */
+        #map {
+            border-radius: var(--radius-lg);
+            border: 2px solid var(--primary);
+            box-shadow: var(--shadow-md);
+            min-height: 480px;
+            z-index: 100;
+        }
+
+        .leaflet-container { border-radius: var(--radius-lg) !important; }
+        .leaflet-popup-content-wrapper {
+            border-radius: var(--radius-md) !important;
+            box-shadow: var(--shadow-lg) !important;
+        }
+
+        .leaflet-popup-tip { display: none !important; }
+
+        /* ─ Info Card ─ */
+        .info-card {
+            background: var(--surface);
+            border: 2px solid var(--primary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Welcome state */
+        .welcome-state {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 20px;
+            text-align: center;
+            gap: 0;
+            background: linear-gradient(180deg, #f0fdfa, #fff);
+        }
+
+        .welcome-icon-wrap {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #14b8a6, #0d9488);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 14px;
+            box-shadow: 0 6px 16px rgba(13,148,136,0.3);
+        }
+
+        .welcome-icon-wrap svg {
+            width: 28px;
+            height: 28px;
+            stroke: #fff;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .welcome-state h2 {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .welcome-state p {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-bottom: 16px;
+            max-width: 220px;
+        }
+
+        .welcome-chips {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            width: 100%;
+        }
+
+        .welcome-chip {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 6px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text);
+            text-align: center;
+        }
+
+        /* Detail state */
+        .detail-state {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+        }
+
+        .detail-state.visible { display: flex; }
+
+        .detail-header {
+            padding: 16px 18px 12px;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg, #f0fdfa, #fff);
+        }
+
+        .area-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #fff;
+            background: linear-gradient(135deg, #14b8a6, #0d9488);
+            border-radius: 12px;
+            padding: 4px 10px;
+            margin-bottom: 8px;
+        }
+
+        .area-tag::before {
+            content: '';
+            width: 5px;
+            height: 5px;
+            background: #fff;
+            border-radius: 50%;
+        }
+
+        .area-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .detail-body {
+            flex: 1;
+            padding: 14px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .inv-grid {
+         display: grid;
+         grid-template-columns: 1fr 1fr; /* 2 sütunlu tam simetrik yapı */
+         gap: 10px;
+}
+
+.inv-tile {
+    text-align: center; /* Yazıları kutu içinde ortalar */
+}
+
+        .inv-tile {
+            background: linear-gradient(135deg, #f0fdfa, #fff);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            transition: all 0.2s;
+        }
+
+        .inv-tile:hover { 
+            border-color: var(--primary); 
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .inv-label {
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .inv-value {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .go-tile {
+            background: linear-gradient(135deg, #14b8a6, #0d9488);
+            border: none;
+            border-radius: var(--radius-md);
+            padding: 10px 12px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            transition: all 0.2s;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .go-tile:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 6px 16px rgba(13,148,136,0.35);
+        }
+
+        .go-tile-icon { font-size: 18px; }
+        .go-tile-label { font-size: 12px; font-weight: 800; color: #fff; }
+
+        .dist-badge {
+            background: linear-gradient(135deg, #fef3c7, #fef9c3);
+            border: 1px solid #fcd34d;
+            border-radius: var(--radius-md);
+            padding: 10px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #b45309;
+            text-align: center;
+        }
+
+        /* ════════════════════════════════════
+           EARTHQUAKE
+        ════════════════════════════════════ */
+        .section-wrapper {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 32px;
+        }
+
+        .section-block {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            margin-top: 20px;
+        }
+
+        .block-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            background: linear-gradient(90deg, #f0fdfa, #fff);
+        }
+
+        .block-header h2 {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .live-pill {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 10px;
+            font-weight: 800;
+            color: #fff;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border-radius: 12px;
+            padding: 3px 10px;
+        }
+
+        .live-pill-dot {
+            width: 6px;
+            height: 6px;
+            background: #fff;
+            border-radius: 50%;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .source-badge {
+            font-size: 10px;
+            font-weight: 600;
+            color: #2563eb;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 12px;
+            padding: 3px 10px;
+        }
+
+        .block-meta {
+            margin-left: auto;
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .eq-table { width: 100%; border-collapse: collapse; }
+
+        .eq-table th {
+            padding: 12px 24px;
+            text-align: left;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+            background: #f0fdfa;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .eq-table td {
+            padding: 14px 24px;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+        }
+
+        .eq-table tbody tr:last-child td { border-bottom: none; }
+        .eq-table tbody tr:hover td { background: #f0fdfa; }
+
+        .mag-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 40px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            color: #fff;
+            font-weight: 800;
+            font-size: 12px;
+        }
+
+        .eq-loc  { font-weight: 600; color: var(--text); }
+        .eq-meta { color: var(--text-secondary); font-size: 12px; }
+
+        /* ════════════════════════════════════
+           EDUCATION
+        ════════════════════════════════════ */
+        .edu-wrapper {
+            max-width: 1400px;
+            margin: 24px auto 100px;
+            padding: 0 32px;
+        }
+
+        .section-heading {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            margin-bottom: 18px;
+        }
+
+        .section-heading-left { display: flex; align-items: center; gap: 12px; }
+        
+        .section-heading-line {
+            width: 4px;
+            height: 28px;
+            background: linear-gradient(180deg, #14b8a6, #0d9488);
+            border-radius: 2px;
+        }
+
+        .section-heading h2 {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--text);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .section-heading p {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 3px;
+        }
+
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+        }
+
+        .video-card {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .video-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
+        }
+
+        .video-thumb {
+            position: relative;
+            width: 100%;
+            padding-top: 52%;
+            background: #0f172a;
+        }
+
+        .video-thumb iframe {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            border: 0;
+        }
+
+        .card-body {
+            padding: 14px 16px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-tag {
+            display: inline-block;
+            font-size: 9px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #fff;
+            background: linear-gradient(135deg, #14b8a6, #0d9488);
+            border-radius: 10px;
+            padding: 3px 8px;
+            margin-bottom: 8px;
+            align-self: flex-start;
+        }
+
+        .card-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text);
+            line-height: 1.45;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            flex: 1;
+        }
+
+        .card-footer {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border);
+        }
+
+        .yt-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #0d9488;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .yt-link:hover { color: #0f766e; gap: 8px; }
+        
+        .yt-link svg {
+            width: 12px;
+            height: 12px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2.5;
+        }
+
+        /* ════════════════════════════════════
+           FOOTER
+        ════════════════════════════════════ */
+        .site-footer {
+            background: linear-gradient(135deg, #134e4a 0%, #115e59 50%, #0f766e 100%);
+            color: #fff;
+            padding: 44px 36px 28px;
+            margin-top: 36px;
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1.2fr;
+            gap: 32px;
+        }
+
+        .footer-brand {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .footer-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .footer-logo-icon {
+            width: 38px;
+            height: 38px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .footer-logo-icon svg {
+            width: 20px;
+            height: 20px;
+            stroke: #fff;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .footer-logo-text {
+            font-size: 20px;
+            font-weight: 800;
+        }
+
+        .footer-desc {
+            font-size: 13px;
+            color: rgba(255,255,255,0.75);
+            line-height: 1.6;
+            max-width: 300px;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        .social-link {
+            width: 36px;
+            height: 36px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .social-link:hover {
+            background: #14b8a6;
+            transform: translateY(-3px);
+        }
+
+        .footer-section h4 {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #2dd4bf;
+            margin-bottom: 14px;
+        }
+
+        .footer-links {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+        }
+
+        .footer-links a {
+            font-size: 13px;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.2s;
+            display: inline-block;
+        }
+
+        .footer-links a:hover { 
+            color: #fff; 
+            transform: translateX(4px);
+        }
+
+        .footer-contact {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: rgba(255,255,255,0.9);
+        }
+
+        .contact-item span:first-child { font-size: 16px; }
+
+        .emergency-box {
+            background: rgba(239,68,68,0.15);
+            border: 1px solid rgba(239,68,68,0.3);
+            border-radius: 10px;
+            padding: 14px;
+            margin-top: 8px;
+        }
+
+        .emergency-box h5 {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #fca5a5;
+            margin-bottom: 8px;
+        }
+
+        .emergency-numbers {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .emergency-num {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .emergency-num span { color: #fca5a5; }
+
+        .footer-bottom {
+            max-width: 1400px;
+            margin: 28px auto 0;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.15);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-copyright {
+            font-size: 12px;
+            color: rgba(255,255,255,0.6);
+        }
+
+        .footer-legal {
+            display: flex;
+            gap: 18px;
+        }
+
+        .footer-legal a {
+            font-size: 12px;
+            color: rgba(255,255,255,0.6);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-legal a:hover { color: #fff; }
+
+        /* ════════════════════════════════════
+           SOS
+        ════════════════════════════════════ */
+        @keyframes sos-pulse {
+            0%   { box-shadow: 0 0 0 0 rgba(239,68,68,0.6); }
+            70%  { box-shadow: 0 0 0 14px rgba(239,68,68,0); }
+            100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+        }
+
+        .sos-btn {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            width: 62px;
+            height: 62px;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 14px;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            animation: sos-pulse 2s ease-in-out infinite;
+            z-index: 9999;
+            border: 3px solid #fff;
+            box-shadow: 0 6px 20px rgba(239,68,68,0.45);
+            user-select: none;
+        }
+
+        .sos-panel {
+            display: none;
+            position: fixed;
+            bottom: 104px;
+            right: 28px;
+            width: 260px;
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            z-index: 9998;
+        }
+
+        .sos-panel.open {
+            display: block;
+            animation: slideUp 0.2s ease forwards;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .sos-panel-head {
+            padding: 12px 16px 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(180deg, #fef2f2, #fff);
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        }
+
+        .sos-panel-head span:first-child {
+            width: 7px;
+            height: 7px;
+            background: #ef4444;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        .sos-panel-head span:last-child {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #ef4444;
+        }
+
+        .sos-divider { height: 1px; background: var(--border); margin: 0 16px; }
+
+        .sos-options {
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .sos-opt {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            border-radius: var(--radius-md);
+            border: 1px solid transparent;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Outfit', sans-serif;
+            text-align: left;
+            width: 100%;
+        }
+
+        .sos-opt-call  { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+        .sos-opt-route { background: #eff6ff; color: #1d4ed8; border-color: #dbeafe; }
+        
+        .sos-opt:hover { transform: translateX(-3px); }
+        .sos-opt-icon  { font-size: 18px; }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .anim-in { animation: fadeInUp 0.25s ease forwards; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner {
+            display: inline-block;
+            width: 14px; height: 14px;
+            border: 2px solid var(--border);
+            border-top-color: #14b8a6;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+
+        @media (max-width: 1024px) {
+            header { padding: 0 20px; }
+            .brand-sub { display: none; }
+            .status-bar { padding: 0 20px; }
+            .status-right { display: none; }
+            .main-wrapper { grid-template-columns: 1fr; padding: 0 20px; margin: 20px auto; }
+            #map { min-height: 320px; }
+            .section-wrapper { padding: 0 20px; }
+            .edu-wrapper { padding: 0 20px; margin-bottom: 80px; }
+            .video-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+            .footer-content { grid-template-columns: 1fr 1fr; }
+        }
+
+        @media (max-width: 640px) {
+            header { height: 62px; padding: 0 14px; }
+            .brand-name { font-size: 17px; }
+            .profile-btn span:last-child { display: none; }
+            .profile-btn { padding: 6px 10px; }
+            .logout-btn { padding: 6px 10px; font-size: 11px; }
+            .main-wrapper { padding: 0 14px; margin: 14px auto; }
             .video-grid { grid-template-columns: 1fr; }
-            .sos-options-panel { width: 220px; right: 10px; }
-            .sos-btn { width: 56px; height: 56px; font-size: 13px; bottom: 16px; right: 16px; }
-            .inventory-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
-            .inv-item { padding: 10px; }
-            .eq-table th, .eq-table td { padding: 10px 8px; font-size: 12px; }
+            .sos-btn { width: 56px; height: 56px; font-size: 12px; bottom: 22px; right: 14px; }
+            .sos-panel { right: 14px; width: 240px; bottom: 92px; }
+            .eq-table th, .eq-table td { padding: 10px 14px; }
+            .footer-content { grid-template-columns: 1fr; gap: 20px; }
+            .footer-bottom { flex-direction: column; gap: 10px; text-align: center; }
+            .profile-dropdown { width: 260px; }
         }
     </style>
 </head>
@@ -131,124 +1227,368 @@
 
 <header>
     <div class="header-left">
-        <h1>GeoSafe</h1>
-        <span>Afet Yönetim ve Güvenli Toplanma Ağı</span>
+        <div class="logo-container">
+            <div class="logo-emblem">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2 L20 6 L20 14 C20 19 12 22 12 22 C12 22 4 19 4 14 L4 6 Z"/>
+                    <polyline points="9,12 11,14 15,10"/>
+                </svg>
+            </div>
+            <div class="brand-text">
+                <span class="brand-name">GeoSafe</span>
+                <span class="brand-sub">Afet Yönetim ve Güvenli Toplanma Ağı</span>
+            </div>
+        </div>
     </div>
+
     <div class="header-right">
         <div class="profile-container">
-            <a href="#" class="nav-btn profile-btn" onclick="toggleProfil(event)">Profilim</a>
+            <a href="#" class="profile-btn" id="profileToggle" onclick="toggleProfil(event)">
+                <span class="avatar">👤</span>
+                <span>Profilim</span>
+            </a>
             <div class="profile-dropdown" id="profil-dropdown">
-                <h3>Kişisel Bilgiler</h3>
-                <div class="profile-form">
-                    <div><label>Ad - Soyad</label><input type="text" id="u-name" placeholder="Ad Soyad" readonly></div>
-                    <div><label>Kan Grubu</label><input type="text" id="u-blood" placeholder="0 Rh+" readonly></div>
-                    <div><label>Kronik Rahatsızlık</label><input type="text" id="u-chronic" placeholder="Varsa belirtin" readonly></div>
-                    <div><label>Kullanılan İlaçlar</label><input type="text" id="u-meds" placeholder="İlaçlarınız" readonly></div>
-                    <div><label>Alerjiler</label><input type="text" id="u-allergy" placeholder="Alerjileriniz" readonly></div>
-                    <div><label>Yakın Telefon No</label><input type="tel" id="u-phone" placeholder="05xx" readonly></div>
-                    <p class="note-text">Not: Bilgileri kaydetmek için 'Kaydet' butonuna basınız.</p>
-                    <div class="button-group">
-                        <button type="button" class="action-btn update-mode-btn" onclick="enableEdit()">Güncelle</button>
-                        <button type="button" class="action-btn save-btn" onclick="saveProfile()">Kaydet</button>
+                <div class="pd-header">
+                    <div class="pd-avatar">🧑</div>
+                    <div class="pd-header-text">
+                        <h3>Kişisel Bilgiler</h3>
+                        <p>Acil durum bilgilerinizi güncel tutun</p>
+                    </div>
+                </div>
+                <div class="pd-body">
+                    <div class="pf-row"><label>Ad - Soyad</label><input type="text" id="u-name" placeholder="Ad Soyad" readonly></div>
+                    <div class="pf-row"><label>Kan Grubu</label><input type="text" id="u-blood" placeholder="0 Rh+" readonly></div>
+                    <div class="pf-row"><label>Kronik Rahatsızlık</label><input type="text" id="u-chronic" placeholder="Varsa belirtin" readonly></div>
+                    <div class="pf-row"><label>Kullanılan İlaçlar</label><input type="text" id="u-meds" placeholder="İlaçlarınız" readonly></div>
+                    <div class="pf-row"><label>Alerjiler</label><input type="text" id="u-allergy" placeholder="Alerjileriniz" readonly></div>
+                    <div class="pf-row"><label>Yakın Telefon No</label><input type="tel" id="u-phone" placeholder="05xx" readonly></div>
+                    <p class="pd-note">Bilgileri güncellemek için 'Güncelle', ardından 'Kaydet' butonuna basın.</p>
+                    <div id="profil-mesaj" class="pd-msg"></div>
+                    <div class="pd-actions">
+                        <button type="button" class="pd-btn pd-btn-secondary" onclick="enableEdit()">Güncelle</button>
+                        <button type="button" class="pd-btn pd-btn-primary" onclick="saveProfile()">Kaydet</button>
                     </div>
                 </div>
             </div>
         </div>
-        <button id="logoutBtn" class="nav-btn logout-btn">Çıkış Yap</button>
+
+        <button id="logoutBtn" class="logout-btn">Çıkış Yap</button>
     </div>
 </header>
 
-<div class="main-container">
+<div class="status-bar">
+    <div class="status-left">
+        <div class="status-dot"></div>
+        <span class="status-text">Sistem çevrimiçi — Veriler canlı güncelleniyor</span>
+    </div>
+    <div class="status-right">
+        <div class="status-hint"><span>🗺️</span><span>Haritadan toplanma alanı seçin</span></div>
+        <div class="status-hint"><span>📦</span><span>Envanter bilgilerini görüntüleyin</span></div>
+        <div class="status-hint"><span>🚨</span><span>SOS ile hızlı müdahale</span></div>
+    </div>
+</div>
+
+<div class="main-wrapper">
     <div id="map"></div>
+
     <div class="info-card">
-        <div id="welcome-msg" class="welcome-box">
-            <div style="font-size: 42px; margin-bottom: 12px;">📍</div>
-            <h2 style="margin:0; font-size: 18px; font-weight: 700;">Hoş Geldiniz</h2>
-            <p style="color: #718096; font-size: 13px; margin-top: 8px;">Detayları görmek için haritadan bir toplanma alanı seçiniz.</p>
-        </div>
-        <div id="details" class="info-content">
-            <h2 id="a-name" class="area-title">-</h2>
-            <div class="inventory-grid">
-                <div class="inv-item"><span>💧 Su</span><b id="a-water">-</b></div>
-                <div class="inv-item"><span>🩹 Tıbbi Kit</span><b id="a-med">-</b></div>
-                <div class="inv-item"><span>🧯 Yangın Tüpü</span><b id="a-ext">-</b></div>
-                <div class="inv-item"><span>🥫 Gıda</span><b id="a-food">-</b></div>
-                <div class="inv-item"><span>🧣 Battaniye</span><b id="a-blanket">-</b></div>
-                <div class="inv-item go-btn-box" id="direct-go-btn"><b>GİT →</b></div>
+        <div class="welcome-state" id="welcome-msg">
+            <div class="welcome-icon-wrap">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+                    <circle cx="12" cy="9" r="2.5"/>
+                </svg>
             </div>
-            <div class="distance-badge" id="a-dist">Hesaplanıyor...</div>
+            <h2>Toplanma Alanı Seçin</h2>
+            <p>Envanter ve mesafe bilgilerini görmek için haritadan bir toplanma noktasına tıklayın.</p>
+            <div class="welcome-chips">
+                <div class="welcome-chip">💧 Su</div>
+                <div class="welcome-chip">🩹 Tıbbi</div>
+                <div class="welcome-chip">🧯 Yangın</div>
+                <div class="welcome-chip">🥫 Gıda</div>
+            </div>
+        </div>
+
+        <div class="detail-state" id="details">
+            <div class="detail-header">
+                <div class="area-tag">Güvenli Toplanma Alanı</div>
+                <div class="area-name" id="a-name">—</div>
+            </div>
+            <div class="detail-body">
+                <div class="inv-grid">
+                    <div class="inv-tile">
+                        <span class="inv-label">💧 Su</span>
+                        <span class="inv-value" id="a-water">—</span>
+                    </div>
+                    <div class="inv-tile">
+                        <span class="inv-label">🩹 Tıbbi Kit</span>
+                        <span class="inv-value" id="a-med">—</span>
+                    </div>
+                    <div class="inv-tile">
+                        <span class="inv-label">🧯 Yangın Tüpü</span>
+                        <span class="inv-value" id="a-ext">—</span>
+                    </div>
+                    <div class="inv-tile">
+                        <span class="inv-label">🥫 Gıda</span>
+                        <span class="inv-value" id="a-food">—</span>
+                    </div>
+                    <div class="inv-tile">
+                        <span class="inv-label">🧣 Battaniye</span>
+                        <span class="inv-value" id="a-blanket">—</span>
+                    </div>
+                    <button class="go-tile" id="direct-go-btn">
+                        <span class="go-tile-icon">🧭</span>
+                        <span class="go-tile-label">GİT →</span>
+                    </button>
+                </div>
+                <div class="dist-badge" id="a-dist">Mesafe hesaplanıyor...</div>
+            </div>
         </div>
     </div>
 </div>
 
-<div class="eq-section">
-    <div class="eq-card">
-        <h2 style="margin:0; font-size: 16px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            🔴 Son Dakika Depremler
-            <span class="kandilli-badge">Kandilli Rasathanesi</span>
-            <span style="font-weight: 400; font-size: 12px; color: #a0aec0;">(Son 3 Gün / 3.5+)</span>
-        </h2>
-        <table class="eq-table">
-            <thead>
-                <tr><th>BÜYÜKLÜK</th><th>KONUM / YER</th><th>TARİH - SAAT</th><th>DERİNLİK</th></tr>
-            </thead>
-            <tbody id="eq-list">
-                <tr><td colspan="4" style="text-align: center; padding: 32px; color: #a0aec0; font-size: 13px;">Kandilli Rasathanesi verisi çekiliyor...</td></tr>
-            </tbody>
-        </table>
+<div class="section-wrapper">
+    <div class="section-block">
+        <div class="block-header">
+            <div class="live-pill">
+                <span class="live-pill-dot"></span>
+                CANLI
+            </div>
+            <h2>Son Depremler</h2>
+            <span class="source-badge">Kandilli Rasathanesi</span>
+            <span class="block-meta">Son 3 gün / M 3.5+</span>
+        </div>
+        <div style="overflow-x:auto;">
+            <table class="eq-table">
+                <thead>
+                    <tr>
+                        <th>Büyüklük</th>
+                        <th>Konum</th>
+                        <th>Tarih &amp; Saat</th>
+                        <th>Derinlik</th>
+                    </tr>
+                </thead>
+                <tbody id="eq-list">
+                    <tr>
+                        <td colspan="4" style="text-align:center;padding:36px 20px;color:var(--text-muted);">
+                            <span class="spinner"></span>Veri yükleniyor...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
-<div class="edu-wrapper">
-    <div class="edu-header">
-        <h2>Afet Hazırlık Eğitimleri</h2>
+<div class="edu-wrapper" id="egitim-videolari">
+    <div class="section-heading">
+        <div class="section-heading-left">
+            <div class="section-heading-line"></div>
+            <div>
+                <h2>Afet Hazırlık Eğitimleri</h2>
+                <p>Bilinçli ve hazırlıklı ol</p>
+            </div>
+        </div>
     </div>
+
     <div class="video-grid">
-        <div class="video-card card-1">
+        <div class="video-card">
             <div class="video-thumb"><iframe id="player1" src="https://www.youtube.com/embed/K0keerAalYE?enablejsapi=1" allowfullscreen></iframe></div>
-            <div class="card-content"><span class="category-tag">Hazırlık</span><h3 class="video-title">Afet ve Acil Durum Çantası Nasıl Hazırlanır?</h3><div class="card-footer"><a href="https://youtu.be/K0keerAalYE" target="_blank" class="view-btn">YouTube'da İzle ➜</a></div></div>
+            <div class="card-body">
+                <span class="card-tag">Hazırlık</span>
+                <h3 class="card-title">Afet ve Acil Durum Çantası Nasıl Hazırlanır?</h3>
+                <div class="card-footer">
+                    <a href="https://youtu.be/K0keerAalYE" target="_blank" class="yt-link">
+                        YouTube'da İzle
+                        <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12,5 19,12 12,19"/></svg>
+                    </a>
+                </div>
+            </div>
         </div>
-        <div class="video-card card-2">
+        <div class="video-card">
             <div class="video-thumb"><iframe id="player2" src="https://www.youtube.com/embed/oZeI0X40EEY?enablejsapi=1" allowfullscreen></iframe></div>
-            <div class="card-content"><span class="category-tag">Deprem</span><h3 class="video-title">Deprem Anında Yapılması Gerekenler</h3><div class="card-footer"><a href="https://youtu.be/oZeI0X40EEY" target="_blank" class="view-btn">YouTube'da İzle ➜</a></div></div>
+            <div class="card-body">
+                <span class="card-tag">Deprem</span>
+                <h3 class="card-title">Deprem Anında Yapılması Gerekenler</h3>
+                <div class="card-footer">
+                    <a href="https://youtu.be/oZeI0X40EEY" target="_blank" class="yt-link">
+                        YouTube'da İzle
+                        <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12,5 19,12 12,19"/></svg>
+                    </a>
+                </div>
+            </div>
         </div>
-        <div class="video-card card-3">
+        <div class="video-card">
             <div class="video-thumb"><iframe id="player3" src="https://www.youtube.com/embed/yQjUhzNMNe8?enablejsapi=1" allowfullscreen></iframe></div>
-            <div class="card-content"><span class="category-tag">Yangın</span><h3 class="video-title">Yangın Anında Yapılması Gerekenler</h3><div class="card-footer"><a href="https://youtu.be/yQjUhzNMNe8" target="_blank" class="view-btn">YouTube'da İzle ➜</a></div></div>
+            <div class="card-body">
+                <span class="card-tag">Yangın</span>
+                <h3 class="card-title">Yangın Anında Yapılması Gerekenler</h3>
+                <div class="card-footer">
+                    <a href="https://youtu.be/yQjUhzNMNe8" target="_blank" class="yt-link">
+                        YouTube'da İzle
+                        <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12,5 19,12 12,19"/></svg>
+                    </a>
+                </div>
+            </div>
         </div>
-        <div class="video-card card-4">
+        <div class="video-card">
             <div class="video-thumb"><iframe id="player4" src="https://www.youtube.com/embed/jy2yf7a5A10?enablejsapi=1" allowfullscreen></iframe></div>
-            <div class="card-content"><span class="category-tag">Sel</span><h3 class="video-title">Sel Anında Yapılması Gerekenler</h3><div class="card-footer"><a href="https://youtu.be/jy2yf7a5A10" target="_blank" class="view-btn">YouTube'da İzle ➜</a></div></div>
+            <div class="card-body">
+                <span class="card-tag">Sel</span>
+                <h3 class="card-title">Sel Anında Yapılması Gerekenler</h3>
+                <div class="card-footer">
+                    <a href="https://youtu.be/jy2yf7a5A10" target="_blank" class="yt-link">
+                        YouTube'da İzle
+                        <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12,5 19,12 12,19"/></svg>
+                    </a>
+                </div>
+            </div>
         </div>
-        <div class="video-card card-5">
+        <div class="video-card">
             <div class="video-thumb"><iframe id="player5" src="https://www.youtube.com/embed/IPkQdDeW6Xg?enablejsapi=1" allowfullscreen></iframe></div>
-            <div class="card-content"><span class="category-tag">Farkındalık</span><h3 class="video-title">Afet Farkındalık Eğitimi</h3><div class="card-footer"><a href="https://youtu.be/IPkQdDeW6Xg" target="_blank" class="view-btn">YouTube'da İzle ➜</a></div></div>
+            <div class="card-body">
+                <span class="card-tag">Farkındalık</span>
+                <h3 class="card-title">Afet Farkındalık Eğitimi</h3>
+                <div class="card-footer">
+                    <a href="https://youtu.be/IPkQdDeW6Xg" target="_blank" class="yt-link">
+                        YouTube'da İzle
+                        <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12,5 19,12 12,19"/></svg>
+                    </a>
+                </div>
+            </div>
         </div>
-        <div class="video-card card-6">
+        <div class="video-card">
             <div class="video-thumb"><iframe id="player6" src="https://www.youtube.com/embed/eYLu7dh6nUI?enablejsapi=1" allowfullscreen></iframe></div>
-            <div class="card-content"><span class="category-tag">İlk Yardım</span><h3 class="video-title">İlk Yardım Eğitimi</h3><div class="card-footer"><a href="https://youtu.be/eYLu7dh6nUI" target="_blank" class="view-btn">YouTube'da İzle ➜</a></div></div>
+            <div class="card-body">
+                <span class="card-tag">İlk Yardım</span>
+                <h3 class="card-title">İlk Yardım Eğitimi</h3>
+                <div class="card-footer">
+                    <a href="https://youtu.be/eYLu7dh6nUI" target="_blank" class="yt-link">
+                        YouTube'da İzle
+                        <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12,5 19,12 12,19"/></svg>
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
+<footer class="site-footer">
+    <div class="footer-content">
+        <div class="footer-brand">
+            <div class="footer-logo">
+                <div class="footer-logo-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 2 L20 6 L20 14 C20 19 12 22 12 22 C12 22 4 19 4 14 L4 6 Z"/>
+                        <polyline points="9,12 11,14 15,10"/>
+                    </svg>
+                </div>
+                <span class="footer-logo-text">GeoSafe</span>
+            </div>
+            <p class="footer-desc">
+                Afet durumlarında güvenli toplanma alanlarını bulun, envanter bilgilerini görüntüleyin ve sevdiklerinize ulaşın. GeoSafe ile her zaman hazırlıklı olun.
+            </p>
+            <div class="social-links">
+                <a href="#" class="social-link">📘</a>
+                <a href="#" class="social-link">🐦</a>
+                <a href="#" class="social-link">📸</a>
+                <a href="#" class="social-link">▶️</a>
+            </div>
+        </div>
+
+        <div class="footer-section">
+            <h4>Hızlı Linkler</h4>
+            <ul class="footer-links">
+                <li><a href="#">Ana Sayfa</a></li>
+                <li><a href="#map">Toplanma Alanları</a></li>
+                <li><a href="#eq-section">Deprem Bilgileri</a></li>
+                <li><a href="#egitim-videolari">Eğitim Videoları</a></li>
+            </ul>
+        </div>
+
+        <div class="footer-section">
+            <h4>Acil Durum</h4>
+            <ul class="footer-links">
+                <li><a href="#sos-panel">Acil Çağrı</a></li>
+                <li><a href="#map">En Yakın Alan</a></li>
+                <li><a href="#egitim-videolari">İlk Yardım</a></li>
+                <li><a href="#">Afet Çantası</a></li>
+            </ul>
+        </div>
+
+        <div class="footer-section">
+            <h4>İletişim</h4>
+            <div class="footer-contact">
+                <div class="contact-item">
+                    <span>📧</span>
+                    <span>bilgi.geosafe@gmail.com</span>
+                </div>
+                <div class="contact-item">
+                    <span>🌐</span>
+                    <span>www.geosafe.org</span>
+                </div>
+            </div>
+
+            <div class="emergency-box">
+    <h5>Acil Durum Hattı</h5>
+       <div class="emergency-numbers">
+          <div class="emergency-num" style="font-size: 22px; font-weight: 800; color: #fff;">
+            <span style="color: #ef4444;">112</span> — Acil Çağrı Merkezi
+       </div>
+      </div>
+        <p style="font-size: 12px; color: #94a3b8; margin-top: 8px;">Tüm acil durumlar için tek numara.</p>
+    </div>
+        </div>
+    </div>
+
+    <div class="footer-bottom">
+        <span class="footer-copyright">© 2026 GeoSafe. Tüm hakları saklıdır.</span>
+        <div class="footer-legal">
+            <a href="#">Gizlilik Politikası</a>
+            <a href="#">Kullanım Şartları</a>
+            <a href="#">KVKK</a>
+        </div>
+    </div>
+</footer>
 
 <div class="sos-btn" onclick="toggleSOS()">SOS</div>
-<div id="sos-panel" class="sos-options-panel">
-    <button class="sos-option opt-call" onclick="sosCall()">📞 Yakın Telefon Numarasını Ara</button>
-    <button class="sos-option opt-route" onclick="sosFindAndRoute()">🏃 En Yakın Toplanma Alanına Git</button>
+
+<div id="sos-panel" class="sos-panel">
+    <div class="sos-panel-head">
+        <span></span>
+        <span>Acil Eylem</span>
+    </div>
+    <div class="sos-divider"></div>
+    <div class="sos-options">
+        <button class="sos-opt sos-opt-call" onclick="sosCall()">
+            <span class="sos-opt-icon">📞</span>
+            <span>Yakın Telefonu Ara</span>
+        </button>
+        <button class="sos-opt sos-opt-route" onclick="sosFindAndRoute()">
+            <span class="sos-opt-icon">🏃</span>
+            <span>En Yakın Toplanma Alanı</span>
+        </button>
+    </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
 <script>
     const API = "http://localhost:8000";
-    const map = L.map('map', {zoomControl: true}).setView([41.043, 29.008], 12);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
+
+    const map = L.map('map', { zoomControl: true }).setView([41.043, 29.008], 12);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        attribution: '© CartoDB'
+    }).addTo(map);
 
     let userLoc = [41.043, 29.008];
     navigator.geolocation.getCurrentPosition(p => {
         userLoc = [p.coords.latitude, p.coords.longitude];
         map.setView(userLoc, 13);
-        L.circleMarker(userLoc, {radius: 6, fillColor: '#3182ce', color: '#fff', weight: 2, fillOpacity: 1}).addTo(map).bindPopup("Siz");
+        L.circleMarker(userLoc, {
+            radius: 8, fillColor: '#0d9488', color: '#fff', weight: 2.5, fillOpacity: 1
+        }).addTo(map).bindPopup(
+            '<div style="font-size:13px;font-weight:700;padding:3px 5px;color:#0f766e;">📍 Konumunuz</div>'
+        );
     });
 
     window.bolgeListesi = [];
@@ -257,51 +1597,41 @@
         const token = sessionStorage.getItem('geosafe_token');
         if (!token) return;
         try {
-            const res = await fetch(`${API}/api/profile`, {
-                headers: { "Authorization": `Bearer ${token}` }
-            });
+            const res = await fetch(`${API}/api/profile`, { headers: { "Authorization": `Bearer ${token}` } });
             if (res.ok) {
-                const data = await res.json();
-                document.getElementById('u-name').value = data.name || "";
-                document.getElementById('u-blood').value = data.blood || "";
-                document.getElementById('u-chronic').value = data.chronic || "";
-                document.getElementById('u-meds').value = data.meds || "";
-                document.getElementById('u-allergy').value = data.allergy || "";
-                document.getElementById('u-phone').value = data.phone || "";
+                const d = await res.json();
+                document.getElementById('u-name').value    = d.name    || "";
+                document.getElementById('u-blood').value   = d.blood   || "";
+                document.getElementById('u-chronic').value = d.chronic || "";
+                document.getElementById('u-meds').value    = d.meds    || "";
+                document.getElementById('u-allergy').value = d.allergy || "";
+                document.getElementById('u-phone').value   = d.phone   || "";
             }
-        } catch(e) { console.error("Profil yüklenemedi:", e); }
+        } catch(e) { console.error(e); }
     }
     profilYukle();
 
     function toggleProfil(e) {
         e.preventDefault();
-        const dropdown = document.getElementById('profil-dropdown');
-        dropdown.classList.toggle('open');
+        const dd  = document.getElementById('profil-dropdown');
+        const btn = document.getElementById('profileToggle');
+        dd.classList.toggle('open');
+        btn.classList.toggle('active');
     }
-
     document.addEventListener('click', function(e) {
-        const container = document.querySelector('.profile-container');
-        if (!container.contains(e.target)) {
+        const c = document.querySelector('.profile-container');
+        if (!c.contains(e.target)) {
             document.getElementById('profil-dropdown').classList.remove('open');
+            document.getElementById('profileToggle').classList.remove('active');
         }
     });
 
     function profilMesaj(tip, metin) {
-        let el = document.getElementById('profil-mesaj');
-        if (!el) {
-            el = document.createElement('div');
-            el.id = 'profil-mesaj';
-            el.style.cssText = 'margin-top:10px; padding:8px 12px; border-radius:8px; font-size:12px; font-weight:600; text-align:center;';
-            document.querySelector('.button-group').insertAdjacentElement('afterend', el);
-        }
+        const el = document.getElementById('profil-mesaj');
         if (tip === 'basari') {
-            el.style.background = '#d1fae5';
-            el.style.color = '#065f46';
-            el.style.border = '1px solid #6ee7b7';
+            el.style.background = '#dcfce7'; el.style.color = '#166534'; el.style.borderColor = '#86efac';
         } else {
-            el.style.background = '#fee2e2';
-            el.style.color = '#991b1b';
-            el.style.border = '1px solid #fca5a5';
+            el.style.background = '#fef2f2'; el.style.color = '#991b1b'; el.style.borderColor = '#fecaca';
         }
         el.innerText = metin;
         el.style.display = 'block';
@@ -310,44 +1640,40 @@
 
     window.saveProfile = async function() {
         const token = sessionStorage.getItem('geosafe_token');
-        if (!token) {
-            profilMesaj('hata', '❌ Oturum bulunamadı.');
-            return;
-        }
+        if (!token) { profilMesaj('hata', '❌ Oturum bulunamadı.'); return; }
         try {
             const res = await fetch(`${API}/api/profile`, {
                 method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                },
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
                 body: JSON.stringify({
-                    name: document.getElementById('u-name').value,
-                    blood: document.getElementById('u-blood').value,
+                    name:    document.getElementById('u-name').value,
+                    blood:   document.getElementById('u-blood').value,
                     chronic: document.getElementById('u-chronic').value,
-                    meds: document.getElementById('u-meds').value,
+                    meds:    document.getElementById('u-meds').value,
                     allergy: document.getElementById('u-allergy').value,
-                    phone: document.getElementById('u-phone').value
+                    phone:   document.getElementById('u-phone').value
                 })
             });
             if (res.ok) {
                 profilMesaj('basari', '✅ Bilgiler kaydedildi!');
                 ['u-name','u-blood','u-chronic','u-meds','u-allergy','u-phone'].forEach(id => {
-                    document.getElementById(id).setAttribute('readonly', true);
-                    document.getElementById(id).style.background = "#f1f5f9";
+                    const el = document.getElementById(id);
+                    el.setAttribute('readonly', true);
+                    el.style.background = '';
+                    el.style.borderColor = '';
+                    el.style.cursor = 'not-allowed';
                 });
-            } else {
-                profilMesaj('hata', '❌ Kaydetme başarısız.');
-            }
-        } catch(e) {
-            profilMesaj('hata', '❌ Bağlantı hatası.');
-        }
+            } else { profilMesaj('hata', '❌ Kaydetme başarısız.'); }
+        } catch(e) { profilMesaj('hata', '❌ Bağlantı hatası.'); }
     };
 
     window.enableEdit = function() {
         ['u-name','u-blood','u-chronic','u-meds','u-allergy','u-phone'].forEach(id => {
-            document.getElementById(id).removeAttribute('readonly');
-            document.getElementById(id).style.background = "#fff";
+            const el = document.getElementById(id);
+            el.removeAttribute('readonly');
+            el.style.background   = '#fff';
+            el.style.borderColor  = '#0d9488';
+            el.style.cursor       = 'text';
         });
         document.getElementById('u-name').focus();
     };
@@ -359,75 +1685,116 @@
 
     async function yukleGuvenliBolgeler() {
         try {
-            const response = await fetch(`${API}/api/safe-zones`);
-            const bolgeler = await response.json();
+            const res     = await fetch(`${API}/api/safe-zones`);
+            const bolgeler = await res.json();
             window.bolgeListesi = [];
-            bolgeler.forEach((data) => {
+
+            bolgeler.forEach(data => {
                 const lat = data.data.bounds.minLat + (data.data.bounds.maxLat - data.data.bounds.minLat) / 2;
                 const lon = data.data.bounds.minLon + (data.data.bounds.maxLon - data.data.bounds.minLon) / 2;
                 window.bolgeListesi.push({ ...data, lat, lon });
-                const marker = L.marker([lat, lon]).addTo(map);
+
+                const icon = L.divIcon({
+                    html: `<div style="
+                        width:34px;height:34px;
+                        background:linear-gradient(135deg,#14b8a6,#0d9488);
+                        border:3px solid #fff;
+                        border-radius:50% 50% 50% 0;
+                        transform:rotate(-45deg);
+                        display:flex;align-items:center;justify-content:center;
+                        box-shadow:0 4px 12px rgba(13,148,136,0.35);">
+                        <span style="transform:rotate(45deg);font-size:14px;">🏕️</span>
+                    </div>`,
+                    className: '',
+                    iconSize:   [34, 34],
+                    iconAnchor: [17, 34]
+                });
+
+                const marker = L.marker([lat, lon], { icon }).addTo(map);
+                marker.bindPopup(`<div style="font-size:13px;font-weight:700;padding:3px 5px;color:#0f766e;">${data.name}</div>`);
+
                 marker.on('click', async () => {
                     document.getElementById('welcome-msg').style.display = 'none';
-                    document.getElementById('details').style.display = 'block';
+                    const detailEl = document.getElementById('details');
+                    detailEl.classList.remove('anim-in');
+                    void detailEl.offsetWidth;
+                    detailEl.classList.add('visible', 'anim-in');
+
                     document.getElementById('a-name').innerText = data.name;
+                    ['a-water','a-med','a-ext','a-food','a-blanket'].forEach(id => {
+                        document.getElementById(id).innerText = '…';
+                    });
+
                     try {
                         const stokRes = await fetch(`${API}/api/inventory/safe-zone/${data.id}`);
-                        const stok = await stokRes.json();
-                        document.getElementById('a-water').innerText = stok.water;
-                        document.getElementById('a-med').innerText = stok.med;
-                        document.getElementById('a-ext').innerText = stok.ext + " Adet";
-                        document.getElementById('a-food').innerText = stok.food;
+                        const stok    = await stokRes.json();
+                        document.getElementById('a-water').innerText   = stok.water;
+                        document.getElementById('a-med').innerText     = stok.med;
+                        document.getElementById('a-ext').innerText     = stok.ext + " Adet";
+                        document.getElementById('a-food').innerText    = stok.food;
                         document.getElementById('a-blanket').innerText = stok.blanket + " Adet";
-                    } catch(e) {
+                    } catch {
                         ['a-water','a-med','a-ext','a-food','a-blanket'].forEach(id => {
-                            document.getElementById(id).innerText = '-';
+                            document.getElementById(id).innerText = '—';
                         });
                     }
-                    const d = L.latLng(userLoc).distanceTo(L.latLng([lat, lon]));
-                    document.getElementById('a-dist').innerText = `📍 ${(d/1000).toFixed(2)} km — yaklaşık ${Math.round(d/80)} dk`;
+
+                    const R    = 6371000;
+                    const dLat = (lat - userLoc[0]) * Math.PI / 180;
+                    const dLon = (lon - userLoc[1]) * Math.PI / 180;
+                    const a    = Math.sin(dLat/2)**2 +
+                                 Math.cos(userLoc[0]*Math.PI/180) * Math.cos(lat*Math.PI/180) * Math.sin(dLon/2)**2;
+                    const d    = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                    document.getElementById('a-dist').innerText =
+                        `📍 ${(d/1000).toFixed(2)} km — yaklaşık ${Math.round(d/80)} dk yürüyüş`;
+
                     document.getElementById('direct-go-btn').onclick = () => {
-                        window.open(`https://www.google.com/maps/dir/?api=1&origin=${userLoc[0]},${userLoc[1]}&destination=${lat},${lon}&travelmode=walking`, '_blank');
+                        window.open(
+                            `https://www.google.com/maps/dir/?api=1&origin=${userLoc[0]},${userLoc[1]}&destination=${lat},${lon}&travelmode=walking`,
+                            '_blank'
+                        );
                     };
                 });
             });
-        } catch (e) { console.error("Bölgeler yüklenirken hata:", e); }
+        } catch(e) { console.error("Bölgeler yüklenemedi:", e); }
     }
     yukleGuvenliBolgeler();
 
     async function getEarthquakes() {
         const list = document.getElementById('eq-list');
         try {
-            const response = await fetch(`${API}/api/earthquakes`);
-            const data = await response.json();
+            const res  = await fetch(`${API}/api/earthquakes`);
+            const data = await res.json();
             list.innerHTML = '';
             if (!data.result || data.result.length === 0) {
-                list.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:24px; color:#a0aec0; font-size:13px;">Son 3 günde 3.5+ şiddetinde deprem kaydı bulunamadı.</td></tr>';
+                list.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--text-muted);font-size:12px;">
+                    Son 3 günde M 3.5+ deprem kaydı bulunamadı.
+                </td></tr>`;
                 return;
             }
             data.result.forEach(eq => {
-                const color = eq.mag >= 5.0 ? '#e53e3e' : eq.mag >= 4.0 ? '#ed8936' : '#d69e2e';
-                list.insertAdjacentHTML('beforeend', `<tr>
-                    <td><span class="mag-tag" style="background:${color}">${eq.mag}</span></td>
-                    <td><b>${eq.title}</b></td>
-                    <td>${eq.date}</td>
-                    <td>${eq.depth} km</td>
-                </tr>`);
+                const color = eq.mag >= 5.0 ? '#ef4444' : eq.mag >= 4.0 ? '#f59e0b' : '#10b981';
+                list.insertAdjacentHTML('beforeend', `
+                    <tr>
+                        <td><span class="mag-badge" style="background:${color}">${eq.mag}</span></td>
+                        <td class="eq-loc">${eq.title}</td>
+                        <td class="eq-meta">${eq.date}</td>
+                        <td class="eq-meta">${eq.depth} km</td>
+                    </tr>`);
             });
-        } catch (e) {
-            list.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#e53e3e; padding:20px; font-size:13px;">Veri çekilemedi.</td></tr>';
+        } catch {
+            list.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:28px;color:var(--danger);font-size:12px;">Veri çekilemedi.</td></tr>`;
         }
     }
     getEarthquakes();
 
     window.toggleSOS = function() {
-        const panel = document.getElementById('sos-panel');
-        panel.style.display = panel.style.display === 'flex' ? 'none' : 'flex';
+        document.getElementById('sos-panel').classList.toggle('open');
     };
 
     window.sosCall = function() {
         const phone = document.getElementById('u-phone').value;
-        if (phone && phone.trim() !== "") {
+        if (phone && phone.trim()) {
             window.location.href = "tel:" + phone;
         } else {
             alert("Yakın telefon numarası bulunamadı. Lütfen profil bilgilerinizi doldurun.");
@@ -435,18 +1802,24 @@
     };
 
     window.sosFindAndRoute = function() {
-        if (!window.bolgeListesi || window.bolgeListesi.length === 0) {
+        if (!window.bolgeListesi || !window.bolgeListesi.length) {
             alert("Bölgeler henüz yüklenmedi, lütfen bekleyin...");
             return;
         }
-        let enYakinMesafe = Infinity;
-        let enYakinBolge = null;
-        window.bolgeListesi.forEach(bolge => {
-            const mesafe = L.latLng(userLoc).distanceTo(L.latLng([bolge.lat, bolge.lon]));
-            if (mesafe < enYakinMesafe) { enYakinMesafe = mesafe; enYakinBolge = bolge; }
+        let nearest = null, minD = Infinity;
+        window.bolgeListesi.forEach(b => {
+            const dLat = (b.lat - userLoc[0]) * Math.PI / 180;
+            const dLon = (b.lon - userLoc[1]) * Math.PI / 180;
+            const a    = Math.sin(dLat/2)**2 +
+                         Math.cos(userLoc[0]*Math.PI/180) * Math.cos(b.lat*Math.PI/180) * Math.sin(dLon/2)**2;
+            const d    = 6371000 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            if (d < minD) { minD = d; nearest = b; }
         });
-        if (enYakinBolge) {
-            window.open(`https://www.google.com/maps/dir/?api=1&origin=${userLoc[0]},${userLoc[1]}&destination=${enYakinBolge.lat},${enYakinBolge.lon}&travelmode=walking`, '_blank');
+        if (nearest) {
+            window.open(
+                `https://www.google.com/maps/dir/?api=1&origin=${userLoc[0]},${userLoc[1]}&destination=${nearest.lat},${nearest.lon}&travelmode=walking`,
+                '_blank'
+            );
         } else {
             alert("En yakın bölge hesaplanamadı.");
         }
@@ -455,14 +1828,17 @@
     var tag = document.createElement('script');
     tag.src = "https://www.youtube.com/iframe_api";
     document.getElementsByTagName('script')[0].parentNode.insertBefore(tag, document.getElementsByTagName('script')[0]);
+
     var players = [];
     window.onYouTubeIframeAPIReady = function() {
         document.querySelectorAll('.video-thumb iframe').forEach(function(iframe, i) {
-            players[i] = new YT.Player(iframe.id, { events: { 'onStateChange': function(e) {
-                if (e.data == YT.PlayerState.PLAYING) {
-                    players.forEach(p => { if (p !== e.target && p.pauseVideo) p.pauseVideo(); });
-                }
-            }}});
+            players[i] = new YT.Player(iframe.id, {
+                events: { 'onStateChange': function(e) {
+                    if (e.data == YT.PlayerState.PLAYING) {
+                        players.forEach(p => { if (p !== e.target && p.pauseVideo) p.pauseVideo(); });
+                    }
+                }}
+            });
         });
     };
 </script>
