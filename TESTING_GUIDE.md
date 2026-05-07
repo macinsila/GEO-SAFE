@@ -106,6 +106,17 @@ pip install -r ../requirements.txt
 Successfully installed fastapi-... sqlalchemy-... geoalchemy2-...
 ```
 
+---
+
+## ✅ Backend Test Suite
+
+Set the test DB connection string and run pytest from the project root:
+
+```powershell
+$env:TEST_DATABASE_URL="postgresql+psycopg://geosafe_user:geosafe_pass@localhost:5432/geosafe"
+pytest backend/tests
+```
+
 ### Step 2.3 - Run Database Migrations
 
 ```powershell

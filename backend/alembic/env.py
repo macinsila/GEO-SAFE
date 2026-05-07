@@ -18,10 +18,19 @@ if config.config_file_name is not None:
 target_metadata = Base.metadata
 
 
+def _sync_url(url: str) -> str:
+    """Convert asyncpg/aiosqlite async URLs to sync equivalents for Alembic."""
+    return url.replace("postgresql+asyncpg://", "postgresql://").replace(
+        "sqlite+aiosqlite://", "sqlite://"
+    )
+
+
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode."""
-    sqlalchemy_url = os.getenv("DATABASE_URL", "postgresql://geosafe_user:geosafe_pass@localhost/geosafe")
-    
+    sqlalchemy_url = _sync_url(
+        os.getenv("DATABASE_URL", "postgresql://geosafe_user:geosafe_pass@localhost/geosafe_db")
+    )
+
     context.configure(
         url=sqlalchemy_url,
         target_metadata=target_metadata,
@@ -35,8 +44,10 @@ def run_migrations_offline() -> None:
 
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
-    sqlalchemy_url = os.getenv("DATABASE_URL", "postgresql://geosafe_user:geosafe_pass@localhost/geosafe")
-    
+    sqlalchemy_url = _sync_url(
+        os.getenv("DATABASE_URL", "postgresql://geosafe_user:geosafe_pass@localhost/geosafe_db")
+    )
+
     configuration = config.get_section(config.config_ini_section)
     configuration["sqlalchemy.url"] = sqlalchemy_url
     

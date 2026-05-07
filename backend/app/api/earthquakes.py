@@ -1,13 +1,15 @@
 from fastapi import APIRouter
 import httpx
 from datetime import datetime, timedelta
+from app.api.response import success_response
 
-router = APIRouter(prefix="/api/earthquakes", tags=["earthquakes"])
+router = APIRouter(tags=["earthquakes"])
 
 @router.get("")
 async def get_earthquakes():
     try:
         all_results = []
+        fetch_errors = []
         async with httpx.AsyncClient(timeout=15) as client:
             for i in range(3):
                 date = (datetime.now() - timedelta(days=i)).strftime("%Y-%m-%d")
@@ -15,9 +17,11 @@ async def get_earthquakes():
                     response = await client.get(
                         f"https://api.orhanaydogdu.com.tr/deprem/kandilli/archive?date={date}&limit=500"
                     )
+                    response.raise_for_status()
                     data = response.json()
                     all_results.extend(data.get("result", []))
-                except:
+                except Exception as exc:
+                    fetch_errors.append(f"{date}: {str(exc)}")
                     continue
 
         three_days_ago = datetime.now() - timedelta(days=3)
@@ -34,10 +38,17 @@ async def get_earthquakes():
                         "date": eq["date_time"],
                         "depth": eq["depth"]
                     })
-            except:
+            except (KeyError, TypeError, ValueError):
                 continue
 
         filtered.sort(key=lambda x: x["date"], reverse=True)
-        return {"result": filtered}
+        return success_response(
+            data={"result": filtered, "partial_errors": fetch_errors},
+            message="Earthquake feed fetched"
+        )
     except Exception as e:
-        return {"result": [], "error": str(e)}
+        return {
+            "status": "error",
+            "data": {"result": []},
+            "message": f"Earthquake feed failed: {str(e)}"
+        }
