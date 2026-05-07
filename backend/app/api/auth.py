@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timedelta
 from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -9,16 +10,16 @@ from pydantic import BaseModel
 from app.models.user import User
 from app.schemas import UserCreate
 from app.db import get_db
+from app.api.response import success_response
 
 # --- Ayarlar ---
-SECRET_KEY = "geosafe-secret-key-2025"  # ileride .env'e taşıyacağız
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 1 gün
 
 # --- Yardımcı araçlar ---
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
-router = APIRouter(prefix="/auth", tags=["auth"])
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")
+router = APIRouter(tags=["auth"])
 
 
 # --- Şemalar ---
@@ -43,18 +44,28 @@ def hash_password(password: str) -> str:
 def verify_password(plain: str, hashed: str) -> bool:
     return pwd_context.verify(plain, hashed)
 
+def _get_jwt_secret() -> str:
+    secret = os.getenv("JWT_SECRET")
+    if not secret:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="JWT secret is not configured",
+        )
+    return secret
+
+
 def create_token(data: dict) -> str:
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return jwt.encode(to_encode, _get_jwt_secret(), algorithm=ALGORITHM)
 
 async def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: AsyncSession = Depends(get_db)
 ) -> User:
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, _get_jwt_secret(), algorithms=[ALGORITHM])
         email: str = payload.get("sub")
         if email is None:
             raise HTTPException(status_code=401, detail="Geçersiz token")
@@ -68,8 +79,20 @@ async def get_current_user(
     return user
 
 
+def require_roles(*allowed_roles: str):
+    async def _role_guard(current_user: User = Depends(get_current_user)) -> User:
+        if current_user.role not in allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient permissions",
+            )
+        return current_user
+
+    return _role_guard
+
+
 # --- Endpoint'ler ---
-@router.post("/register", response_model=UserResponse, status_code=201)
+@router.post("/register", status_code=201)
 async def register(payload: UserCreate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).where(User.email == payload.email))
     if result.scalars().first():
@@ -83,10 +106,10 @@ async def register(payload: UserCreate, db: AsyncSession = Depends(get_db)):
     db.add(user)
     await db.commit()
     await db.refresh(user)
-    return user
+    return success_response(data=user, message="User registered")
 
 
-@router.post("/token", response_model=Token)
+@router.post("/token")
 async def login(
     form: OAuth2PasswordRequestForm = Depends(),
     db: AsyncSession = Depends(get_db)
@@ -97,9 +120,9 @@ async def login(
         raise HTTPException(status_code=401, detail="Email veya şifre hatalı")
 
     token = create_token({"sub": user.email, "role": user.role})
-    return {"access_token": token, "token_type": "bearer"}
+    return success_response(data={"access_token": token, "token_type": "bearer"}, message="Login successful")
 
 
-@router.get("/me", response_model=UserResponse)
+@router.get("/me")
 async def me(current_user: User = Depends(get_current_user)):
-    return current_user
+    return success_response(data=current_user, message="Current user fetched")

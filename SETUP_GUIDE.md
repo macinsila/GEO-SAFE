@@ -43,6 +43,13 @@ geosafe2-db-1  postgis/postgis:15-3.3  Up About a minute
 
 ## ⚙️ Step 2: Setup Backend (Python/FastAPI)
 
+### Configure Environment Variables
+
+Copy backend/.env.example to backend/.env and update the following:
+
+- `JWT_SECRET` (required)
+- `CORS_ORIGINS` (comma-separated allowed origins)
+
 ### Install Backend Dependencies
 
 ```bash

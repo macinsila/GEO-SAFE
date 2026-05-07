@@ -127,19 +127,22 @@ See [SETUP_GUIDE.md](SETUP_GUIDE.md) for detailed step-by-step instructions.
 # 1. Start database
 docker-compose up -d
 
-# 2. Install dependencies
+# 2. Configure backend environment
+# Copy backend/.env.example to backend/.env and set JWT_SECRET and CORS_ORIGINS
+
+# 3. Install dependencies
 pip install -r requirements.txt
 
-# 3. Run migrations
+# 4. Run migrations
 cd backend && alembic upgrade head && cd ..
 
-# 4. Seed data
+# 5. Seed data
 python scripts/seed_db.py
 
-# 5. Start backend (Terminal 1)
+# 6. Start backend (Terminal 1)
 cd backend && uvicorn app.main:app --reload
 
-# 6. Start frontend (Terminal 2)
+# 7. Start frontend (Terminal 2)
 cd frontend && npm install && npm start
 ```
 
@@ -232,6 +235,9 @@ Visit `http://localhost:8000/docs` (Swagger) or `http://localhost:8000/redoc` (R
 **Safe Zones:**
 - `GET /api/safe-zones/` - List all safe zones
 - `GET /api/safe-zones/{id}` - Get specific safe zone
+
+**Emergency:**
+- `POST /api/v1/emergency` - Create emergency report (rate limited: 5 requests/min per IP)
 
 **Health:**
 - `GET /health` - Backend health check
