@@ -39,6 +39,15 @@ def upgrade() -> None:
                   AND column_name = 'data'
             ) THEN
                 ALTER TABLE inventory_movements ADD COLUMN data JSONB;
+            ELSIF EXISTS (
+                SELECT 1
+                FROM information_schema.columns
+                WHERE table_name = 'inventory_movements'
+                  AND column_name = 'metadata'
+            ) THEN
+                UPDATE inventory_movements
+                SET data = metadata
+                WHERE data IS NULL AND metadata IS NOT NULL;
             END IF;
         END
         $$;
@@ -68,8 +77,15 @@ def downgrade() -> None:
                 FROM information_schema.columns
                 WHERE table_name = 'inventory_movements'
                   AND column_name = 'data'
+            ) AND EXISTS (
+                SELECT 1
+                FROM information_schema.columns
+                WHERE table_name = 'inventory_movements'
+                  AND column_name = 'metadata'
             ) THEN
-                ALTER TABLE inventory_movements DROP COLUMN data;
+                UPDATE inventory_movements
+                SET metadata = data
+                WHERE metadata IS NULL AND data IS NOT NULL;
             END IF;
         END
         $$;

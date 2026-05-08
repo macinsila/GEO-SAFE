@@ -49,6 +49,7 @@ Copy backend/.env.example to backend/.env and update the following:
 
 - `JWT_SECRET` (required)
 - `CORS_ORIGINS` (comma-separated allowed origins)
+- `AUTO_CREATE_TABLES` (optional; default `false`, only set to `true` for local/test if you explicitly want startup to create tables)
 
 ### Install Backend Dependencies
 

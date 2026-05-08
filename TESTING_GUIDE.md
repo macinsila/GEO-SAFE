@@ -117,6 +117,13 @@ $env:TEST_DATABASE_URL="postgresql+psycopg://geosafe_user:geosafe_pass@localhost
 pytest backend/tests
 ```
 
+## ✅ Frontend Build Verification
+
+```powershell
+cd frontend
+npm run build
+```
+
 ### Step 2.3 - Run Database Migrations
 
 ```powershell
