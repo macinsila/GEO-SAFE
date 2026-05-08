@@ -35,10 +35,12 @@ async def on_startup():
     if not os.getenv("JWT_SECRET"):
         raise RuntimeError("JWT_SECRET is required. Set it in the environment before starting the API.")
     try:
-        # Async engine ile tabloları oluştur
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
-        print("✅ Veritabanı tabloları başarıyla oluşturuldu!")
+        auto_create = os.getenv("AUTO_CREATE_TABLES", "false").strip().lower() in {"1", "true", "yes"}
+        if auto_create:
+            # Async engine ile tabloları oluştur
+            async with engine.begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
+            print("✅ Veritabanı tabloları başarıyla oluşturuldu!")
     except Exception as e:
         print(f"⚠️ Veritabanı bağlantı hatası: {e}")
         print("⚠️ Not: API yine de çalışacak, ama veritabanı işlemleri başarısız olacak.")
