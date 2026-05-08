@@ -14,7 +14,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U geosafe_user"]
+      test: ["CMD-SHELL", "pg_isready -U geosafe_user -d geosafe_db"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -33,6 +33,7 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://geosafe_user:geosafe_pass@db:5432/geosafe_db
       DEBUG: "false"
+      JWT_SECRET: "z7d5oPWyXrB0WkUeAFDEPcHfc0vh2Z3oPnA4h83hu+zbaUf3JV8dZfK6g1BugfuR"
     volumes:
       - ./backend:/app
     depends_on:

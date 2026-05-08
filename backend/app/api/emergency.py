@@ -1,22 +1,15 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, Column, Integer, String, Float, DateTime
-from sqlalchemy.sql import func
+from sqlalchemy import select
 from pydantic import BaseModel
 from app.db import get_db
-from app.models.base import Base
+from app.api.auth import require_roles
+from app.api.rate_limit import emergency_limiter
+from app.models.emergency_report import EmergencyReport
+from app.api.response import success_response
+from app.models.user import User
 
-router = APIRouter(prefix="/api/emergency", tags=["emergency"])
-
-class EmergencyModel(Base):
-    __tablename__ = "emergency_reports"
-    id = Column(Integer, primary_key=True)
-    durum = Column(String)
-    saat = Column(String)
-    harita_link = Column(String)
-    enlem = Column(Float)
-    boylam = Column(Float)
-    created_at = Column(DateTime, server_default=func.now())
+router = APIRouter(tags=["emergency"])
 
 class EmergencyCreate(BaseModel):
     durum: str
@@ -35,8 +28,13 @@ class EmergencyResponse(BaseModel):
         from_attributes = True
 
 @router.post("", status_code=201)
-async def acil_bildirim_gonder(payload: EmergencyCreate, db: AsyncSession = Depends(get_db)):
-    bildirim = EmergencyModel(
+async def acil_bildirim_gonder(
+    payload: EmergencyCreate,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    await emergency_limiter.check(request)
+    bildirim = EmergencyReport(
         durum=payload.durum,
         saat=payload.saat,
         harita_link=payload.harita_link,
@@ -46,18 +44,24 @@ async def acil_bildirim_gonder(payload: EmergencyCreate, db: AsyncSession = Depe
     db.add(bildirim)
     await db.commit()
     await db.refresh(bildirim)
-    return {"message": "Bildirim alındı", "id": bildirim.id}
+    return success_response(data={"id": bildirim.id}, message="Bildirim alındı")
 
-@router.get("", response_model=list[EmergencyResponse])
-async def bildirimleri_getir(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(EmergencyModel).order_by(EmergencyModel.id.desc()))
-    return result.scalars().all()
+@router.get("")
+async def bildirimleri_getir(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_roles("admin")),
+):
+    result = await db.execute(select(EmergencyReport).order_by(EmergencyReport.id.desc()))
+    return success_response(data=result.scalars().all(), message="Bildirimler listelendi")
 
 @router.delete("")
-async def bildirimleri_temizle(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(EmergencyModel))
+async def bildirimleri_temizle(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_roles("admin")),
+):
+    result = await db.execute(select(EmergencyReport))
     bildirimler = result.scalars().all()
     for b in bildirimler:
         await db.delete(b)
     await db.commit()
-    return {"message": "Bildirimler temizlendi"}
+    return success_response(data={"deleted": len(bildirimler)}, message="Bildirimler temizlendi")

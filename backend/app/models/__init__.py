@@ -6,6 +6,7 @@ from .user import User
 from .item import Item
 from .warehouse_inventory import WarehouseInventory
 from .inventory_movement import InventoryMovement
+from .emergency_report import EmergencyReport
 
 __all__ = [
     "Base",
@@ -15,4 +16,5 @@ __all__ = [
     "Item",
     "WarehouseInventory",
     "InventoryMovement",
+    "EmergencyReport",
 ]

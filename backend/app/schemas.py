@@ -3,7 +3,7 @@ Pydantic schemas for request/response validation and serialization.
 Includes custom JSON serialization for PostGIS geometries.
 """
 
-from pydantic import BaseModel, field_serializer
+from pydantic import BaseModel, field_serializer, field_validator
 from typing import Optional, Any
 from datetime import datetime
 
@@ -75,6 +75,20 @@ class WarehouseBase(BaseModel):
 class WarehouseCreate(WarehouseBase):
     # Expected geometry as GeoJSON: {"type": "Point", "coordinates": [lon, lat]}
     location: dict
+
+    @field_validator("location")
+    @classmethod
+    def validate_location(cls, v: dict) -> dict:
+        coords = v.get("coordinates")
+        if not isinstance(coords, list) or len(coords) < 2:
+            raise ValueError("location.coordinates must be [lon, lat]")
+        try:
+            lon, lat = float(coords[0]), float(coords[1])
+        except (TypeError, ValueError):
+            raise ValueError("location.coordinates must contain numeric values")
+        if not (-180 <= lon <= 180) or not (-90 <= lat <= 90):
+            raise ValueError("location coordinates out of valid WGS84 range")
+        return v
 
 
 class WarehouseResponse(WarehouseBase):

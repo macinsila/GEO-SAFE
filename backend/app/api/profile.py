@@ -6,8 +6,9 @@ from typing import Optional
 from app.db import get_db
 from app.models.user import User
 from app.api.auth import get_current_user
+from app.api.response import success_response
 
-router = APIRouter(prefix="/api/profile", tags=["profile"])
+router = APIRouter(tags=["profile"])
 
 class ProfileUpdate(BaseModel):
     name: Optional[str] = ""
@@ -29,14 +30,14 @@ async def get_profile(
         raise HTTPException(status_code=404, detail="Kullanıcı bulunamadı")
     
     data = user.data or {}
-    return {
+    return success_response(data={
         "name": data.get("name", ""),
         "blood": data.get("blood", ""),
         "chronic": data.get("chronic", ""),
         "meds": data.get("meds", ""),
         "allergy": data.get("allergy", ""),
         "phone": data.get("phone", "")
-    }
+    }, message="Profile fetched")
 
 @router.put("")
 async def update_profile(
@@ -63,4 +64,4 @@ async def update_profile(
 
     await db.commit()
     await db.refresh(user)
-    return {"message": "Profil güncellendi"}
+    return success_response(data={"user_id": user.id}, message="Profil güncellendi")
