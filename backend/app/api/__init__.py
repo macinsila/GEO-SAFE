@@ -1,4 +1,4 @@
 # API package
-from . import warehouses, safe_zones, auth, emergency, inventory, earthquakes, profile
+from . import warehouses, safe_zones, auth, emergency, inventory, earthquakes, profile, spatial
 
-__all__ = ["warehouses", "safe_zones", "auth", "emergency", "inventory", "earthquakes", "profile"]
+__all__ = ["warehouses", "safe_zones", "auth", "emergency", "inventory", "earthquakes", "profile", "spatial"]

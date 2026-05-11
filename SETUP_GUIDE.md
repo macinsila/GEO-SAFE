@@ -43,6 +43,14 @@ geosafe2-db-1  postgis/postgis:15-3.3  Up About a minute
 
 ## ⚙️ Step 2: Setup Backend (Python/FastAPI)
 
+### Configure Environment Variables
+
+Copy backend/.env.example to backend/.env and update the following:
+
+- `JWT_SECRET` (required)
+- `CORS_ORIGINS` (comma-separated allowed origins)
+- `AUTO_CREATE_TABLES` (optional; default `false`, only set to `true` for local/test if you explicitly want startup to create tables)
+
 ### Install Backend Dependencies
 
 ```bash

@@ -67,3 +67,47 @@ export interface ApiListResponse<T> {
   total: number;
   error?: string;
 }
+
+export type ReliefItemName =
+  | "battaniye"
+  | "kuru_gida"
+  | "ilac"
+  | "su"
+  | "yangin_malzemesi";
+
+export interface NearestDepotInfo {
+  id: number;
+  name: string;
+  address?: string;
+  status: string;
+}
+
+export interface NearestDepotItemInfo {
+  id: number;
+  name: string;
+  unit: string;
+  quantity: number;
+}
+
+export interface NearestDepotResult {
+  depot: NearestDepotInfo;
+  distance_km: number;
+  item: NearestDepotItemInfo;
+}
+
+export interface WarehouseInventoryItem {
+  id: number;
+  item_id: number;
+  item_name: string;
+  item_sku: string;
+  item_unit: string;
+  quantity: number;
+  capacity_pct: number;
+  low_stock: boolean;
+}
+
+export interface WarehouseInventoryData {
+  warehouse_id: number;
+  capacity: number;
+  items: WarehouseInventoryItem[];
+}

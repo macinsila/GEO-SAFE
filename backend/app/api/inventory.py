@@ -6,10 +6,11 @@ from pydantic import BaseModel
 from typing import Optional
 from app.db import get_db
 from app.models.safe_zone import SafeZone
-from app.api.auth import get_current_user
+from app.api.auth import require_roles
+from app.api.response import success_response
 from app.models.user import User
 
-router = APIRouter(prefix="/api/inventory", tags=["inventory"])
+router = APIRouter(tags=["inventory"])
 
 class StokGuncelle(BaseModel):
     water: Optional[str] = "-"
@@ -27,7 +28,7 @@ async def stok_getir(zone_id: int, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Bölge bulunamadı")
     
     data = zone.data or {}
-    return {
+    return success_response(data={
         "zone_id": zone_id,
         "name": zone.name,
         "water": data.get("water", "-"),
@@ -35,14 +36,14 @@ async def stok_getir(zone_id: int, db: AsyncSession = Depends(get_db)):
         "med": data.get("med", "-"),
         "blanket": data.get("blanket", 0),
         "ext": data.get("ext", 0)
-    }
+    }, message="Inventory fetched")
 
 @router.put("/safe-zone/{zone_id}")
 async def stok_guncelle(
     zone_id: int,
     payload: StokGuncelle,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_roles("admin"))
 ):
     stmt = select(SafeZone).where(SafeZone.id == zone_id)
     result = await db.execute(stmt)
@@ -61,4 +62,4 @@ async def stok_guncelle(
 
     await db.commit()
     await db.refresh(zone)
-    return {"message": "Stok güncellendi", "zone_id": zone_id}
+    return success_response(data={"zone_id": zone_id}, message="Stok güncellendi")

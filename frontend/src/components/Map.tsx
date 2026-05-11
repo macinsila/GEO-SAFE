@@ -4,18 +4,21 @@
  * Handles click events to capture coordinates
  */
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
+  LayerGroup,
+  LayersControl,
   MapContainer,
   TileLayer,
-  Marker,
-  Popup,
-  GeoJSON,
   useMapEvents,
 } from "react-leaflet";
 import L from "leaflet";
-import { Warehouse, SafeZone, MapClickEvent } from "../types";
 import { geoSafeAPI } from "../services";
+import { MapClickEvent, NearestDepotResult, Warehouse } from "../types";
+import { CitizenSearch } from "./CitizenSearch";
+import { RouteLayer } from "./RouteLayer";
+import { WarehouseLayer } from "./WarehouseLayer";
+import { SafeZoneLayer } from "./SafeZoneLayer";
 
 // Fix Leaflet icon issue (required for React Leaflet)
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -41,7 +44,7 @@ function MapClickHandler({
 }: {
   onClickCoordinates?: (event: MapClickEvent) => void;
 }) {
-  const map = useMapEvents({
+  useMapEvents({
     click(e) {
       console.log("Map clicked at:", e.latlng.lat, e.latlng.lng);
       if (onClickCoordinates) {
@@ -57,120 +60,114 @@ function MapClickHandler({
 }
 
 /**
- * Warehouse Marker Component
- */
-function WarehouseMarker({ warehouse }: { warehouse: Warehouse }) {
-  const [coords, setCoords] = useState<[number, number] | null>(null);
-
-  useEffect(() => {
-    // Extract coordinates from location GeoJSON
-    if (warehouse.location && warehouse.location.coordinates) {
-      const [lon, lat] = warehouse.location.coordinates;
-      setCoords([lat, lon]); // Leaflet uses [lat, lon]
-    } else if (warehouse.data) {
-      // Fallback: try to extract from data JSON
-      try {
-        const data = typeof warehouse.data === "string" ? JSON.parse(warehouse.data) : warehouse.data;
-        if (data.location) {
-          setCoords([data.location.lat, data.location.lon]);
-        }
-      } catch (e) {
-        console.error("Failed to parse warehouse data:", e);
-      }
-    }
-  }, [warehouse]);
-
-  if (!coords) {
-    console.warn(`Warehouse ${warehouse.id} has no valid coordinates`);
-    return null;
-  }
-
-  return (
-    <Marker position={coords}>
-      <Popup>
-        <div>
-          <h3 style={{ margin: "0 0 5px 0" }}>{warehouse.name}</h3>
-          <p style={{ margin: "5px 0" }}>
-            <strong>Status:</strong> {warehouse.status}
-          </p>
-          {warehouse.capacity && (
-            <p style={{ margin: "5px 0" }}>
-              <strong>Capacity:</strong> {warehouse.capacity}
-            </p>
-          )}
-          {warehouse.address && (
-            <p style={{ margin: "5px 0" }}>
-              <strong>Address:</strong> {warehouse.address}
-            </p>
-          )}
-        </div>
-      </Popup>
-    </Marker>
-  );
-}
-
-/**
  * Main Map Component
  */
 export const Map: React.FC<MapProps> = ({ onClickCoordinates }) => {
-  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
-  const [safeZones, setSafeZones] = useState<SafeZone[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [mapInstance, setMapInstance] = React.useState<L.Map | null>(null);
+  const [userPosition, setUserPosition] = React.useState<[number, number] | null>(
+    null
+  );
+  const [targetDepotPosition, setTargetDepotPosition] = React.useState<[
+    number,
+    number
+  ] | null>(null);
+  const [targetDepotName, setTargetDepotName] = React.useState<string>("");
 
   // Default map center (e.g., Istanbul, Turkey)
   const defaultCenter: [number, number] = [41.0082, 28.9784];
   const defaultZoom = 12;
 
-  /**
-   * Fetch data from backend on component mount
-   */
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        const [warehousesData, safeZonesData] = await Promise.all([
-          geoSafeAPI.fetchWarehouses(),
-          geoSafeAPI.fetchSafeZones(),
-        ]);
-
-        setWarehouses(warehousesData);
-        setSafeZones(safeZonesData);
-        setError(null);
-      } catch (err) {
-        console.error("Failed to load map data:", err);
-        setError("Failed to load map data. Check backend connection.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadData();
+  const handleMapRef = React.useCallback((instance: L.Map | null) => {
+    if (instance) {
+      setMapInstance(instance);
+    }
   }, []);
 
-  if (error) {
-    return (
-      <div style={{ padding: "20px", color: "red" }}>
-        <p>{error}</p>
-        <small>Make sure backend is running on http://localhost:8000</small>
-      </div>
-    );
-  }
+  const extractWarehouseCoordinates = (
+    warehouse: Warehouse
+  ): [number, number] | null => {
+    if (warehouse.location?.coordinates && warehouse.location.coordinates.length === 2) {
+      const [lon, lat] = warehouse.location.coordinates;
+      return [lat, lon];
+    }
+
+    if (!warehouse.data) {
+      return null;
+    }
+
+    try {
+      const meta =
+        typeof warehouse.data === "string"
+          ? JSON.parse(warehouse.data)
+          : warehouse.data;
+      const lat = Number(meta?.location?.lat);
+      const lon = Number(meta?.location?.lon);
+
+      if (Number.isFinite(lat) && Number.isFinite(lon)) {
+        return [lat, lon];
+      }
+    } catch (error) {
+      console.error("Warehouse coordinate parse failed:", error);
+    }
+
+    return null;
+  };
+
+  const handleCitizenSearchResult = async ({
+    userPosition: newUserPosition,
+    result,
+  }: {
+    userPosition: [number, number];
+    result: NearestDepotResult | null;
+  }) => {
+    setUserPosition(newUserPosition);
+
+    if (!result) {
+      setTargetDepotPosition(null);
+      setTargetDepotName("");
+      return;
+    }
+
+    try {
+      const warehouses = await geoSafeAPI.fetchWarehouses();
+      const matchedWarehouse = warehouses.find(
+        (warehouse) => warehouse.id === result.depot.id
+      );
+
+      if (!matchedWarehouse) {
+        alert("Hedef depo detayı bulunamadı");
+        return;
+      }
+
+      const coordinates = extractWarehouseCoordinates(matchedWarehouse);
+      if (!coordinates) {
+        alert("Depo koordinatı alınamadı");
+        return;
+      }
+
+      setTargetDepotPosition(coordinates);
+      setTargetDepotName(result.depot.name);
+
+      if (mapInstance) {
+        mapInstance.flyTo(coordinates, 15);
+      }
+    } catch (error) {
+      console.error("Target depot location fetch failed:", error);
+      alert("Depo konumu yüklenirken API hatası oluştu");
+    }
+  };
 
   return (
     <div>
       <div style={{ marginBottom: "10px", fontSize: "14px", color: "#666" }}>
-        {loading ? (
-          <p>Loading map data...</p>
-        ) : (
-          <p>
-            Showing {warehouses.length} warehouses and {safeZones.length} safe
-            zones. Click on map to get coordinates.
-          </p>
-        )}
+        <p>Map layers load live data from API. Click on map to get coordinates.</p>
       </div>
 
+      <div className="map-wrapper">
+        <CitizenSearch onSearchResult={handleCitizenSearchResult} />
+
       <MapContainer
+        ref={handleMapRef}
         center={defaultCenter}
         zoom={defaultZoom}
         style={{ height: "600px", width: "100%" }}
@@ -184,53 +181,27 @@ export const Map: React.FC<MapProps> = ({ onClickCoordinates }) => {
         {/* Click handler */}
         <MapClickHandler onClickCoordinates={onClickCoordinates} />
 
-        {/* Warehouse markers */}
-        {warehouses.map((warehouse) => (
-          <WarehouseMarker
-            key={warehouse.id}
-            warehouse={warehouse}
-          />
-        ))}
+        <LayersControl position="topright">
+          <LayersControl.Overlay checked name="Toplanma Alanları">
+            <LayerGroup>
+              <SafeZoneLayer />
+            </LayerGroup>
+          </LayersControl.Overlay>
 
-        {/* Safe zones as GeoJSON polygons */}
-        {safeZones.map((zone) => (
-          <GeoJSON
-            key={zone.id}
-            data={
-              {
-                type: "Feature",
-                geometry: zone.geometry,
-                properties: {
-                  name: zone.name,
-                  capacity: zone.capacity,
-                  status: zone.status,
-                },
-              } as any
-            }
-            style={{
-              color: "#ff7800",
-              weight: 2,
-              opacity: 0.6,
-              fillOpacity: 0.2,
-            }}
-          >
-            <Popup>
-              <div>
-                <h3 style={{ margin: "0 0 5px 0" }}>{zone.name}</h3>
-                <p style={{ margin: "5px 0" }}>
-                  <strong>Status:</strong> {zone.status}
-                </p>
-                {zone.capacity && (
-                  <p style={{ margin: "5px 0" }}>
-                    <strong>Capacity:</strong> {zone.capacity}{" "}
-                    {zone.capacity_type}
-                  </p>
-                )}
-              </div>
-            </Popup>
-          </GeoJSON>
-        ))}
+          <LayersControl.Overlay checked name="Depolar">
+            <LayerGroup>
+              <WarehouseLayer />
+            </LayerGroup>
+          </LayersControl.Overlay>
+        </LayersControl>
+
+        <RouteLayer
+          userPosition={userPosition}
+          depotPosition={targetDepotPosition}
+          depotName={targetDepotName}
+        />
       </MapContainer>
+      </div>
     </div>
   );
 };
