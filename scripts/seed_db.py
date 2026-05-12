@@ -172,12 +172,42 @@ SAMPLE_SAFE_ZONES = [
 ]
 
 SAMPLE_ITEMS = [
-    {"name": "Blanket", "unit": "piece", "category": "shelter"},
-    {"name": "Water (liter)", "unit": "liter", "category": "hydration"},
-    {"name": "Medical Kit", "unit": "piece", "category": "medical"},
-    {"name": "Food Package", "unit": "box", "category": "food"},
-    {"name": "Tent", "unit": "piece", "category": "shelter"},
-    {"name": "First Aid Supplies", "unit": "pack", "category": "medical"},
+    {
+        "sku": "BLANKET-001",
+        "name": "Blanket",
+        "description": "Thermal emergency blanket.",
+        "unit": "piece",
+    },
+    {
+        "sku": "WATER-001",
+        "name": "Water (liter)",
+        "description": "Potable water supply.",
+        "unit": "liter",
+    },
+    {
+        "sku": "MEDKIT-001",
+        "name": "Medical Kit",
+        "description": "Basic medical kit for first response.",
+        "unit": "piece",
+    },
+    {
+        "sku": "FOOD-001",
+        "name": "Food Package",
+        "description": "Non-perishable emergency food.",
+        "unit": "box",
+    },
+    {
+        "sku": "TENT-001",
+        "name": "Tent",
+        "description": "Emergency shelter tent.",
+        "unit": "piece",
+    },
+    {
+        "sku": "FIRSTAID-001",
+        "name": "First Aid Supplies",
+        "description": "First aid refills and supplies.",
+        "unit": "pack",
+    },
 ]
 
 
