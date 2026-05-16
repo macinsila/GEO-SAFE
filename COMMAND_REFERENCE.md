@@ -59,7 +59,7 @@ psql -U geosafe_user -d geosafe_db -h localhost -c "CREATE EXTENSION IF NOT EXIS
 
 # 4. Alembic migration'larını çalıştır
 cd backend
-alembic upgrade head
+alembic -c alembic/alembic.ini upgrade head
 
 # 5. Seed script'ini çalıştır
 cd ..
@@ -132,17 +132,17 @@ Yanıt:
 
 ### 2. Tüm Warehouse'ları Getir
 ```powershell
-curl -X GET http://localhost:8000/api/warehouses
+curl -X GET http://localhost:8000/api/v1/warehouses
 ```
 
 ### 3. Tüm Safe Zone'ları Getir
 ```powershell
-curl -X GET http://localhost:8000/api/safe-zones
+curl -X GET http://localhost:8000/api/v1/safe-zones
 ```
 
 ### 4. Specific Warehouse
 ```powershell
-curl -X GET http://localhost:8000/api/warehouses/1
+curl -X GET http://localhost:8000/api/v1/warehouses/1
 ```
 
 ## 🗺️  Frontend'i Test Et

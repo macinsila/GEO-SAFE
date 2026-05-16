@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # PostgreSQL Database with PostGIS
   db:
@@ -33,7 +31,7 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://geosafe_user:geosafe_pass@db:5432/geosafe_db
       DEBUG: "false"
-      JWT_SECRET: "z7d5oPWyXrB0WkUeAFDEPcHfc0vh2Z3oPnA4h83hu+zbaUf3JV8dZfK6g1BugfuR"
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET to a long random value before starting GeoSafe}
     volumes:
       - ./backend:/app
     depends_on:

@@ -3,9 +3,9 @@ Pydantic schemas for request/response validation and serialization.
 Includes custom JSON serialization for PostGIS geometries.
 """
 
-from pydantic import BaseModel, field_serializer, field_validator
+from pydantic import BaseModel, Field, field_serializer, field_validator
 from typing import Optional, Any
-from datetime import datetime
+from datetime import datetime, date
 
 
 # ===== SafeZone Schemas =====
@@ -133,17 +133,79 @@ class ItemBase(BaseModel):
     sku: str
     name: str
     unit: str = "unit"
+    description: Optional[str] = None
+    low_stock_threshold: Optional[int] = Field(default=None, ge=0)
+    is_active: bool = True
 
 
 class ItemCreate(ItemBase):
     pass
 
 
+class ItemUpdate(BaseModel):
+    sku: Optional[str] = None
+    name: Optional[str] = None
+    unit: Optional[str] = None
+    description: Optional[str] = None
+    low_stock_threshold: Optional[int] = Field(default=None, ge=0)
+    is_active: Optional[bool] = None
+
+
 class ItemResponse(ItemBase):
     id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
+
+
+class WarehouseInventoryAdminUpdate(BaseModel):
+    quantity: int = Field(ge=0)
+    movement_type: str = "adjustment"
+    note: Optional[str] = None
+
+
+class WarehouseInventoryAdminRow(BaseModel):
+    warehouse_id: int
+    warehouse_name: str
+    item_id: int
+    item_name: str
+    item_sku: str
+    item_unit: str
+    quantity: int
+    threshold: int
+    is_critical: bool
+
+
+class InventoryMovementAdminResponse(BaseModel):
+    id: int
+    warehouse_id: Optional[int] = None
+    warehouse_name: Optional[str] = None
+    item_id: int
+    item_name: str
+    item_sku: str
+    quantity_change: int
+    old_quantity: Optional[int] = None
+    new_quantity: Optional[int] = None
+    movement_type: str
+    note: Optional[str] = None
+    created_at: datetime
+    actor_id: Optional[int] = None
+    actor_name: Optional[str] = None
+    actor_role: Optional[str] = None
+
+
+class CriticalStockResponse(BaseModel):
+    warehouse_id: int
+    warehouse_name: str
+    item_id: int
+    item_name: str
+    item_sku: str
+    item_unit: str
+    quantity: int
+    threshold: int
+    recommended_action: str
 
 
 # ===== User Schemas =====
@@ -158,3 +220,133 @@ class UserCreate(BaseModel):
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+
+
+# ===== Volunteer Schemas =====
+class VolunteerCreate(BaseModel):
+    full_name: str
+    contact_info: str
+    district: Optional[str] = None
+    neighborhood: Optional[str] = None
+    skills: list[str] = Field(default_factory=list)
+    availability_note: Optional[str] = None
+
+
+class VolunteerPublicResponse(BaseModel):
+    id: int
+    status: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class VolunteerAdminResponse(VolunteerPublicResponse):
+    full_name: str
+    contact_info: str
+    district: Optional[str] = None
+    neighborhood: Optional[str] = None
+    skills: list[str] | None = None
+    availability_note: Optional[str] = None
+    updated_at: Optional[datetime] = None
+
+
+# ===== Shelter Offer Schemas =====
+class ShelterOfferCreate(BaseModel):
+    host_name: str
+    contact_info: str
+    city: Optional[str] = None
+    district: Optional[str] = None
+    neighborhood: Optional[str] = None
+    address_detail: Optional[str] = None
+    capacity: int = Field(ge=1)
+    available_from: Optional[date] = None
+    available_until: Optional[date] = None
+    duration_note: Optional[str] = None
+    household_notes: Optional[str] = None
+    suitability_notes: Optional[str] = None
+
+
+class ShelterOfferPublicResponse(BaseModel):
+    id: int
+    status: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class ShelterOfferAdminResponse(ShelterOfferPublicResponse):
+    host_name: str
+    contact_info: str
+    city: Optional[str] = None
+    district: Optional[str] = None
+    neighborhood: Optional[str] = None
+    address_detail: Optional[str] = None
+    capacity: int
+    available_from: Optional[date] = None
+    available_until: Optional[date] = None
+    duration_note: Optional[str] = None
+    household_notes: Optional[str] = None
+    suitability_notes: Optional[str] = None
+    updated_at: Optional[datetime] = None
+
+
+# ===== Sprint 3A — Status Update Schemas =====
+
+_VOLUNTEER_STATUSES = {"pending", "approved", "rejected", "inactive"}
+_SHELTER_STATUSES = {"pending", "approved", "rejected", "inactive"}
+_EMERGENCY_STATUSES = {"new", "reviewing", "resolved", "dismissed", "spam"}
+
+
+class VolunteerStatusUpdate(BaseModel):
+    status: str
+
+    @field_validator("status")
+    @classmethod
+    def validate_status(cls, v: str) -> str:
+        if v not in _VOLUNTEER_STATUSES:
+            raise ValueError(
+                f"Invalid volunteer status '{v}'. Allowed: {sorted(_VOLUNTEER_STATUSES)}"
+            )
+        return v
+
+
+class ShelterStatusUpdate(BaseModel):
+    status: str
+
+    @field_validator("status")
+    @classmethod
+    def validate_status(cls, v: str) -> str:
+        if v not in _SHELTER_STATUSES:
+            raise ValueError(
+                f"Invalid shelter status '{v}'. Allowed: {sorted(_SHELTER_STATUSES)}"
+            )
+        return v
+
+
+class EmergencyStatusUpdate(BaseModel):
+    status: str
+
+    @field_validator("status")
+    @classmethod
+    def validate_status(cls, v: str) -> str:
+        if v not in _EMERGENCY_STATUSES:
+            raise ValueError(
+                f"Invalid emergency status '{v}'. Allowed: {sorted(_EMERGENCY_STATUSES)}"
+            )
+        return v
+
+
+class EmergencyAdminResponse(BaseModel):
+    id: int
+    durum: str
+    saat: str
+    harita_link: Optional[str] = None
+    enlem: float
+    boylam: float
+    status: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True

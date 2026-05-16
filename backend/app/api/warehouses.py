@@ -10,11 +10,12 @@ from sqlalchemy import select, and_
 from sqlalchemy.orm.attributes import flag_modified
 from geoalchemy2.elements import WKBElement, WKTElement
 from geoalchemy2.shape import to_shape
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List
 
 from app.db import get_db
 from app.models import Warehouse
+from app.models.inventory_movement import InventoryMovement
 from app.models.item import Item
 from app.models.warehouse_inventory import WarehouseInventory
 from app.schemas import WarehouseCreate
@@ -22,10 +23,12 @@ from app.api.auth import require_roles
 from app.api.response import success_response
 from app.models.user import User
 
+DEFAULT_LOW_STOCK_THRESHOLD = 10
+
 
 class InventoryUpdateItem(BaseModel):
     item_id: int
-    quantity: int
+    quantity: int = Field(ge=0)
 
 
 class InventoryUpdatePayload(BaseModel):
@@ -34,7 +37,7 @@ class InventoryUpdatePayload(BaseModel):
 router = APIRouter(tags=["warehouses"])
 
 
-def _serialize_warehouse(warehouse: Warehouse) -> dict:
+def _serialize_warehouse(warehouse: Warehouse, *, include_private: bool = False) -> dict:
     location_payload = None
 
     if warehouse.location is not None:
@@ -62,16 +65,18 @@ def _serialize_warehouse(warehouse: Warehouse) -> dict:
         except (json.JSONDecodeError, AttributeError, KeyError):
             location_payload = None
 
-    return {
+    payload = {
         "id": warehouse.id,
         "name": warehouse.name,
-        "address": warehouse.address,
         "capacity": warehouse.capacity,
         "status": warehouse.status,
         "location": location_payload,
-        "data": warehouse.data,
         "created_at": warehouse.created_at,
     }
+    if include_private:
+        payload["address"] = warehouse.address
+        payload["data"] = warehouse.data
+    return payload
 
 
 @router.get("")
@@ -87,6 +92,20 @@ async def list_warehouses(db: AsyncSession = Depends(get_db)):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching warehouses: {str(e)}")
+
+
+@router.get("/admin")
+async def list_warehouses_admin(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_roles("admin")),
+):
+    stmt = select(Warehouse).order_by(Warehouse.id)
+    result = await db.execute(stmt)
+    warehouses = result.scalars().all()
+    return success_response(
+        data=[_serialize_warehouse(warehouse, include_private=True) for warehouse in warehouses],
+        message="Admin warehouses listed",
+    )
 
 
 @router.get("/{warehouse_id}")
@@ -122,9 +141,10 @@ async def create_warehouse(
         }}
     )
     db.add(warehouse)
-    await db.commit()
+    await db.flush()
     await db.refresh(warehouse)
-    return success_response(data=_serialize_warehouse(warehouse), message="Warehouse created")
+    await db.commit()
+    return success_response(data=_serialize_warehouse(warehouse, include_private=True), message="Warehouse created")
 
 
 @router.put("/{warehouse_id}")
@@ -154,9 +174,10 @@ async def update_warehouse(
         "lat": lat
     }}
 
-    await db.commit()
+    await db.flush()
     await db.refresh(warehouse)
-    return success_response(data=_serialize_warehouse(warehouse), message="Warehouse updated")
+    await db.commit()
+    return success_response(data=_serialize_warehouse(warehouse, include_private=True), message="Warehouse updated")
 
 
 @router.delete("/{warehouse_id}")
@@ -192,6 +213,7 @@ async def get_warehouse_inventory(warehouse_id: int, db: AsyncSession = Depends(
             Item.name.label("item_name"),
             Item.sku.label("item_sku"),
             Item.unit.label("item_unit"),
+            Item.low_stock_threshold.label("item_threshold"),
         )
         .join(Item, Item.id == WarehouseInventory.item_id)
         .where(WarehouseInventory.warehouse_id == warehouse_id)
@@ -211,8 +233,11 @@ async def get_warehouse_inventory(warehouse_id: int, db: AsyncSession = Depends(
             "item_sku": row.item_sku,
             "item_unit": row.item_unit,
             "quantity": row.quantity,
+            "threshold": row.item_threshold if row.item_threshold is not None else DEFAULT_LOW_STOCK_THRESHOLD,
             "capacity_pct": pct,
-            "low_stock": pct < 20,
+            "low_stock": row.quantity <= (
+                row.item_threshold if row.item_threshold is not None else DEFAULT_LOW_STOCK_THRESHOLD
+            ),
         })
 
     return success_response(
@@ -232,7 +257,16 @@ async def update_warehouse_inventory(
     if not wh_result.scalar_one_or_none():
         raise HTTPException(status_code=404, detail="Warehouse bulunamadı")
 
+    performed_by = current_user.id
+    user_result = await db.execute(select(User.id).where(User.id == current_user.id))
+    if user_result.scalar_one_or_none() is None:
+        performed_by = None
+
     for upd in payload.items:
+        item_result = await db.execute(select(Item).where(Item.id == upd.item_id))
+        if item_result.scalar_one_or_none() is None:
+            raise HTTPException(status_code=404, detail=f"Item {upd.item_id} not found")
+
         result = await db.execute(
             select(WarehouseInventory).where(
                 and_(
@@ -242,13 +276,30 @@ async def update_warehouse_inventory(
             )
         )
         inv = result.scalar_one_or_none()
+        previous_quantity = 0
         if inv is None:
             inv = WarehouseInventory(
                 warehouse_id=warehouse_id, item_id=upd.item_id, quantity=upd.quantity
             )
             db.add(inv)
         else:
+            previous_quantity = inv.quantity
             inv.quantity = upd.quantity
+
+        db.add(
+            InventoryMovement(
+                item_id=upd.item_id,
+                quantity=upd.quantity - previous_quantity,
+                to_warehouse_id=warehouse_id,
+                movement_type="adjustment",
+                performed_by=performed_by,
+                note="Warehouse inventory set",
+                data={
+                    "previous_quantity": previous_quantity,
+                    "new_quantity": upd.quantity,
+                },
+            )
+        )
 
     await db.commit()
     return success_response(data={"warehouse_id": warehouse_id}, message="Envanter güncellendi")

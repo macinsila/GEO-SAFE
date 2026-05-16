@@ -1,0 +1,23 @@
+{
+  "name": "GeoSafe Afet Dayanismasi",
+  "short_name": "GeoSafe",
+  "description": "GeoSafe icin guvenli offline temel. Hassas form verileri cihazda saklanmaz.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f7fb",
+  "theme_color": "#12406a",
+  "icons": [
+    {
+      "src": "/icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

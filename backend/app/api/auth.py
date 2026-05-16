@@ -14,6 +14,16 @@ from app.api.response import success_response
 
 # --- Ayarlar ---
 ALGORITHM = "HS256"
+WEAK_JWT_SECRETS = {
+    "dev-secret-change-me",
+    "change-this-in-production",
+    "your-secret-key",
+    "secret",
+    "changeme",
+    "<replace-with-long-random-secret>",
+    "replace-with-long-random-secret",
+}
+MIN_JWT_SECRET_LENGTH = 32
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 1 gün
 
 # --- Yardımcı araçlar ---
@@ -44,14 +54,28 @@ def hash_password(password: str) -> str:
 def verify_password(plain: str, hashed: str) -> bool:
     return pwd_context.verify(plain, hashed)
 
-def _get_jwt_secret() -> str:
-    secret = os.getenv("JWT_SECRET")
+
+def validate_jwt_secret(secret: str | None) -> str:
     if not secret:
+        raise RuntimeError("JWT_SECRET is required. Set a long random value before starting the API.")
+
+    normalized = secret.strip()
+    if len(normalized) < MIN_JWT_SECRET_LENGTH or normalized.lower() in WEAK_JWT_SECRETS:
+        raise RuntimeError(
+            "JWT_SECRET is too weak. Use a unique random value with at least "
+            f"{MIN_JWT_SECRET_LENGTH} characters."
+        )
+    return normalized
+
+
+def _get_jwt_secret() -> str:
+    try:
+        return validate_jwt_secret(os.getenv("JWT_SECRET"))
+    except RuntimeError as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="JWT secret is not configured",
-        )
-    return secret
+            detail=str(exc),
+        ) from exc
 
 
 def create_token(data: dict) -> str:
@@ -104,9 +128,15 @@ async def register(payload: UserCreate, db: AsyncSession = Depends(get_db)):
         password_hash=hash_password(payload.password)
     )
     db.add(user)
+    await db.flush()
+    user_id = user.id
     await db.commit()
-    await db.refresh(user)
-    return success_response(data=user, message="User registered")
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one()
+    return success_response(
+        data=UserResponse.model_validate(user).model_dump(),
+        message="User registered",
+    )
 
 
 @router.post("/token")
@@ -125,4 +155,7 @@ async def login(
 
 @router.get("/me")
 async def me(current_user: User = Depends(get_current_user)):
-    return success_response(data=current_user, message="Current user fetched")
+    return success_response(
+        data=UserResponse.model_validate(current_user).model_dump(),
+        message="Current user fetched",
+    )

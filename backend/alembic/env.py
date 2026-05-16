@@ -1,10 +1,17 @@
 # Alembic SQLAlchemy configuration
 
 import os
+import sys
+from pathlib import Path
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
+
+BACKEND_DIR = Path(__file__).resolve().parents[1]
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
+
 from app.models import Base
 
 # this is the Alembic Config object

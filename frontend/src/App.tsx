@@ -1,10 +1,18 @@
 import React from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import {
+  OfflineQueuePanel,
+  OfflineQueueProvider,
+  OfflineStatusBanner,
+} from "./offlineQueue/context";
 import LoginPage from "./pages/LoginPage";
 import MainPage from "./pages/MainPage";
 import EmergencyPage from "./pages/EmergencyPage";
 import AdminDashboard from "./pages/AdminDashboard";
+import VolunteerPage from "./pages/VolunteerPage";
+import ShelterOfferPage from "./pages/ShelterOfferPage";
+import PsychologicalSupportPage from "./pages/PsychologicalSupportPage";
 
 function ProtectedRoute({
   children,
@@ -24,7 +32,10 @@ function AppRoutes() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/" element={<ProtectedRoute><MainPage /></ProtectedRoute>} />
-      <Route path="/emergency" element={<ProtectedRoute><EmergencyPage /></ProtectedRoute>} />
+      <Route path="/emergency" element={<EmergencyPage />} />
+      <Route path="/volunteer" element={<VolunteerPage />} />
+      <Route path="/shelter-offer" element={<ShelterOfferPage />} />
+      <Route path="/psychological-support" element={<ProtectedRoute><PsychologicalSupportPage /></ProtectedRoute>} />
       <Route
         path="/admin"
         element={
@@ -42,7 +53,11 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppRoutes />
+        <OfflineQueueProvider>
+          <OfflineStatusBanner />
+          <AppRoutes />
+          <OfflineQueuePanel />
+        </OfflineQueueProvider>
       </AuthProvider>
     </BrowserRouter>
   );

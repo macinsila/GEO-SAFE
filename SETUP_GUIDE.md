@@ -47,7 +47,7 @@ geosafe2-db-1  postgis/postgis:15-3.3  Up About a minute
 
 Copy backend/.env.example to backend/.env and update the following:
 
-- `JWT_SECRET` (required)
+- `JWT_SECRET` (required; use a long random value, not the placeholder)
 - `CORS_ORIGINS` (comma-separated allowed origins)
 - `AUTO_CREATE_TABLES` (optional; default `false`, only set to `true` for local/test if you explicitly want startup to create tables)
 
@@ -55,7 +55,7 @@ Copy backend/.env.example to backend/.env and update the following:
 
 ```bash
 cd backend
-pip install -r ../requirements.txt
+pip install -r requirements.txt -r requirements-test.txt
 ```
 
 **What's installed:**
@@ -70,7 +70,7 @@ pip install -r ../requirements.txt
 
 ```bash
 cd backend
-alembic upgrade head
+alembic -c alembic/alembic.ini upgrade head
 ```
 
 **What this does:**
@@ -148,7 +148,7 @@ INFO:     Application startup complete
 
 **Test backend:**
 - Visit `http://localhost:8000/docs` for interactive API documentation
-- Try endpoint: `http://localhost:8000/api/warehouses/`
+- Try endpoint: `http://localhost:8000/api/v1/warehouses`
 
 You should see JSON response with warehouse data.
 
@@ -212,7 +212,7 @@ Response:
 
 ### 2. **Check Warehouse Endpoint**
 ```bash
-curl http://localhost:8000/api/warehouses/ | jq
+curl http://localhost:8000/api/v1/warehouses | jq '.data'
 ```
 
 Response should show 5 warehouses with Point geometries:
@@ -225,7 +225,6 @@ Response should show 5 warehouses with Point geometries:
       "type": "Point",
       "coordinates": [28.9784, 41.0082]
     },
-    "address": "Taksim District, Beyoğlu, Istanbul",
     "capacity": 500,
     "status": "active",
     "created_at": "2025-12-24T12:00:00"
@@ -236,7 +235,7 @@ Response should show 5 warehouses with Point geometries:
 
 ### 3. **Check Safe Zones Endpoint**
 ```bash
-curl http://localhost:8000/api/safe-zones/ | jq
+curl http://localhost:8000/api/v1/safe-zones | jq '.data'
 ```
 
 Response should show 4 safe zones with Polygon geometries:
@@ -307,8 +306,8 @@ geosafe2/
 ├── backend/
 │   ├── app/
 │   │   ├── api/
-│   │   │   ├── warehouses.py   # GET /api/warehouses/
-│   │   │   └── safe_zones.py   # GET /api/safe-zones/
+│   │   │   ├── warehouses.py   # GET /api/v1/warehouses
+│   │   │   └── safe_zones.py   # GET /api/v1/safe-zones
 │   │   ├── models/
 │   │   │   ├── warehouse.py    # SQLAlchemy model with Point geometry
 │   │   │   ├── safe_zone.py    # SQLAlchemy model with Polygon geometry
@@ -342,7 +341,9 @@ geosafe2/
 │   ├── setup_all.py            # One-command setup
 │   └── README.md
 ├── docker-compose.yml          # PostgreSQL + PostGIS
-├── requirements.txt            # Python dependencies
+├── backend/
+│   ├── requirements.txt        # Backend runtime dependencies
+│   └── requirements-test.txt   # Backend test dependencies
 └── README.md
 ```
 
@@ -364,14 +365,14 @@ docker-compose logs db
 
 ### "CORS error: Access to XMLHttpRequest blocked"
 - Make sure backend is running on `http://localhost:8000`
-- Check `REACT_APP_API_URL` in `.env.local` (should be `http://localhost:8000`)
+- Check `REACT_APP_API_BASE_URL` in `.env.local` (should be `http://localhost:8000`)
 
 ### "Map not showing data"
 1. Check browser console (F12 → Console tab)
-2. Check if backend returns data: `curl http://localhost:8000/api/warehouses/`
+2. Check if backend returns data: `curl http://localhost:8000/api/v1/warehouses`
 3. Check Network tab in F12 to see API requests
 
-### "No migrations found" when running `alembic upgrade head`
+### "No migrations found" when running `alembic -c alembic/alembic.ini upgrade head`
 ```bash
 cd backend
 # Check if alembic folder exists
@@ -394,7 +395,7 @@ DROP TABLE IF EXISTS users CASCADE;
 "
 
 # Re-run migrations and seeding
-alembic upgrade head
+alembic -c alembic/alembic.ini upgrade head
 python scripts/seed_db.py
 ```
 
@@ -404,7 +405,7 @@ python scripts/seed_db.py
 cd /path/to/geosafe2
 
 # Install dependencies first
-pip install -r requirements.txt
+pip install -r backend/requirements.txt -r backend/requirements-test.txt
 
 # Then run
 python scripts/seed_db.py
@@ -420,10 +421,10 @@ Visit `http://localhost:8000/docs` for interactive API explorer.
 **Available endpoints:**
 - `GET /` - Health check
 - `GET /health` - Detailed health check
-- `GET /api/warehouses/` - List all warehouses
-- `GET /api/warehouses/{id}` - Get specific warehouse
-- `GET /api/safe-zones/` - List all safe zones
-- `GET /api/safe-zones/{id}` - Get specific safe zone
+- `GET /api/v1/warehouses` - List public warehouse summaries
+- `GET /api/v1/warehouses/{id}` - Get a public warehouse summary
+- `GET /api/v1/safe-zones` - List public safe zone summaries
+- `GET /api/v1/safe-zones/{id}` - Get a public safe zone summary
 
 ### Response Formats
 
@@ -436,7 +437,6 @@ Visit `http://localhost:8000/docs` for interactive API explorer.
     "type": "Point",
     "coordinates": [28.9784, 41.0082]
   },
-  "address": "Taksim District, Beyoğlu, Istanbul",
   "capacity": 500,
   "status": "active",
   "created_at": "2025-12-24T12:00:00"

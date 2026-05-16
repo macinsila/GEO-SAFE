@@ -1,9 +1,21 @@
 import axios, { AxiosInstance } from "axios";
 import {
+  CriticalStockRecord,
+  EmergencyAdminRecord,
+  EmergencyPayload,
+  InventoryItemAdmin,
+  InventoryMovementAdminRecord,
   NearestDepotResult,
   ReliefItemName,
   SafeZone,
+  ShelterOfferAdmin,
+  ShelterOfferPayload,
+  ShelterOfferPublic,
+  VolunteerApplicationAdmin,
+  VolunteerApplicationPayload,
+  VolunteerApplicationPublic,
   Warehouse,
+  WarehouseInventoryAdminRow,
   WarehouseInventoryData,
 } from "../types";
 
@@ -20,9 +32,11 @@ interface ApiEnvelope<T> {
 
 class GeoSafeAPI {
   private client: AxiosInstance;
+  private publicClient: AxiosInstance;
 
   constructor() {
     this.client = axios.create({ baseURL: API_BASE_URL });
+    this.publicClient = axios.create({ baseURL: API_BASE_URL });
 
     // Inject Bearer token from localStorage on every request
     this.client.interceptors.request.use((config) => {
@@ -79,6 +93,13 @@ class GeoSafeAPI {
     return this.unwrap<Warehouse[]>(res.data);
   }
 
+  async fetchAdminWarehouses(): Promise<Warehouse[]> {
+    const res = await this.client.get<ApiEnvelope<Warehouse[]>>(
+      "/api/v1/warehouses/admin"
+    );
+    return this.unwrap<Warehouse[]>(res.data);
+  }
+
   async fetchWarehouseInventory(warehouseId: number): Promise<WarehouseInventoryData> {
     const res = await this.client.get<ApiEnvelope<WarehouseInventoryData>>(
       `/api/v1/warehouses/${warehouseId}/inventory`
@@ -93,10 +114,94 @@ class GeoSafeAPI {
     await this.client.put(`/api/v1/warehouses/${warehouseId}/inventory`, { items });
   }
 
+  async fetchInventoryItemsAdmin(): Promise<InventoryItemAdmin[]> {
+    const res = await this.client.get<ApiEnvelope<InventoryItemAdmin[]>>(
+      "/api/v1/inventory/items/admin"
+    );
+    return this.unwrap(res.data);
+  }
+
+  async createInventoryItemAdmin(payload: {
+    sku: string;
+    name: string;
+    unit: string;
+    description?: string;
+    low_stock_threshold?: number | null;
+    is_active?: boolean;
+  }): Promise<InventoryItemAdmin> {
+    const res = await this.client.post<ApiEnvelope<InventoryItemAdmin>>(
+      "/api/v1/inventory/items/admin",
+      payload
+    );
+    return this.unwrap(res.data);
+  }
+
+  async updateInventoryItemAdmin(
+    itemId: number,
+    payload: Partial<{
+      sku: string;
+      name: string;
+      unit: string;
+      description: string;
+      low_stock_threshold: number | null;
+      is_active: boolean;
+    }>
+  ): Promise<InventoryItemAdmin> {
+    const res = await this.client.patch<ApiEnvelope<InventoryItemAdmin>>(
+      `/api/v1/inventory/items/admin/${itemId}`,
+      payload
+    );
+    return this.unwrap(res.data);
+  }
+
+  async deleteInventoryItemAdmin(itemId: number): Promise<void> {
+    await this.client.delete(`/api/v1/inventory/items/admin/${itemId}`);
+  }
+
+  async fetchWarehouseInventoryAdmin(): Promise<WarehouseInventoryAdminRow[]> {
+    const res = await this.client.get<ApiEnvelope<WarehouseInventoryAdminRow[]>>(
+      "/api/v1/inventory/warehouses/admin"
+    );
+    return this.unwrap(res.data);
+  }
+
+  async updateWarehouseInventoryAdmin(
+    warehouseId: number,
+    itemId: number,
+    payload: { quantity: number; movement_type?: string; note?: string }
+  ): Promise<WarehouseInventoryAdminRow> {
+    const res = await this.client.patch<ApiEnvelope<WarehouseInventoryAdminRow>>(
+      `/api/v1/inventory/warehouses/admin/${warehouseId}/items/${itemId}`,
+      payload
+    );
+    return this.unwrap(res.data);
+  }
+
+  async fetchInventoryMovementsAdmin(): Promise<InventoryMovementAdminRecord[]> {
+    const res = await this.client.get<ApiEnvelope<InventoryMovementAdminRecord[]>>(
+      "/api/v1/inventory/movements/admin"
+    );
+    return this.unwrap(res.data);
+  }
+
+  async fetchCriticalStockAdmin(): Promise<CriticalStockRecord[]> {
+    const res = await this.client.get<ApiEnvelope<CriticalStockRecord[]>>(
+      "/api/v1/inventory/critical/admin"
+    );
+    return this.unwrap(res.data);
+  }
+
   // ── Safe Zones ────────────────────────────────────────────────────────
   async fetchSafeZones(): Promise<SafeZone[]> {
     const res = await this.client.get<SafeZone[] | ApiEnvelope<SafeZone[]>>(
       "/api/v1/safe-zones"
+    );
+    return this.unwrap<SafeZone[]>(res.data);
+  }
+
+  async fetchAdminSafeZones(): Promise<SafeZone[]> {
+    const res = await this.client.get<ApiEnvelope<SafeZone[]>>(
+      "/api/v1/safe-zones/admin"
     );
     return this.unwrap<SafeZone[]>(res.data);
   }
@@ -144,16 +249,82 @@ class GeoSafeAPI {
 
   // ── Emergency ─────────────────────────────────────────────────────────
   async sendEmergency(payload: EmergencyPayload): Promise<void> {
-    await this.client.post("/api/v1/emergency", payload);
+    await this.publicClient.post("/api/v1/emergency", payload);
   }
 
-  async fetchEmergencies(): Promise<EmergencyRecord[]> {
-    const res = await this.client.get<ApiEnvelope<EmergencyRecord[]>>("/api/v1/emergency");
+  async fetchEmergenciesAdmin(status?: string): Promise<EmergencyAdminRecord[]> {
+    const params = status ? { status } : undefined;
+    const res = await this.client.get<ApiEnvelope<EmergencyAdminRecord[]>>(
+      "/api/v1/emergency/admin",
+      { params }
+    );
+    return this.unwrap(res.data);
+  }
+
+  async updateEmergencyStatus(id: number, status: string): Promise<EmergencyAdminRecord> {
+    const res = await this.client.patch<ApiEnvelope<EmergencyAdminRecord>>(
+      `/api/v1/emergency/admin/${id}/status`,
+      { status }
+    );
     return this.unwrap(res.data);
   }
 
   async clearEmergencies(): Promise<void> {
     await this.client.delete("/api/v1/emergency");
+  }
+
+  // ── Volunteers ─────────────────────────────────────────────────────
+  async submitVolunteerApplication(
+    payload: VolunteerApplicationPayload
+  ): Promise<VolunteerApplicationPublic> {
+    const res = await this.publicClient.post<ApiEnvelope<VolunteerApplicationPublic>>(
+      "/api/v1/volunteers",
+      payload
+    );
+    return this.unwrap(res.data);
+  }
+
+  async fetchVolunteerApplicationsAdmin(status?: string): Promise<VolunteerApplicationAdmin[]> {
+    const params = status ? { status } : undefined;
+    const res = await this.client.get<ApiEnvelope<VolunteerApplicationAdmin[]>>(
+      "/api/v1/volunteers/admin",
+      { params }
+    );
+    return this.unwrap(res.data);
+  }
+
+  async updateVolunteerStatus(id: number, status: string): Promise<VolunteerApplicationAdmin> {
+    const res = await this.client.patch<ApiEnvelope<VolunteerApplicationAdmin>>(
+      `/api/v1/volunteers/admin/${id}/status`,
+      { status }
+    );
+    return this.unwrap(res.data);
+  }
+
+  // ── Shelter Offers ──────────────────────────────────────────────────
+  async submitShelterOffer(payload: ShelterOfferPayload): Promise<ShelterOfferPublic> {
+    const res = await this.publicClient.post<ApiEnvelope<ShelterOfferPublic>>(
+      "/api/v1/shelter-offers",
+      payload
+    );
+    return this.unwrap(res.data);
+  }
+
+  async fetchShelterOffersAdmin(status?: string): Promise<ShelterOfferAdmin[]> {
+    const params = status ? { status } : undefined;
+    const res = await this.client.get<ApiEnvelope<ShelterOfferAdmin[]>>(
+      "/api/v1/shelter-offers/admin",
+      { params }
+    );
+    return this.unwrap(res.data);
+  }
+
+  async updateShelterStatus(id: number, status: string): Promise<ShelterOfferAdmin> {
+    const res = await this.client.patch<ApiEnvelope<ShelterOfferAdmin>>(
+      `/api/v1/shelter-offers/admin/${id}/status`,
+      { status }
+    );
+    return this.unwrap(res.data);
   }
 
   // ── Health ────────────────────────────────────────────────────────────
@@ -174,14 +345,7 @@ export interface EarthquakeItem {
   depth: number;
 }
 
-export interface EmergencyPayload {
-  durum: string;
-  saat: string;
-  harita_link: string;
-  enlem: number;
-  boylam: number;
-}
-
+// Legacy alias kept for compatibility with EmergencyPage component
 export interface EmergencyRecord {
   id?: number;
   durum: string;

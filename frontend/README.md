@@ -115,35 +115,36 @@ Our backend returns geospatial data in GeoJSON format:
 
 ### 🐛 Troubleshooting
 
-**"Cannot GET /api/warehouses"**
+**"Cannot GET /api/v1/warehouses"**
 - Make sure backend is running: `docker-compose up`
-- Check REACT_APP_API_URL in `.env.local`
+- Check REACT_APP_API_BASE_URL in `.env.local`
 
 **Map not displaying**
 - Check browser console for errors (F12)
 - Verify Leaflet CSS is loaded (leaflet/dist/leaflet.css)
 
 **No data on map**
-- Check if backend has data (visit `http://localhost:8000/api/warehouses/`)
+- Check if backend has data (visit `http://localhost:8000/api/v1/warehouses`)
 - Check browser Network tab for API calls
 
 ### 📝 Environment Variables
 
-- `REACT_APP_API_URL`: Backend API URL (default: http://localhost:8000)
+- `REACT_APP_API_BASE_URL`: Backend API URL (default: http://localhost:8000)
 - `REACT_APP_MAP_CENTER_LAT`: Default map latitude (default: 41.0082)
 - `REACT_APP_MAP_CENTER_LNG`: Default map longitude (default: 28.9784)
 - `REACT_APP_MAP_DEFAULT_ZOOM`: Default zoom level (default: 12)
 
 ### 🔗 API Endpoints Used
 
-- `GET /api/warehouses/` - List all warehouses
-- `GET /api/safe-zones/` - List all safe zones
+- `GET /api/v1/warehouses` - List public warehouse summaries
+- `GET /api/v1/safe-zones` - List public safe zone summaries
 - `GET /health` - Backend health check
 
 ### 📦 Build for Production
 
 ```bash
 npm run build
+npm test -- --watchAll=false
 ```
 
 Creates optimized production build in `build/` folder.

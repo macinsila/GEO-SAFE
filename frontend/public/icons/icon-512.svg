@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title>GeoSafe Icon</title>
+  <rect width="512" height="512" rx="96" fill="#12406a" />
+  <path d="M256 80 112 171v154c0 70 48 107 144 107s144-37 144-107V171L256 80Z" fill="#f4f7fb" />
+  <path d="M256 154c-30 0-54 24-54 54v24h-28v48h28v78h48v-78h32v78h48v-78h28v-48h-28v-24c0-30-24-54-54-54h-20Z" fill="#12406a" />
+  <path d="M232 210h48v46h-48z" fill="#e4552d" />
+</svg>

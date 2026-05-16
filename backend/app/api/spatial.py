@@ -48,7 +48,6 @@ async def nearest_depot_with_required_item(
             select(
                 Warehouse.id.label("warehouse_id"),
                 Warehouse.name.label("warehouse_name"),
-                Warehouse.address.label("address"),
                 Warehouse.status.label("status"),
                 Item.id.label("item_id"),
                 Item.name.label("item_name"),
@@ -84,7 +83,6 @@ async def nearest_depot_with_required_item(
                     "depot": {
                         "id": row["warehouse_id"],
                         "name": row["warehouse_name"],
-                        "address": row["address"],
                         "status": row["status"],
                     },
                     "distance_km": round(float(row["distance_km"]), 3),

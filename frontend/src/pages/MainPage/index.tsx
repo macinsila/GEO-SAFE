@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { geoSafeAPI, EarthquakeItem, EmergencyPayload } from "../../services";
+import { geoSafeAPI, EarthquakeItem } from "../../services";
 import { Map } from "../../components";
-import { MapClickEvent } from "../../types";
+import { EmergencyPayload, MapClickEvent } from "../../types";
 
 // ── profile types ──────────────────────────────────────────────────────
 interface Profile { name?: string; blood?: string; chronic?: string; meds?: string; allergy?: string; phone?: string }
@@ -28,8 +28,32 @@ const VIDEO_CARDS = [
   { tag: "İlk Yardım", title: "İlk Yardım Eğitimi",                        url: "https://youtu.be/eYLu7dh6nUI" },
 ];
 
+const SUPPORT_CARDS = [
+  {
+    title: "Gönüllü Olabilirim",
+    desc: "Becerilerinizi ve musaitlik bilginizi bildirin.",
+    action: "Basvur",
+    path: "/volunteer",
+    tone: "#0d9488",
+  },
+  {
+    title: "Barınma Destegi",
+    desc: "Evini gecici destek icin bildirmek isteyenler.",
+    action: "Teklif Gonder",
+    path: "/shelter-offer",
+    tone: "#f97316",
+  },
+  {
+    title: "Psikolojik Destek",
+    desc: "Guvenli kaynaklara ve bilgilere ulasin.",
+    action: "Kaynaklara Git",
+    path: "/psychological-support",
+    tone: "#3b82f6",
+  },
+];
+
 export default function MainPage() {
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, role, logout } = useAuth();
   const navigate = useNavigate();
 
   // ── profile ──
@@ -102,7 +126,7 @@ export default function MainPage() {
           enlem: lat,
           boylam: lon,
         } satisfies EmergencyPayload);
-        setSosMsg("✅ Yardım çağrısı gönderildi!");
+        setSosMsg("Bildiriminiz alındı, yetkili ekiplerce değerlendirilecektir.");
         setTimeout(() => { setSosOpen(false); setSosMsg(""); }, 3000);
       } catch { setSosMsg("❌ Gönderilemedi."); }
       setSosSending(false);
@@ -119,7 +143,7 @@ export default function MainPage() {
     <div style={{ minHeight: "100vh", background: "linear-gradient(135deg,#ecfeff,#f0fdfa,#dcfce7,#fef9c3)", fontFamily: "'Outfit','Segoe UI',system-ui,sans-serif", color: "#134e4a" }}>
 
       {/* ── HEADER ── */}
-      <header style={{ position: "sticky", top: 0, zIndex: 2000, background: "linear-gradient(135deg,#fff,#f0fdfa)", borderBottom: "2px solid #0d9488", padding: "0 36px", height: 68, display: "flex", alignItems: "center", justifyContent: "space-between", boxShadow: "0 4px 20px rgba(13,148,136,.14)" }}>
+      <header className="main-header" style={{ position: "sticky", top: 0, zIndex: 2000, background: "linear-gradient(135deg,#fff,#f0fdfa)", borderBottom: "2px solid #0d9488", padding: "0 36px", height: 68, display: "flex", alignItems: "center", justifyContent: "space-between", boxShadow: "0 4px 20px rgba(13,148,136,.14)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ width: 42, height: 42, background: "linear-gradient(135deg,#14b8a6,#0d9488)", borderRadius: 11, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>🛡️</div>
           <div>
@@ -128,7 +152,7 @@ export default function MainPage() {
           </div>
         </div>
 
-        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+        <div className="main-header-actions" style={{ display: "flex", gap: 10, alignItems: "center" }}>
           {/* Profile dropdown */}
           <div ref={profileRef} style={{ position: "relative" }}>
             <button
@@ -176,9 +200,11 @@ export default function MainPage() {
           <button onClick={() => navigate("/emergency")} style={{ padding: "8px 14px", background: "linear-gradient(135deg,#ef4444,#dc2626)", color: "#fff", border: "none", borderRadius: 10, cursor: "pointer", fontWeight: 700, fontSize: 13, fontFamily: "inherit" }}>
             🚨 Acil Durum
           </button>
-          <button onClick={() => navigate("/admin")} style={{ padding: "8px 14px", background: "transparent", border: "1px solid rgba(13,148,136,.6)", color: "#0f766e", borderRadius: 10, cursor: "pointer", fontWeight: 600, fontSize: 13, fontFamily: "inherit" }}>
-            Admin Panel →
-          </button>
+          {role === "admin" && (
+            <button onClick={() => navigate("/admin")} style={{ padding: "8px 14px", background: "transparent", border: "1px solid rgba(13,148,136,.6)", color: "#0f766e", borderRadius: 10, cursor: "pointer", fontWeight: 600, fontSize: 13, fontFamily: "inherit" }}>
+              Admin Panel →
+            </button>
+          )}
           <button onClick={logout} style={{ padding: "8px 14px", background: "#fef2f2", border: "1px solid #fecaca", color: "#dc2626", borderRadius: 10, cursor: "pointer", fontWeight: 600, fontSize: 13, fontFamily: "inherit" }}>
             Çıkış
           </button>
@@ -186,7 +212,7 @@ export default function MainPage() {
       </header>
 
       {/* ── STATUS BAR ── */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 36px", background: "#fff", borderBottom: "1px solid #ccfbf1", boxShadow: "0 2px 8px rgba(13,148,136,.08)" }}>
+      <div className="main-status-bar" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 36px", background: "#fff", borderBottom: "1px solid #ccfbf1", boxShadow: "0 2px 8px rgba(13,148,136,.08)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ width: 8, height: 8, background: "#4ade80", borderRadius: "50%", boxShadow: "0 0 0 3px rgba(74,222,128,.3)", display: "inline-block" }} />
           <span style={{ fontSize: 12, fontWeight: 600 }}>Sistem çevrimiçi — Veriler canlı güncelleniyor</span>
@@ -201,6 +227,31 @@ export default function MainPage() {
       {/* ── MAIN: MAP ── */}
       <div style={{ maxWidth: 1400, margin: "24px auto", padding: "0 28px" }}>
         <Map onClickCoordinates={setClickedCoord} />
+      </div>
+
+      {/* ── SUPPORT ACTIONS ── */}
+      <div style={{ maxWidth: 1400, margin: "0 auto 24px", padding: "0 28px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
+          <div style={{ width: 4, height: 28, background: "linear-gradient(180deg,#14b8a6,#0d9488)", borderRadius: 2 }} />
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 800, textTransform: "uppercase", letterSpacing: .06 }}>Katilim ve Destek</div>
+            <div style={{ fontSize: 12, color: "#94a3b0", marginTop: 2 }}>Gonullu ve barinma bildirimi icin guvenli alan</div>
+          </div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 16 }}>
+          {SUPPORT_CARDS.map(card => (
+            <div key={card.title} style={{ background: "#fff", border: "2px solid #ccfbf1", borderRadius: 16, padding: "18px 18px 16px", boxShadow: "0 8px 22px rgba(13,148,136,.08)", display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: "#134e4a" }}>{card.title}</div>
+              <div style={{ fontSize: 12, color: "#5c7a75", lineHeight: 1.5 }}>{card.desc}</div>
+              <button
+                onClick={() => navigate(card.path)}
+                style={{ marginTop: "auto", padding: "9px 12px", background: card.tone, color: "#fff", border: "none", borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+              >
+                {card.action}
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* ── EARTHQUAKES ── */}

@@ -28,7 +28,7 @@ def _coords_to_wkt_polygon(coords: list[list[float]]) -> str:
     return f"POLYGON(({points}))"
 
 
-def _serialize_safe_zone(zone: SafeZone) -> dict:
+def _serialize_safe_zone(zone: SafeZone, *, include_private: bool = False) -> dict:
     geometry_payload = None
 
     if zone.geometry is not None:
@@ -63,15 +63,18 @@ def _serialize_safe_zone(zone: SafeZone) -> dict:
         except (json.JSONDecodeError, AttributeError, KeyError, TypeError):
             geometry_payload = None
 
-    return {
+    payload = {
         "id": zone.id,
         "name": zone.name,
         "capacity": zone.capacity,
+        "capacity_type": zone.capacity_type,
         "status": zone.status,
         "geometry": geometry_payload,
-        "data": zone.data,
         "created_at": zone.created_at,
     }
+    if include_private:
+        payload["data"] = zone.data
+    return payload
 
 
 @router.get("")
@@ -87,6 +90,20 @@ async def list_safe_zones(db: AsyncSession = Depends(get_db)):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching safe zones: {str(e)}")
+
+
+@router.get("/admin")
+async def list_safe_zones_admin(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_roles("admin")),
+):
+    stmt = select(SafeZone).order_by(SafeZone.id)
+    result = await db.execute(stmt)
+    zones = result.scalars().all()
+    return success_response(
+        data=[_serialize_safe_zone(zone, include_private=True) for zone in zones],
+        message="Admin safe zones listed",
+    )
 
 
 @router.get("/{zone_id}")
@@ -126,9 +143,10 @@ async def create_safe_zone(
         }}
     )
     db.add(zone)
-    await db.commit()
+    await db.flush()
     await db.refresh(zone)
-    return success_response(data=_serialize_safe_zone(zone), message="Safe zone created")
+    await db.commit()
+    return success_response(data=_serialize_safe_zone(zone, include_private=True), message="Safe zone created")
 
 
 @router.put("/{zone_id}")
@@ -162,9 +180,10 @@ async def update_safe_zone(
         "maxLat": max(lats)
     }}
 
-    await db.commit()
+    await db.flush()
     await db.refresh(zone)
-    return success_response(data=_serialize_safe_zone(zone), message="Safe zone updated")
+    await db.commit()
+    return success_response(data=_serialize_safe_zone(zone, include_private=True), message="Safe zone updated")
 
 
 @router.delete("/{zone_id}")
