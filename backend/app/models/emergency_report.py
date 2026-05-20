@@ -18,7 +18,8 @@ class EmergencyReport(Base):
     harita_link = Column(String, nullable=True)
     enlem = Column(Float, nullable=False)
     boylam = Column(Float, nullable=False)
+    status = Column(String(50), default="new", nullable=False)
     created_at = Column(DateTime, server_default=func.now())
 
     def __repr__(self) -> str:
-        return f"<EmergencyReport id={self.id} durum='{self.durum}'>"
+        return f"<EmergencyReport id={self.id} durum='{self.durum}' status='{self.status}'>"

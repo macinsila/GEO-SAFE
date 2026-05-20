@@ -95,7 +95,9 @@ geosafe2/
 │   └── README.md
 │
 ├── docker-compose.yml         # Docker services definition
-├── requirements.txt           # Python dependencies
+├── backend/
+│   ├── requirements.txt       # Backend runtime dependencies
+│   └── requirements-test.txt  # Backend test dependencies
 ├── SETUP_GUIDE.md            # Detailed setup instructions
 ├── QUICKSTART.ps1            # Windows quick start script
 └── README.md                 # This file
@@ -128,13 +130,14 @@ See [SETUP_GUIDE.md](SETUP_GUIDE.md) for detailed step-by-step instructions.
 docker-compose up -d
 
 # 2. Configure backend environment
-# Copy backend/.env.example to backend/.env and set JWT_SECRET and CORS_ORIGINS
+# Copy backend/.env.example to backend/.env and set JWT_SECRET to a long random value.
+# The API fails fast if JWT_SECRET is missing or uses a known placeholder.
 
 # 3. Install dependencies
-pip install -r requirements.txt
+pip install -r backend/requirements.txt -r backend/requirements-test.txt
 
 # 4. Run migrations
-cd backend && alembic upgrade head && cd ..
+cd backend && alembic -c alembic/alembic.ini upgrade head && cd ..
 
 # 5. Seed data
 python scripts/seed_db.py
@@ -144,6 +147,22 @@ cd backend && uvicorn app.main:app --reload
 
 # 7. Start frontend (Terminal 2)
 cd frontend && npm install && npm start
+```
+
+**Sprint 1 verification commands:**
+```powershell
+$env:JWT_SECRET="replace-with-32-plus-char-random-secret"
+docker compose up -d db
+cd backend
+alembic -c alembic/alembic.ini upgrade head
+cd ..
+
+# Create and use a separate test DB. Never run pytest against geosafe_db.
+docker exec geosafe_db psql -U geosafe_user -d postgres -c "CREATE DATABASE geosafe_test_db"
+$env:TEST_DATABASE_URL="postgresql://geosafe_user:geosafe_pass@localhost:5432/geosafe_test_db"
+pytest backend/tests
+npm run build
+npm test -- --watchAll=false
 ```
 
 **Then visit:**
@@ -175,7 +194,33 @@ After seeding, the database includes:
 
 ---
 
-## 🗺️ Understanding GIS & PostGIS
+## � Deployment (Vercel & Render)
+
+### Frontend (Vercel)
+The React frontend can be easily deployed to Vercel. To avoid Python backend build errors (`No FastAPI entrypoint found` or `pg_config executable not found`), you **must** configure Vercel to only build the frontend:
+
+1. Import your GitHub repository in Vercel.
+2. Go to **Settings > General** or configure during import:
+   - **Root Directory:** `GEO-SAFE/frontend`
+   - **Framework Preset:** Create React App
+   - **Build Command:** `npm run build`
+   - **Output Directory:** `build`
+3. Add Environment Variables:
+   - `REACT_APP_API_URL`: Your deployed backend URL (e.g., `https://geosafe-api.onrender.com`).
+
+### Backend (Render / Railway)
+Vercel is Serverless and not ideal for a FastAPI + PostGIS heavy application. Use Render or Railway instead:
+1. Create a Web Service and point it to the repository.
+2. **Root Directory:** `GEO-SAFE`
+3. **Build Command:** `pip install -r requirements.txt` (This uses `psycopg2-binary` to avoid build errors).
+4. **Start Command:** `cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+5. **Environment Variables Needed:**
+   - `DATABASE_URL`: A PostgreSQL + PostGIS database connection string.
+   - `JWT_SECRET`: Used for auth tokens (generate a long random string).
+
+---
+
+## �🗺️ Understanding GIS & PostGIS
 
 ### What is PostGIS?
 
@@ -229,15 +274,21 @@ Visit `http://localhost:8000/docs` (Swagger) or `http://localhost:8000/redoc` (R
 ### Main Endpoints
 
 **Warehouses:**
-- `GET /api/warehouses/` - List all warehouses
-- `GET /api/warehouses/{id}` - Get specific warehouse
+- `GET /api/v1/warehouses` - List public warehouse summaries without operational address/contact metadata
+- `GET /api/v1/warehouses/{id}` - Get a public warehouse summary
+- `GET /api/v1/warehouses/admin` - Admin-only warehouse details
 
 **Safe Zones:**
-- `GET /api/safe-zones/` - List all safe zones
-- `GET /api/safe-zones/{id}` - Get specific safe zone
+- `GET /api/v1/safe-zones` - List public safe zone summaries without raw metadata
+- `GET /api/v1/safe-zones/{id}` - Get a public safe zone summary
+- `GET /api/v1/safe-zones/admin` - Admin-only safe zone details
 
 **Emergency:**
 - `POST /api/v1/emergency` - Create emergency report (rate limited: 5 requests/min per IP)
+
+The anonymous rate limit is in-memory and keyed by `request.client.host`. Production
+deployments behind proxies or multiple API workers must configure trusted proxy headers
+and/or a shared distributed limiter before relying on it as an abuse-control boundary.
 
 **Health:**
 - `GET /health` - Backend health check
@@ -254,7 +305,6 @@ Visit `http://localhost:8000/docs` (Swagger) or `http://localhost:8000/redoc` (R
     "type": "Point",
     "coordinates": [28.9784, 41.0082]
   },
-  "address": "Taksim District, Beyoğlu, Istanbul",
   "capacity": 500,
   "status": "active",
   "created_at": "2025-12-24T12:00:00"
@@ -285,10 +335,10 @@ Visit `http://localhost:8000/docs` (Swagger) or `http://localhost:8000/redoc` (R
 
 ```bash
 # Get all warehouses
-curl http://localhost:8000/api/warehouses/ | jq
+curl http://localhost:8000/api/v1/warehouses | jq
 
 # Get all safe zones
-curl http://localhost:8000/api/safe-zones/ | jq
+curl http://localhost:8000/api/v1/safe-zones | jq
 
 # Health check
 curl http://localhost:8000/health
@@ -341,7 +391,7 @@ SELECT id, name, ST_AsText(geometry) FROM safe_zones;
    ```bash
    cd backend
    alembic revision --autogenerate -m "description"
-   alembic upgrade head
+   alembic -c alembic/alembic.ini upgrade head
    ```
 
 3. **New React component:**
@@ -359,7 +409,7 @@ SELECT id, name, ST_AsText(geometry) FROM safe_zones;
 
 ### "CORS errors"
 - Backend must be running on http://localhost:8000
-- Check frontend `.env.local` has `REACT_APP_API_URL=http://localhost:8000`
+- Check frontend `.env.local` has `REACT_APP_API_BASE_URL=http://localhost:8000`
 
 ### "No data on map"
 1. Backend running? → http://localhost:8000/docs
@@ -473,7 +523,7 @@ MIT License - Feel free to use for learning and projects.
 You'll know everything is working when:
 
 1. ✅ `docker ps` shows running containers
-2. ✅ Backend returns data: `curl http://localhost:8000/api/warehouses/`
+2. ✅ Backend returns data: `curl http://localhost:8000/api/v1/warehouses`
 3. ✅ Frontend loads: http://localhost:3000
 4. ✅ Map shows 5 blue pins and 4 orange areas
 5. ✅ Clicking map shows coordinates

@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(\"c:/Users/Emre/Desktop/Afet Projesi/Geo/.venv/Scripts/pip.exe\" install aiosqlite --quiet)",
+      "Bash(PYTHONPATH=. \"c:/Users/Emre/Desktop/Afet Projesi/Geo/.venv/Scripts/python.exe\" -m uvicorn app.main:app --host 0.0.0.0 --port 8000)",
+      "Bash(echo \"PID=$!\" sleep 5 cat /tmp/uvicorn2.log)",
+      "Bash(curl -s http://localhost:8000/api/v1/safe-zones)",
+      "Bash(curl -s http://localhost:8000/health)",
+      "Bash(curl -s \"http://localhost:8000/api/v1/auth/me\" -H \"Authorization: Bearer invalid\")",
+      "Bash(PYTHONPATH=. PYTHONIOENCODING=utf-8 \"c:/Users/Emre/Desktop/Afet Projesi/Geo/.venv/Scripts/python.exe\" scripts/load_test.py)",
+      "Bash(curl -s -I -X OPTIONS http://localhost:8000/health -H 'Origin: http://localhost:3000' -H 'Access-Control-Request-Method: GET')",
+      "Bash(curl -s -I -X OPTIONS http://localhost:8000/health -H 'Origin: http://evil.example.com' -H 'Access-Control-Request-Method: GET')",
+      "Bash('c:/Users/Emre/Desktop/Afet Projesi/Geo/.venv/Scripts/python.exe' -c ' *)"
+    ]
+  }
+}

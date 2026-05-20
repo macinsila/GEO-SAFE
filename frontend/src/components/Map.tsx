@@ -170,7 +170,8 @@ export const Map: React.FC<MapProps> = ({ onClickCoordinates }) => {
         ref={handleMapRef}
         center={defaultCenter}
         zoom={defaultZoom}
-        style={{ height: "600px", width: "100%" }}
+        className="map-container"
+        style={{ width: "100%" }}
       >
         {/* OpenStreetMap tile layer */}
         <TileLayer

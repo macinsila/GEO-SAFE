@@ -30,6 +30,7 @@ def test_nearest_depot_found(client, data_factory, radius_km):
     assert payload["status"] == "success"
     assert payload["data"]
     assert payload["data"][0]["depot"]["id"] == near["id"]
+    assert "address" not in payload["data"][0]["depot"]
 
     distance_km = payload["data"][0]["distance_km"]
     assert distance_km >= 0

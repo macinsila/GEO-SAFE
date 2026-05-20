@@ -98,7 +98,7 @@ geosafe | geosafe_user | UTF8
 
 ```powershell
 cd backend
-pip install -r ../requirements.txt
+pip install -r requirements.txt -r requirements-test.txt
 ```
 
 **Expected Output:** (no errors)
@@ -110,18 +110,41 @@ Successfully installed fastapi-... sqlalchemy-... geoalchemy2-...
 
 ## ✅ Backend Test Suite
 
-Set the test DB connection string and run pytest from the project root:
+Set the test DB connection string and run pytest from the project root. `TEST_DATABASE_URL`
+is required for the backend suite and must point to a dedicated PostGIS test database
+whose name contains `test` or `_test`; SQLite is not supported by the spatial tests.
+Never run `pytest backend/tests` against the application database (`geosafe_db`) because
+the test suite truncates and drops its own schema during cleanup.
 
 ```powershell
-$env:TEST_DATABASE_URL="postgresql+psycopg://geosafe_user:geosafe_pass@localhost:5432/geosafe"
+docker exec geosafe_db psql -U geosafe_user -d postgres -c "CREATE DATABASE geosafe_test_db"
+$env:TEST_DATABASE_URL="postgresql://geosafe_user:geosafe_pass@localhost:5432/geosafe_test_db"
 pytest backend/tests
 ```
+
+## ✅ Frontend Build Verification
+
+```powershell
+cd frontend
+npm run build
+npm test -- --watchAll=false
+```
+
+The frontend test command intentionally uses CRA's `--passWithNoTests` standard until
+real frontend tests are added.
+
+## Rate Limiter Note
+
+Emergency and nearest-depot rate limits are in-memory per API process and key on
+`request.client.host`. This is enough for Sprint 1 tests, but production deployments
+behind proxies or multiple workers must use trusted forwarded IP handling plus a shared
+distributed limiter before treating rate limits as a security boundary.
 
 ### Step 2.3 - Run Database Migrations
 
 ```powershell
 cd backend
-alembic upgrade head
+alembic -c alembic/alembic.ini upgrade head
 ```
 
 **Expected Output:**
@@ -320,7 +343,7 @@ curl http://localhost:8000/health | jq
 ### Step 4.3 - Test Warehouses Endpoint
 
 ```powershell
-curl http://localhost:8000/api/warehouses/ | jq '.[0]'
+curl http://localhost:8000/api/v1/warehouses | jq '.data[0]'
 ```
 
 **Expected Output:**
@@ -332,7 +355,6 @@ curl http://localhost:8000/api/warehouses/ | jq '.[0]'
     "type": "Point",
     "coordinates": [28.9784, 41.0082]
   },
-  "address": "Taksim District, Beyoğlu, Istanbul",
   "capacity": 500,
   "status": "active",
   "created_at": "2025-12-24T12:00:00"
@@ -342,7 +364,7 @@ curl http://localhost:8000/api/warehouses/ | jq '.[0]'
 ### Step 4.4 - Count Warehouses Response
 
 ```powershell
-curl http://localhost:8000/api/warehouses/ | jq 'length'
+curl http://localhost:8000/api/v1/warehouses | jq '.data | length'
 ```
 
 **Expected Output:**
@@ -353,7 +375,7 @@ curl http://localhost:8000/api/warehouses/ | jq 'length'
 ### Step 4.5 - Test Safe Zones Endpoint
 
 ```powershell
-curl http://localhost:8000/api/safe-zones/ | jq '.[0]'
+curl http://localhost:8000/api/v1/safe-zones | jq '.data[0]'
 ```
 
 **Expected Output:**
@@ -377,7 +399,7 @@ curl http://localhost:8000/api/safe-zones/ | jq '.[0]'
 ### Step 4.6 - Count Safe Zones Response
 
 ```powershell
-curl http://localhost:8000/api/safe-zones/ | jq 'length'
+curl http://localhost:8000/api/v1/safe-zones | jq '.data | length'
 ```
 
 **Expected Output:**
@@ -388,7 +410,7 @@ curl http://localhost:8000/api/safe-zones/ | jq 'length'
 ### Step 4.7 - Test Specific Warehouse
 
 ```powershell
-curl http://localhost:8000/api/warehouses/1 | jq '.name'
+curl http://localhost:8000/api/v1/warehouses/1 | jq '.data.name'
 ```
 
 **Expected Output:**
@@ -409,7 +431,7 @@ Open in browser: `http://localhost:8000/docs`
 ### Step 4.9 - Verify Geometry Serialization
 
 ```powershell
-curl http://localhost:8000/api/warehouses/1 | jq '.location'
+curl http://localhost:8000/api/v1/warehouses/1 | jq '.data.location'
 ```
 
 **Expected Output:**
@@ -517,7 +539,7 @@ Click on a blue pin.
 
 **Expected:**
 - Popup appears with warehouse info
-- Shows: name, status, capacity, address
+- Shows: name, status, capacity, and public geometry
 
 ### Step 6.4 - Verify Safe Zone Polygons
 
@@ -591,8 +613,8 @@ Press `Ctrl+R` or `Cmd+R`.
 ### Step 7.4 - Check API Calls
 
 Look for requests to:
-- `http://localhost:8000/api/warehouses/`
-- `http://localhost:8000/api/safe-zones/`
+- `http://localhost:8000/api/v1/warehouses`
+- `http://localhost:8000/api/v1/safe-zones`
 
 **Expected:**
 - Both requests show Status 200
@@ -601,7 +623,7 @@ Look for requests to:
 
 ### Step 7.5 - Check Response Format
 
-Click on `/api/warehouses/` request.
+Click on the `/api/v1/warehouses` request.
 
 **In Preview tab:**
 ```json
@@ -674,7 +696,7 @@ curl http://localhost:8000/api/invalid-endpoint
 ### Step 8.5 - Test 404 for Warehouse
 
 ```powershell
-curl http://localhost:8000/api/warehouses/999
+curl http://localhost:8000/api/v1/warehouses/999
 ```
 
 **Expected Output:**
@@ -796,7 +818,7 @@ In Network tab, look at waterfall chart.
 ```powershell
 # Measure response time
 $start = Get-Date
-curl http://localhost:8000/api/warehouses/ | Out-Null
+curl http://localhost:8000/api/v1/warehouses | Out-Null
 $end = Get-Date
 Write-Host "Response time: $($end - $start)"
 ```
@@ -887,10 +909,10 @@ uvicorn app.main:app --reload
 
 ### Map shows but no data
 1. Browser console (F12) should show no errors
-2. Check API response: `curl http://localhost:8000/api/warehouses/`
+2. Check API response: `curl http://localhost:8000/api/v1/warehouses`
 3. Verify geometry format is GeoJSON
 
-### "Cannot GET /api/warehouses"
+### "Cannot GET /api/v1/warehouses"
 1. Backend not running
 2. Port 8000 already in use
 3. Check backend logs

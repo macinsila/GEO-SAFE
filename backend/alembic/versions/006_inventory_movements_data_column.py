@@ -16,6 +16,28 @@ depends_on = None
 
 
 def upgrade() -> None:
+    # Alembic creates alembic_version.version_num as VARCHAR(32) by default.
+    # Our later revision ids are longer, so widen it before Alembic updates the row.
+    op.execute(
+        """
+        DO $$
+        BEGIN
+            IF EXISTS (
+                SELECT 1
+                FROM information_schema.columns
+                WHERE table_name = 'alembic_version'
+                  AND column_name = 'version_num'
+                  AND character_maximum_length IS NOT NULL
+                  AND character_maximum_length < 64
+            ) THEN
+                ALTER TABLE alembic_version
+                ALTER COLUMN version_num TYPE VARCHAR(64);
+            END IF;
+        END
+        $$;
+        """
+    )
+
     op.execute(
         """
         DO $$
@@ -39,6 +61,15 @@ def upgrade() -> None:
                   AND column_name = 'data'
             ) THEN
                 ALTER TABLE inventory_movements ADD COLUMN data JSONB;
+            ELSIF EXISTS (
+                SELECT 1
+                FROM information_schema.columns
+                WHERE table_name = 'inventory_movements'
+                  AND column_name = 'metadata'
+            ) THEN
+                UPDATE inventory_movements
+                SET data = metadata
+                WHERE data IS NULL AND metadata IS NOT NULL;
             END IF;
         END
         $$;
@@ -68,8 +99,15 @@ def downgrade() -> None:
                 FROM information_schema.columns
                 WHERE table_name = 'inventory_movements'
                   AND column_name = 'data'
+            ) AND EXISTS (
+                SELECT 1
+                FROM information_schema.columns
+                WHERE table_name = 'inventory_movements'
+                  AND column_name = 'metadata'
             ) THEN
-                ALTER TABLE inventory_movements DROP COLUMN data;
+                UPDATE inventory_movements
+                SET metadata = data
+                WHERE metadata IS NULL AND data IS NOT NULL;
             END IF;
         END
         $$;

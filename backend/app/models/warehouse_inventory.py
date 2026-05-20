@@ -4,7 +4,7 @@ Link table between Warehouse and Item.
 Tracks current stock at each warehouse.
 """
 
-from sqlalchemy import Column, Integer, DateTime, ForeignKey
+from sqlalchemy import CheckConstraint, Column, Integer, DateTime, ForeignKey
 from sqlalchemy.sql import func
 
 from .base import Base
@@ -12,6 +12,9 @@ from .base import Base
 
 class WarehouseInventory(Base):
     __tablename__ = "warehouse_inventory"
+    __table_args__ = (
+        CheckConstraint("quantity >= 0", name="ck_warehouse_inventory_quantity_non_negative"),
+    )
 
     id = Column(Integer, primary_key=True)
     warehouse_id = Column(Integer, ForeignKey("warehouses.id"), nullable=False)

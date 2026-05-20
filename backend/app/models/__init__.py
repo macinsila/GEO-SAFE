@@ -7,6 +7,8 @@ from .item import Item
 from .warehouse_inventory import WarehouseInventory
 from .inventory_movement import InventoryMovement
 from .emergency_report import EmergencyReport
+from .volunteer_application import VolunteerApplication
+from .shelter_offer import ShelterOffer
 
 __all__ = [
     "Base",
@@ -17,4 +19,6 @@ __all__ = [
     "WarehouseInventory",
     "InventoryMovement",
     "EmergencyReport",
+    "VolunteerApplication",
+    "ShelterOffer",
 ]
