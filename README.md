@@ -175,7 +175,33 @@ After seeding, the database includes:
 
 ---
 
-## 🗺️ Understanding GIS & PostGIS
+## � Deployment (Vercel & Render)
+
+### Frontend (Vercel)
+The React frontend can be easily deployed to Vercel. To avoid Python backend build errors (`No FastAPI entrypoint found` or `pg_config executable not found`), you **must** configure Vercel to only build the frontend:
+
+1. Import your GitHub repository in Vercel.
+2. Go to **Settings > General** or configure during import:
+   - **Root Directory:** `GEO-SAFE/frontend`
+   - **Framework Preset:** Create React App
+   - **Build Command:** `npm run build`
+   - **Output Directory:** `build`
+3. Add Environment Variables:
+   - `REACT_APP_API_URL`: Your deployed backend URL (e.g., `https://geosafe-api.onrender.com`).
+
+### Backend (Render / Railway)
+Vercel is Serverless and not ideal for a FastAPI + PostGIS heavy application. Use Render or Railway instead:
+1. Create a Web Service and point it to the repository.
+2. **Root Directory:** `GEO-SAFE`
+3. **Build Command:** `pip install -r requirements.txt` (This uses `psycopg2-binary` to avoid build errors).
+4. **Start Command:** `cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+5. **Environment Variables Needed:**
+   - `DATABASE_URL`: A PostgreSQL + PostGIS database connection string.
+   - `JWT_SECRET`: Used for auth tokens (generate a long random string).
+
+---
+
+## �🗺️ Understanding GIS & PostGIS
 
 ### What is PostGIS?
 
