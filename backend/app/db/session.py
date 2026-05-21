@@ -54,6 +54,23 @@ def _normalize_database_url(raw_url: str) -> str:
 
 DATABASE_URL = _normalize_database_url(os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./geosafe.db"))
 
+
+def _safe_database_url_summary(url: str) -> str:
+    try:
+        parsed = urlsplit(url)
+        return (
+            f"scheme={parsed.scheme} "
+            f"host={parsed.hostname or '<none>'} "
+            f"port={parsed.port or '<default>'} "
+            f"user={parsed.username or '<none>'} "
+            f"database={parsed.path.lstrip('/') or '<none>'}"
+        )
+    except Exception:
+        return "<unparseable database url>"
+
+
+print(f"Database configuration: {_safe_database_url_summary(DATABASE_URL)}")
+
 # SQLite mi Postgres mu otomatik anla
 is_sqlite = DATABASE_URL.startswith("sqlite")
 
