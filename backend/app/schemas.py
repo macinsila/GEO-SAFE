@@ -296,7 +296,7 @@ class ShelterOfferAdminResponse(ShelterOfferPublicResponse):
 
 _VOLUNTEER_STATUSES = {"pending", "approved", "rejected", "inactive"}
 _SHELTER_STATUSES = {"pending", "approved", "rejected", "inactive"}
-_EMERGENCY_STATUSES = {"new", "reviewing", "resolved", "dismissed", "spam"}
+_EMERGENCY_STATUSES = {"new", "reviewing", "verified", "resolved", "dismissed", "spam"}
 
 
 class VolunteerStatusUpdate(BaseModel):
@@ -341,6 +341,8 @@ class EmergencyStatusUpdate(BaseModel):
 class EmergencyAdminResponse(BaseModel):
     id: int
     durum: str
+    kategori: Optional[str] = None
+    aciklama: Optional[str] = None
     saat: str
     harita_link: Optional[str] = None
     enlem: float

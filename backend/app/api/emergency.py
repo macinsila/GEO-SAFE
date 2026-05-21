@@ -20,6 +20,7 @@ from app.schemas import EmergencyAdminResponse, EmergencyStatusUpdate
 
 router = APIRouter(tags=["emergency"])
 
+from typing import Optional as _Opt
 from pydantic import BaseModel
 
 
@@ -29,6 +30,8 @@ class EmergencyCreate(BaseModel):
     harita_link: str
     enlem: float
     boylam: float
+    kategori: _Opt[str] = None
+    aciklama: _Opt[str] = None
 
 
 def _serialize_admin(report: EmergencyReport) -> dict:
@@ -44,7 +47,9 @@ async def acil_bildirim_gonder(
 ):
     await emergency_limiter.check(request)
     bildirim = EmergencyReport(
-        durum=payload.durum,
+        durum=payload.kategori or payload.durum,
+        kategori=payload.kategori,
+        aciklama=payload.aciklama,
         saat=payload.saat,
         harita_link=payload.harita_link,
         enlem=payload.enlem,

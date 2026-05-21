@@ -1132,11 +1132,12 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
                   onChange={(event) => setEmergencyFilter(event.target.value)}
                   style={{ padding: "6px 8px", borderRadius: 6, border: "1px solid #ccc" }}
                 >
-                  <option value="">Tumu</option>
-                  <option value="new">New</option>
-                  <option value="reviewing">Reviewing</option>
-                  <option value="resolved">Resolved</option>
-                  <option value="dismissed">Dismissed</option>
+                  <option value="">Tümü</option>
+                  <option value="new">Yeni</option>
+                  <option value="reviewing">İnceleniyor</option>
+                  <option value="verified">Doğrulandı</option>
+                  <option value="resolved">Çözüldü</option>
+                  <option value="dismissed">Reddedildi</option>
                   <option value="spam">Spam</option>
                 </select>
                 <button
@@ -1167,18 +1168,22 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
                   <thead>
                     <tr style={{ background: "#f5f5f5" }}>
                       <th style={TH}>#</th>
-                      <th style={TH}>Durum</th>
+                      <th style={TH}>Kategori</th>
+                      <th style={TH}>Açıklama</th>
                       <th style={TH}>Saat</th>
                       <th style={TH}>Konum</th>
                       <th style={TH}>Harita</th>
-                      <th style={TH}>Status</th>
+                      <th style={TH}>Durum</th>
                     </tr>
                   </thead>
                   <tbody>
                     {emergencies.map((emergency) => (
                       <tr key={emergency.id}>
                         <td style={TD}>{emergency.id}</td>
-                        <td style={TD}>{emergency.durum}</td>
+                        <td style={TD}>{emergency.kategori ?? emergency.durum}</td>
+                        <td style={{ ...TD, maxWidth: 200, whiteSpace: "normal", wordBreak: "break-word" }}>
+                          {emergency.aciklama ?? "-"}
+                        </td>
                         <td style={TD}>{emergency.saat}</td>
                         <td style={TD}>
                           {emergency.enlem != null && emergency.boylam != null
@@ -1188,7 +1193,7 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
                         <td style={TD}>
                           {emergency.harita_link ? (
                             <a href={emergency.harita_link} target="_blank" rel="noreferrer">
-                              Haritada Gor
+                              Haritada Gör
                             </a>
                           ) : (
                             "-"
@@ -1200,10 +1205,11 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
                             onChange={(event) => updateEmergencyStatus(emergency.id, event.target.value)}
                             style={{ padding: "6px 8px", borderRadius: 6, border: "1px solid #ccc" }}
                           >
-                            <option value="new">New</option>
-                            <option value="reviewing">Reviewing</option>
-                            <option value="resolved">Resolved</option>
-                            <option value="dismissed">Dismissed</option>
+                            <option value="new">Yeni</option>
+                            <option value="reviewing">İnceleniyor</option>
+                            <option value="verified">Doğrulandı</option>
+                            <option value="resolved">Çözüldü</option>
+                            <option value="dismissed">Reddedildi</option>
                             <option value="spam">Spam</option>
                           </select>
                         </td>

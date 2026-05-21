@@ -235,6 +235,8 @@ export interface ShelterOfferAdmin extends ShelterOfferPublic {
 export interface EmergencyAdminRecord {
   id: number;
   durum: string;
+  kategori?: string;
+  aciklama?: string;
   saat: string;
   harita_link?: string;
   enlem?: number;
@@ -249,5 +251,7 @@ export interface EmergencyPayload {
   harita_link: string;
   enlem: number;
   boylam: number;
+  kategori?: string;
+  aciklama?: string;
 }
 
