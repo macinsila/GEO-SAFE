@@ -38,7 +38,7 @@ def _normalize_database_url(raw_url: str) -> str:
 
     if host.startswith("db.") and host.endswith(".supabase.co"):
         project_ref = host.removeprefix("db.").removesuffix(".supabase.co")
-        pooler_host = os.getenv("SUPABASE_POOLER_HOST", "aws-0-ap-southeast-1.pooler.supabase.com").strip()
+        pooler_host = os.getenv("SUPABASE_POOLER_HOST", "aws-1-ap-northeast-1.pooler.supabase.com").strip()
         user = parsed.username or "postgres"
         password = unquote(parsed.password or "")
         username = user if "." in user else f"{user}.{project_ref}"

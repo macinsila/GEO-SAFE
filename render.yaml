@@ -18,4 +18,4 @@ services:
       - key: CORS_ORIGIN_REGEX
         value: https://.*\.vercel\.app
       - key: SUPABASE_POOLER_HOST
-        value: aws-0-ap-southeast-1.pooler.supabase.com
+        value: aws-1-ap-northeast-1.pooler.supabase.com
