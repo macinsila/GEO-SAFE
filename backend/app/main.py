@@ -4,7 +4,7 @@ load_dotenv()
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from app.api import warehouses, safe_zones, auth, emergency, inventory, earthquakes, profile, spatial, volunteers, shelter_offers, qr
+from app.api import warehouses, safe_zones, auth, emergency, inventory, earthquakes, profile, spatial, volunteers, shelter_offers, qr, announcements
 from app.db.session import engine
 from app.models.base import Base
 from app.api.response import success_response, error_response
@@ -19,6 +19,7 @@ from app.models.inventory_movement import InventoryMovement
 from app.models.emergency_report import EmergencyReport
 from app.models.volunteer_application import VolunteerApplication
 from app.models.shelter_offer import ShelterOffer
+from app.models.announcement import Announcement
 
 app = FastAPI(title="GeoSafe API")
 
@@ -66,6 +67,7 @@ app.include_router(spatial.router, prefix="/api/v1/spatial", tags=["spatial"])
 app.include_router(volunteers.router, prefix="/api/v1/volunteers", tags=["volunteers"])
 app.include_router(shelter_offers.router, prefix="/api/v1/shelter-offers", tags=["shelter-offers"])
 app.include_router(qr.router, prefix="/api/v1/qr", tags=["qr"])
+app.include_router(announcements.router, prefix="/api/v1/announcements", tags=["announcements"])
 
 
 @app.exception_handler(HTTPException)

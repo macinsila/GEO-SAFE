@@ -20,6 +20,10 @@ from app.schemas import EmergencyAdminResponse, EmergencyStatusUpdate
 
 router = APIRouter(tags=["emergency"])
 
+# Statuses from which a report cannot be moved back into active triage.
+# Prevents re-opening confirmed fake/spam submissions.
+_TERMINAL_STATUSES = frozenset({"spam", "dismissed"})
+
 from typing import Optional as _Opt
 from pydantic import BaseModel
 
@@ -100,6 +104,12 @@ async def update_emergency_status(
     report = result.scalars().first()
     if report is None:
         raise HTTPException(status_code=404, detail="Emergency report not found")
+
+    if report.status in _TERMINAL_STATUSES and payload.status not in _TERMINAL_STATUSES:
+        raise HTTPException(
+            status_code=422,
+            detail="Bu bildirim terminal durumda (spam/reddedildi). Yeniden açılamaz.",
+        )
 
     report.status = payload.status
     await db.flush()

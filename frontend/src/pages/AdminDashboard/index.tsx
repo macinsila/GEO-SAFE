@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { geoSafeAPI } from "../../services";
 import {
+  AnnouncementAdmin,
+  AnnouncementCreate,
   CriticalStockRecord,
   EmergencyAdminRecord,
   InventoryItemAdmin,
@@ -14,7 +16,7 @@ import {
   WarehouseInventoryData,
 } from "../../types";
 
-type AdminTab = "warehouses" | "safezones" | "emergency" | "volunteers" | "shelters";
+type AdminTab = "warehouses" | "safezones" | "emergency" | "volunteers" | "shelters" | "announcements";
 
 type InventoryEditRow = {
   item_id: number;
@@ -45,6 +47,10 @@ const STATUS_STYLE: Record<string, React.CSSProperties> = {
   resolved: { background: "#2E7D32", color: "#fff" },
   dismissed: { background: "#616161", color: "#fff" },
   spam: { background: "#6A1B9A", color: "#fff" },
+  draft: { background: "#78909C", color: "#fff" },
+  published: { background: "#2E7D32", color: "#fff" },
+  archived: { background: "#455A64", color: "#fff" },
+  verified: { background: "#00838F", color: "#fff" },
 };
 
 const TH: React.CSSProperties = {
@@ -217,6 +223,17 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
   const [shelterOffers, setShelterOffers] = useState<ShelterOfferAdmin[]>([]);
   const [shelterLoading, setShelterLoading] = useState(false);
   const [shelterFilter, setShelterFilter] = useState("");
+
+  const [announcements, setAnnouncements] = useState<AnnouncementAdmin[]>([]);
+  const [announcementsLoading, setAnnouncementsLoading] = useState(false);
+  const [announcementStatusFilter, setAnnouncementStatusFilter] = useState("");
+  const [announcementKategoriFilter, setAnnouncementKategoriFilter] = useState("");
+  const [annTitle, setAnnTitle] = useState("");
+  const [annContent, setAnnContent] = useState("");
+  const [annKategori, setAnnKategori] = useState("genel");
+  const [annPriority, setAnnPriority] = useState("normal");
+  const [annCreateBusy, setAnnCreateBusy] = useState(false);
+  const [annCreateMsg, setAnnCreateMsg] = useState("");
 
   const loadWarehouseOverview = useCallback(async () => {
     setLoading(true);
@@ -534,6 +551,67 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
     await loadShelterOffers();
   };
 
+  const loadAnnouncements = useCallback(async () => {
+    setAnnouncementsLoading(true);
+    try {
+      setAnnouncements(
+        await geoSafeAPI.fetchAnnouncementsAdmin(
+          announcementStatusFilter || undefined,
+          announcementKategoriFilter || undefined
+        )
+      );
+    } finally {
+      setAnnouncementsLoading(false);
+    }
+  }, [announcementStatusFilter, announcementKategoriFilter]);
+
+  useEffect(() => {
+    if (activeTab === "announcements") {
+      loadAnnouncements();
+    }
+  }, [activeTab, loadAnnouncements]);
+
+  const createAndPublishAnnouncement = async (publishNow: boolean) => {
+    if (!annTitle.trim() || !annContent.trim()) {
+      setAnnCreateMsg("Başlık ve içerik zorunludur.");
+      return;
+    }
+    setAnnCreateBusy(true);
+    setAnnCreateMsg("");
+    try {
+      const payload: AnnouncementCreate = {
+        title: annTitle.trim(),
+        content: annContent.trim(),
+        kategori: annKategori || undefined,
+        priority: annPriority,
+      };
+      const created = await geoSafeAPI.createAnnouncement(payload);
+      if (publishNow) {
+        await geoSafeAPI.updateAnnouncement(created.id, { status: "published" });
+      }
+      setAnnTitle("");
+      setAnnContent("");
+      setAnnKategori("genel");
+      setAnnPriority("normal");
+      setAnnCreateMsg(publishNow ? "Duyuru yayımlandı." : "Taslak kaydedildi.");
+      await loadAnnouncements();
+    } catch {
+      setAnnCreateMsg("Duyuru oluşturulamadı.");
+    } finally {
+      setAnnCreateBusy(false);
+    }
+  };
+
+  const updateAnnouncementStatus = async (id: number, status: string) => {
+    await geoSafeAPI.updateAnnouncement(id, { status });
+    await loadAnnouncements();
+  };
+
+  const deleteAnnouncement = async (id: number) => {
+    await geoSafeAPI.deleteAnnouncement(id);
+    await loadAnnouncements();
+  };
+
   const activeWarehouses = warehouses.filter((warehouse) => warehouse.status === "active").length;
   const inactiveWarehouses = warehouses.filter((warehouse) => warehouse.status === "inactive").length;
   const riskyWarehouses = warehouses.filter((warehouse) => warehouse.status === "risky").length;
@@ -637,6 +715,7 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
           <TabBtn id="emergency" label="Acil Bildirimler" />
           <TabBtn id="volunteers" label="Gonulluler" />
           <TabBtn id="shelters" label="Barinma Teklifleri" />
+          <TabBtn id="announcements" label="Duyurular" />
         </div>
 
         {activeTab === "warehouses" && (
@@ -1348,6 +1427,158 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
                             <option value="rejected">Rejected</option>
                             <option value="inactive">Inactive</option>
                           </select>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </SectionCard>
+        )}
+
+        {activeTab === "announcements" && (
+          <SectionCard title="Duyurular">
+            {/* Create form */}
+            <div style={{ background: "#f8f9ff", border: "1px solid #c5cae9", borderRadius: 10, padding: 20, marginBottom: 24 }}>
+              <h3 style={{ margin: "0 0 14px", fontSize: 15, fontWeight: 700, color: "#1a237e" }}>Yeni Duyuru</h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <input
+                  type="text"
+                  placeholder="Başlık *"
+                  value={annTitle}
+                  onChange={(e) => setAnnTitle(e.target.value)}
+                  style={{ padding: "9px 12px", borderRadius: 7, border: "1px solid #c5cae9", fontSize: 14 }}
+                />
+                <textarea
+                  placeholder="İçerik *"
+                  value={annContent}
+                  onChange={(e) => setAnnContent(e.target.value)}
+                  rows={4}
+                  style={{ padding: "9px 12px", borderRadius: 7, border: "1px solid #c5cae9", fontSize: 14, resize: "vertical" }}
+                />
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  <select
+                    value={annKategori}
+                    onChange={(e) => setAnnKategori(e.target.value)}
+                    style={{ padding: "8px 10px", borderRadius: 7, border: "1px solid #c5cae9", fontSize: 13 }}
+                  >
+                    <option value="genel">Genel</option>
+                    <option value="uyari">Uyarı</option>
+                    <option value="tahliye">Tahliye</option>
+                    <option value="saglik">Sağlık</option>
+                    <option value="lojistik">Lojistik</option>
+                    <option value="guvenlik">Güvenlik</option>
+                  </select>
+                  <select
+                    value={annPriority}
+                    onChange={(e) => setAnnPriority(e.target.value)}
+                    style={{ padding: "8px 10px", borderRadius: 7, border: "1px solid #c5cae9", fontSize: 13 }}
+                  >
+                    <option value="low">Normal</option>
+                    <option value="normal">Önemli</option>
+                    <option value="high">Acil</option>
+                    <option value="critical">Kritik</option>
+                  </select>
+                  <button
+                    onClick={() => void createAndPublishAnnouncement(true)}
+                    disabled={annCreateBusy}
+                    style={{ padding: "8px 18px", background: "#1a237e", color: "#fff", border: "none", borderRadius: 7, cursor: "pointer", fontWeight: 700, fontSize: 13 }}
+                  >
+                    {annCreateBusy ? "..." : "Yayımla"}
+                  </button>
+                  <button
+                    onClick={() => void createAndPublishAnnouncement(false)}
+                    disabled={annCreateBusy}
+                    style={{ padding: "8px 18px", background: "#78909c", color: "#fff", border: "none", borderRadius: 7, cursor: "pointer", fontWeight: 600, fontSize: 13 }}
+                  >
+                    Taslak Kaydet
+                  </button>
+                </div>
+                {annCreateMsg && <p style={{ margin: 0, fontSize: 13, color: annCreateMsg.includes("oluşturulamadı") ? "#c62828" : "#2e7d32" }}>{annCreateMsg}</p>}
+              </div>
+            </div>
+
+            {/* Filters */}
+            <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
+              <select
+                value={announcementStatusFilter}
+                onChange={(e) => setAnnouncementStatusFilter(e.target.value)}
+                style={{ padding: "6px 8px", borderRadius: 6, border: "1px solid #ccc", fontSize: 13 }}
+              >
+                <option value="">Tüm Durumlar</option>
+                <option value="draft">Taslak</option>
+                <option value="published">Yayımlandı</option>
+                <option value="archived">Arşivlendi</option>
+              </select>
+              <select
+                value={announcementKategoriFilter}
+                onChange={(e) => setAnnouncementKategoriFilter(e.target.value)}
+                style={{ padding: "6px 8px", borderRadius: 6, border: "1px solid #ccc", fontSize: 13 }}
+              >
+                <option value="">Tüm Kategoriler</option>
+                <option value="genel">Genel</option>
+                <option value="uyari">Uyarı</option>
+                <option value="tahliye">Tahliye</option>
+                <option value="saglik">Sağlık</option>
+                <option value="lojistik">Lojistik</option>
+                <option value="guvenlik">Güvenlik</option>
+              </select>
+            </div>
+
+            {/* Table */}
+            {announcementsLoading ? (
+              <div style={{ color: "#666" }}>Yükleniyor...</div>
+            ) : announcements.length === 0 ? (
+              <div style={{ color: "#666" }}>Duyuru bulunamadı.</div>
+            ) : (
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <thead>
+                    <tr style={{ background: "#f5f5f5" }}>
+                      <th style={TH}>#</th>
+                      <th style={TH}>Başlık</th>
+                      <th style={TH}>Kategori</th>
+                      <th style={TH}>Öncelik</th>
+                      <th style={TH}>Durum</th>
+                      <th style={TH}>Yayım Tarihi</th>
+                      <th style={TH}>İşlem</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {announcements.map((ann) => (
+                      <tr key={ann.id}>
+                        <td style={TD}>{ann.id}</td>
+                        <td style={{ ...TD, maxWidth: 240, whiteSpace: "normal", wordBreak: "break-word" }}>{ann.title}</td>
+                        <td style={TD}>{ann.kategori ?? "-"}</td>
+                        <td style={TD}>
+                          <span style={{ ...(STATUS_STYLE[ann.priority === "critical" ? "risky" : ann.priority === "high" ? "maintenance" : ann.priority === "normal" ? "reviewing" : "inactive"] ?? {}), borderRadius: 12, padding: "2px 8px", fontSize: 12 }}>
+                            {ann.priority === "critical" ? "Kritik" : ann.priority === "high" ? "Acil" : ann.priority === "normal" ? "Önemli" : "Normal"}
+                          </span>
+                        </td>
+                        <td style={TD}>
+                          <select
+                            value={ann.status}
+                            onChange={(e) => void updateAnnouncementStatus(ann.id, e.target.value)}
+                            style={{ padding: "5px 7px", borderRadius: 6, border: "1px solid #ccc", fontSize: 12 }}
+                          >
+                            <option value="draft">Taslak</option>
+                            <option value="published">Yayımlandı</option>
+                            <option value="archived">Arşivlendi</option>
+                          </select>
+                        </td>
+                        <td style={TD}>
+                          {ann.published_at
+                            ? new Date(ann.published_at).toLocaleDateString("tr-TR")
+                            : "-"}
+                        </td>
+                        <td style={TD}>
+                          <button
+                            onClick={() => void deleteAnnouncement(ann.id)}
+                            style={{ background: "#fef2f2", border: "1px solid #fecaca", color: "#dc2626", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 12, fontWeight: 600 }}
+                          >
+                            Sil
+                          </button>
                         </td>
                       </tr>
                     ))}

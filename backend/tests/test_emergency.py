@@ -157,7 +157,8 @@ def test_emergency_admin_status_update_works(client):
     assert create_res.status_code == 201
     em_id = create_res.json()["data"]["id"]
 
-    for new_status in ("reviewing", "resolved", "dismissed", "spam", "new"):
+    # Cycle through forward-flow statuses; spam/dismissed are terminal (no return to new)
+    for new_status in ("reviewing", "resolved", "dismissed", "spam"):
         patch_res = client.patch(
             f"/api/v1/emergency/admin/{em_id}/status",
             json={"status": new_status},

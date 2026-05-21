@@ -4,6 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import { geoSafeAPI, EarthquakeItem } from "../../services";
 import { Map } from "../../components";
 import {
+  Announcement,
   CriticalStockRecord,
   EmergencyAdminRecord,
   EmergencyPayload,
@@ -11,6 +12,39 @@ import {
   SafeZone,
   Warehouse,
 } from "../../types";
+
+const ANN_CACHE_KEY = "geosafe_announcements_v1";
+
+function loadAnnouncementCache(): Announcement[] {
+  try {
+    const raw = localStorage.getItem(ANN_CACHE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as { items: Announcement[] };
+    return parsed.items ?? [];
+  } catch {
+    return [];
+  }
+}
+
+function saveAnnouncementCache(items: Announcement[]) {
+  try {
+    localStorage.setItem(ANN_CACHE_KEY, JSON.stringify({ items, cachedAt: new Date().toISOString() }));
+  } catch { /* ignore */ }
+}
+
+const ANN_PRIORITY_COLORS: Record<string, string> = {
+  critical: "#b71c1c",
+  high: "#e65100",
+  normal: "#1565c0",
+  low: "#616161",
+};
+
+const ANN_PRIORITY_LABELS: Record<string, string> = {
+  critical: "Kritik",
+  high: "Acil",
+  normal: "Önemli",
+  low: "Normal",
+};
 
 interface Profile {
   name?: string;
@@ -216,6 +250,7 @@ export default function MainPage() {
   const [emergencies, setEmergencies] = useState<EmergencyAdminRecord[]>([]);
   const [earthquakes, setEarthquakes] = useState<EarthquakeItem[]>([]);
   const [opsLoading, setOpsLoading] = useState(true);
+  const [recentAnnouncements, setRecentAnnouncements] = useState<Announcement[]>(loadAnnouncementCache().slice(0, 3));
 
   const [sosOpen, setSosOpen] = useState(false);
   const [sosSending, setSosSending] = useState(false);
@@ -260,6 +295,14 @@ export default function MainPage() {
     };
 
     loadOperationalData();
+
+    // Announcements: try to fetch fresh, fall back to cache silently
+    geoSafeAPI.fetchAnnouncements().then((items) => {
+      if (!isMounted) return;
+      saveAnnouncementCache(items);
+      setRecentAnnouncements(items.slice(0, 3));
+    }).catch(() => { /* serve the already-loaded cache */ });
+
     return () => {
       isMounted = false;
     };
@@ -661,6 +704,45 @@ export default function MainPage() {
                     Kaynak videosunu ac
                   </a>
                 </article>
+              </section>
+
+              <section id="announcements" className="ops-panel ops-scroll-target">
+                <SectionHeader eyebrow="Resmi Bilgi" title="Son Duyurular" />
+                {recentAnnouncements.length === 0 ? (
+                  <EmptyState message="Henüz duyuru yok." />
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {recentAnnouncements.map((ann) => {
+                      const color = ANN_PRIORITY_COLORS[ann.priority] ?? "#1565c0";
+                      return (
+                        <div
+                          key={ann.id}
+                          style={{ display: "flex", gap: 10, background: "#f8f9ff", borderRadius: 8, padding: "10px 12px", borderLeft: `4px solid ${color}` }}
+                        >
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                              <span style={{ background: color, color: "#fff", borderRadius: 10, padding: "1px 7px", fontSize: 10, fontWeight: 700 }}>
+                                {ANN_PRIORITY_LABELS[ann.priority] ?? ann.priority}
+                              </span>
+                              <span style={{ fontSize: 11, color: "#999" }}>
+                                {ann.published_at ? new Date(ann.published_at).toLocaleDateString("tr-TR") : ""}
+                              </span>
+                            </div>
+                            <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#1a237e", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                              {ann.title}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <button
+                      onClick={() => navigate("/duyurular")}
+                      style={{ background: "none", border: "1px solid #c5cae9", borderRadius: 8, padding: "7px 12px", color: "#1a237e", fontSize: 13, fontWeight: 600, cursor: "pointer", textAlign: "center" }}
+                    >
+                      Tüm Duyurular →
+                    </button>
+                  </div>
+                )}
               </section>
             </aside>
           </section>
