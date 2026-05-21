@@ -16,6 +16,7 @@ import asyncio
 import os
 import sys
 from datetime import datetime
+from urllib.parse import urlsplit, urlunsplit
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -41,7 +42,19 @@ DATABASE_URL = os.getenv(
     "postgresql+asyncpg://geosafe_user:geosafe_pass@localhost:5432/geosafe_db"
 )
 
-print(f"📦 Connecting to database: {DATABASE_URL}")
+def mask_database_url(url: str) -> str:
+    try:
+        parsed = urlsplit(url)
+        if "@" not in parsed.netloc:
+            return url
+        userinfo, hostinfo = parsed.netloc.rsplit("@", 1)
+        username = userinfo.split(":", 1)[0]
+        return urlunsplit((parsed.scheme, f"{username}:***@{hostinfo}", parsed.path, parsed.query, parsed.fragment))
+    except Exception:
+        return "<configured>"
+
+
+print(f"📦 Connecting to database: {mask_database_url(DATABASE_URL)}")
 
 
 # ============================================================================
