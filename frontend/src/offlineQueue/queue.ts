@@ -53,7 +53,7 @@ export interface SyncResult {
 const OFFLINE_QUEUE_STORAGE_KEY = "geosafe_offline_queue_v1";
 
 const API_BASE_URL =
-  (process.env.REACT_APP_API_BASE_URL as string | undefined) ?? "http://localhost:8000";
+  (process.env.REACT_APP_API_BASE_URL as string | undefined) ?? "http://localhost:8011";
 
 const publicClient = axios.create({ baseURL: API_BASE_URL });
 

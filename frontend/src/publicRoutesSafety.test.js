@@ -33,7 +33,8 @@ describe("public route and public client safety", () => {
   });
 
   it("uses public client for public form submission endpoints", () => {
-    expect(apiSource).toContain('this.publicClient = axios.create({ baseURL: API_BASE_URL });');
+    expect(apiSource).toContain("this.publicClient = axios.create({ baseURL: API_BASE_URL");
+    expect(apiSource).toContain("timeout: API_TIMEOUT_MS");
     expect(apiSource).toContain('await this.publicClient.post("/api/v1/emergency", payload);');
     expect(apiSource).toContain('await this.publicClient.post<ApiEnvelope<VolunteerApplicationPublic>>(');
     expect(apiSource).toContain('"/api/v1/volunteers"');

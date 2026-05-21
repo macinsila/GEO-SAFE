@@ -158,11 +158,7 @@ export const Map: React.FC<MapProps> = ({ onClickCoordinates }) => {
   };
 
   return (
-    <div>
-      <div style={{ marginBottom: "10px", fontSize: "14px", color: "#666" }}>
-        <p>Map layers load live data from API. Click on map to get coordinates.</p>
-      </div>
-
+    <div className="geosafe-map">
       <div className="map-wrapper">
         <CitizenSearch onSearchResult={handleCitizenSearchResult} />
 

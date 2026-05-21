@@ -16,6 +16,7 @@ import asyncio
 import os
 import sys
 from datetime import datetime
+from urllib.parse import urlsplit, urlunsplit
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -41,7 +42,19 @@ DATABASE_URL = os.getenv(
     "postgresql+asyncpg://geosafe_user:geosafe_pass@localhost:5432/geosafe_db"
 )
 
-print(f"📦 Connecting to database: {DATABASE_URL}")
+def mask_database_url(url: str) -> str:
+    try:
+        parsed = urlsplit(url)
+        if "@" not in parsed.netloc:
+            return url
+        userinfo, hostinfo = parsed.netloc.rsplit("@", 1)
+        username = userinfo.split(":", 1)[0]
+        return urlunsplit((parsed.scheme, f"{username}:***@{hostinfo}", parsed.path, parsed.query, parsed.fragment))
+    except Exception:
+        return "<configured>"
+
+
+print(f"📦 Connecting to database: {mask_database_url(DATABASE_URL)}")
 
 
 # ============================================================================
@@ -172,12 +185,42 @@ SAMPLE_SAFE_ZONES = [
 ]
 
 SAMPLE_ITEMS = [
-    {"name": "Blanket", "unit": "piece", "category": "shelter"},
-    {"name": "Water (liter)", "unit": "liter", "category": "hydration"},
-    {"name": "Medical Kit", "unit": "piece", "category": "medical"},
-    {"name": "Food Package", "unit": "box", "category": "food"},
-    {"name": "Tent", "unit": "piece", "category": "shelter"},
-    {"name": "First Aid Supplies", "unit": "pack", "category": "medical"},
+    {
+        "sku": "BLANKET-001",
+        "name": "Blanket",
+        "description": "Thermal emergency blanket.",
+        "unit": "piece",
+    },
+    {
+        "sku": "WATER-001",
+        "name": "Water (liter)",
+        "description": "Potable water supply.",
+        "unit": "liter",
+    },
+    {
+        "sku": "MEDKIT-001",
+        "name": "Medical Kit",
+        "description": "Basic medical kit for first response.",
+        "unit": "piece",
+    },
+    {
+        "sku": "FOOD-001",
+        "name": "Food Package",
+        "description": "Non-perishable emergency food.",
+        "unit": "box",
+    },
+    {
+        "sku": "TENT-001",
+        "name": "Tent",
+        "description": "Emergency shelter tent.",
+        "unit": "piece",
+    },
+    {
+        "sku": "FIRSTAID-001",
+        "name": "First Aid Supplies",
+        "description": "First aid refills and supplies.",
+        "unit": "pack",
+    },
 ]
 
 

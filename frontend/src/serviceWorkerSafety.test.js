@@ -34,9 +34,11 @@ describe("service worker safety policy", () => {
     expect(source).toContain('"/health"');
   });
 
-  it("registers the service worker only in production and handles failures safely", () => {
+  it("cleans up service worker caches in production and handles failures safely", () => {
     expect(indexSource).toContain('process.env.NODE_ENV === "production"');
-    expect(indexSource).toContain('navigator.serviceWorker.register("/service-worker.js")');
+    expect(indexSource).toContain("navigator.serviceWorker.getRegistrations()");
+    expect(indexSource).toContain("registration.unregister()");
+    expect(indexSource).toContain("caches.delete(key)");
     expect(indexSource).toContain(".catch(() => {");
   });
 });
