@@ -1,4 +1,4 @@
-const SW_VERSION = "3b1-v1";
+const SW_VERSION = "login-timeout-v1";
 const SHELL_CACHE = `geosafe-shell-${SW_VERSION}`;
 const PUBLIC_CACHE = `geosafe-public-${SW_VERSION}`;
 const OFFLINE_URL = "/offline.html";

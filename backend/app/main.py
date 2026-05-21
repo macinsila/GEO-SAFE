@@ -22,17 +22,20 @@ from app.models.shelter_offer import ShelterOffer
 
 app = FastAPI(title="GeoSafe API")
 
-# CORS: read allowed origins from env; default to localhost dev URLs only.
-# In production set: CORS_ORIGINS=https://pilot.geosafe.app,https://admin.geosafe.app
+# CORS: read allowed origins from env. Vercel preview/production URLs are
+# supported by default because this project deploys the frontend on Vercel.
+# In production, set CORS_ORIGINS to the exact frontend URL when possible.
 _raw_origins = os.getenv(
     "CORS_ORIGINS",
     "http://localhost:3000,http://127.0.0.1:3000,http://localhost:4173,http://127.0.0.1:4173,http://localhost:8000",
 )
 allowed_origins = [o.strip() for o in _raw_origins.split(",") if o.strip()]
+allowed_origin_regex = os.getenv("CORS_ORIGIN_REGEX", r"https://.*\.vercel\.app").strip() or None
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
+    allow_origin_regex=allowed_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

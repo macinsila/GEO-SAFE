@@ -12,6 +12,18 @@ interface Msg {
   text: string;
 }
 
+const LOGIN_TIMEOUT_MS = 15000;
+
+function withTimeout<T>(promise: Promise<T>, timeoutMessage: string): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout>;
+
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(timeoutMessage)), LOGIN_TIMEOUT_MS);
+  });
+
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
+}
+
 function getErrorMessage(error: unknown, fallback: string): string {
   if (axios.isAxiosError(error)) {
     if (error.code === "ECONNABORTED") {
@@ -68,7 +80,10 @@ export default function LoginPage() {
     setLoading(true);
     clearMsg();
     try {
-      const token = await geoSafeAPI.login(loginEmail, loginPassword);
+      const token = await withTimeout(
+        geoSafeAPI.login(loginEmail, loginPassword),
+        "Login istegi zaman asimina ugradi. Vercel API adresi, Render backend ve CORS ayarlarini kontrol edin."
+      );
       login(token);
       navigate("/");
     } catch (error) {
@@ -83,8 +98,14 @@ export default function LoginPage() {
     setLoading(true);
     clearMsg();
     try {
-      await geoSafeAPI.register(regName || "Kullanici", regEmail, regPassword);
-      const token = await geoSafeAPI.login(regEmail, regPassword);
+      await withTimeout(
+        geoSafeAPI.register(regName || "Kullanici", regEmail, regPassword),
+        "Kayit istegi zaman asimina ugradi. Vercel API adresi, Render backend ve CORS ayarlarini kontrol edin."
+      );
+      const token = await withTimeout(
+        geoSafeAPI.login(regEmail, regPassword),
+        "Login istegi zaman asimina ugradi. Vercel API adresi, Render backend ve CORS ayarlarini kontrol edin."
+      );
       login(token);
       navigate("/");
     } catch (error) {
