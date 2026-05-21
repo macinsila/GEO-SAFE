@@ -19,8 +19,48 @@ import {
   WarehouseInventoryData,
 } from "../types";
 
-const API_BASE_URL =
-  (process.env.REACT_APP_API_BASE_URL as string | undefined) ?? "http://localhost:8011";
+const configuredApiBaseUrl = (process.env.REACT_APP_API_BASE_URL as string | undefined)?.trim();
+const API_TIMEOUT_MS = 15000;
+
+const isLocalHostname = (hostname: string): boolean =>
+  ["localhost", "127.0.0.1", "::1", ""].includes(hostname);
+
+const isLocalApiUrl = (url: string): boolean => {
+  try {
+    return isLocalHostname(new URL(url).hostname);
+  } catch {
+    return false;
+  }
+};
+
+const getApiConfig = (): { baseUrl: string; error: string | null } => {
+  const frontendHostname = typeof window === "undefined" ? "localhost" : window.location.hostname;
+  const isLocalFrontend = isLocalHostname(frontendHostname);
+
+  if (!configuredApiBaseUrl) {
+    if (isLocalFrontend) {
+      return { baseUrl: "http://localhost:8011", error: null };
+    }
+
+    return {
+      baseUrl: "",
+      error:
+        "API adresi ayarlanmamis. Vercel ortam degiskenlerinde REACT_APP_API_BASE_URL Render backend URL'i olmali.",
+    };
+  }
+
+  if (!isLocalFrontend && isLocalApiUrl(configuredApiBaseUrl)) {
+    return {
+      baseUrl: "",
+      error:
+        "Canli sitede API adresi localhost olamaz. Vercel'de REACT_APP_API_BASE_URL Render backend URL'i olarak ayarlanmali.",
+    };
+  }
+
+  return { baseUrl: configuredApiBaseUrl.replace(/\/+$/, ""), error: null };
+};
+
+const { baseUrl: API_BASE_URL, error: API_CONFIG_ERROR } = getApiConfig();
 
 const TOKEN_KEY = "geosafe_token";
 
@@ -35,10 +75,26 @@ class GeoSafeAPI {
   private publicClient: AxiosInstance;
 
   constructor() {
-    this.client = axios.create({ baseURL: API_BASE_URL });
-    this.publicClient = axios.create({ baseURL: API_BASE_URL });
+    this.client = axios.create({ baseURL: API_BASE_URL, timeout: API_TIMEOUT_MS });
+    this.publicClient = axios.create({ baseURL: API_BASE_URL, timeout: API_TIMEOUT_MS });
 
-    // Inject Bearer token from localStorage on every request
+    this.client.interceptors.request.use((config) => {
+      if (API_CONFIG_ERROR) {
+        return Promise.reject(new Error(API_CONFIG_ERROR));
+      }
+
+      return config;
+    });
+
+    this.publicClient.interceptors.request.use((config) => {
+      if (API_CONFIG_ERROR) {
+        return Promise.reject(new Error(API_CONFIG_ERROR));
+      }
+
+      return config;
+    });
+
+    // Inject Bearer token from localStorage on every authenticated request
     this.client.interceptors.request.use((config) => {
       const token = localStorage.getItem(TOKEN_KEY);
       if (token) {

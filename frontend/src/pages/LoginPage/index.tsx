@@ -14,6 +14,14 @@ interface Msg {
 
 function getErrorMessage(error: unknown, fallback: string): string {
   if (axios.isAxiosError(error)) {
+    if (error.code === "ECONNABORTED") {
+      return "Backend yanit vermedi. Render servisinin acik oldugunu ve Vercel API adresinin dogru oldugunu kontrol edin.";
+    }
+
+    if (!error.response && error.message === "Network Error") {
+      return "Backend'e ulasilamadi. Render URL'i veya CORS_ORIGINS ayari hatali olabilir.";
+    }
+
     const detail = error.response?.data?.detail;
     if (typeof detail === "string" && detail.trim()) {
       return detail;
