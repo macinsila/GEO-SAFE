@@ -19,7 +19,9 @@ engine = create_async_engine(
     DATABASE_URL,
     echo=False,
     future=True,
-    connect_args=connect_args
+    connect_args=connect_args,
+    pool_pre_ping=True,
+    pool_timeout=30,
 )
 
 # Session factory: creates new session instances

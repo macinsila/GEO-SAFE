@@ -20,7 +20,7 @@ import {
 } from "../types";
 
 const configuredApiBaseUrl = (process.env.REACT_APP_API_BASE_URL as string | undefined)?.trim();
-const API_TIMEOUT_MS = 15000;
+const API_TIMEOUT_MS = 60000;
 
 const isLocalHostname = (hostname: string): boolean =>
   ["localhost", "127.0.0.1", "::1", ""].includes(hostname);

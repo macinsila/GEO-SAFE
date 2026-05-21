@@ -12,7 +12,7 @@ interface Msg {
   text: string;
 }
 
-const LOGIN_TIMEOUT_MS = 15000;
+const LOGIN_TIMEOUT_MS = 60000;
 
 function withTimeout<T>(promise: Promise<T>, timeoutMessage: string): Promise<T> {
   let timeoutId: ReturnType<typeof setTimeout>;
@@ -27,7 +27,7 @@ function withTimeout<T>(promise: Promise<T>, timeoutMessage: string): Promise<T>
 function getErrorMessage(error: unknown, fallback: string): string {
   if (axios.isAxiosError(error)) {
     if (error.code === "ECONNABORTED") {
-      return "Backend yanit vermedi. Render servisinin acik oldugunu ve Vercel API adresinin dogru oldugunu kontrol edin.";
+      return "Backend 60 saniye icinde yanit vermedi. Render servisi uyaniyor olabilir; biraz sonra tekrar deneyin veya Render loglarini kontrol edin.";
     }
 
     if (!error.response && error.message === "Network Error") {
@@ -82,7 +82,7 @@ export default function LoginPage() {
     try {
       const token = await withTimeout(
         geoSafeAPI.login(loginEmail, loginPassword),
-        "Login istegi zaman asimina ugradi. Vercel API adresi, Render backend ve CORS ayarlarini kontrol edin."
+        "Login istegi 60 saniye icinde yanit alamadi. Render servisi, Supabase baglantisi veya backend loglari kontrol edilmeli."
       );
       login(token);
       navigate("/");
@@ -100,11 +100,11 @@ export default function LoginPage() {
     try {
       await withTimeout(
         geoSafeAPI.register(regName || "Kullanici", regEmail, regPassword),
-        "Kayit istegi zaman asimina ugradi. Vercel API adresi, Render backend ve CORS ayarlarini kontrol edin."
+        "Kayit istegi 60 saniye icinde yanit alamadi. Render servisi, Supabase baglantisi veya backend loglari kontrol edilmeli."
       );
       const token = await withTimeout(
         geoSafeAPI.login(regEmail, regPassword),
-        "Login istegi zaman asimina ugradi. Vercel API adresi, Render backend ve CORS ayarlarini kontrol edin."
+        "Login istegi 60 saniye icinde yanit alamadi. Render servisi, Supabase baglantisi veya backend loglari kontrol edilmeli."
       );
       login(token);
       navigate("/");
