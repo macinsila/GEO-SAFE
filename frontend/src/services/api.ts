@@ -39,7 +39,7 @@ const getApiConfig = (): { baseUrl: string; error: string | null } => {
 
   if (!configuredApiBaseUrl) {
     if (isLocalFrontend) {
-      return { baseUrl: "http://localhost:8011", error: null };
+      return { baseUrl: "http://localhost:8000", error: null };
     }
 
     return {
