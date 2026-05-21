@@ -24,7 +24,10 @@ app = FastAPI(title="GeoSafe API")
 
 # CORS: read allowed origins from env; default to localhost dev URLs only.
 # In production set: CORS_ORIGINS=https://pilot.geosafe.app,https://admin.geosafe.app
-_raw_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:8000")
+_raw_origins = os.getenv(
+    "CORS_ORIGINS",
+    "http://localhost:3000,http://127.0.0.1:3000,http://localhost:4173,http://127.0.0.1:4173,http://localhost:8000",
+)
 allowed_origins = [o.strip() for o in _raw_origins.split(",") if o.strip()]
 
 app.add_middleware(

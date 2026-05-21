@@ -20,7 +20,7 @@ import {
 } from "../types";
 
 const API_BASE_URL =
-  (process.env.REACT_APP_API_BASE_URL as string | undefined) ?? "http://localhost:8000";
+  (process.env.REACT_APP_API_BASE_URL as string | undefined) ?? "http://localhost:8011";
 
 const TOKEN_KEY = "geosafe_token";
 

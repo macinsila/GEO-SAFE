@@ -38,8 +38,17 @@ Write-Host ""
 
 # Step 1: Start Docker containers
 Write-Host "Step 1: Starting Docker containers..." -ForegroundColor Cyan
-Write-Host "   Running: docker-compose up -d" -ForegroundColor Gray
-docker-compose up -d
+if (-not $env:JWT_SECRET) {
+    $env:JWT_SECRET = "replace-this-with-a-32-plus-char-random-secret"
+}
+if (-not $env:GEOSAFE_BACKEND_PORT) {
+    $env:GEOSAFE_BACKEND_PORT = "8011"
+}
+if (-not $env:REACT_APP_API_BASE_URL) {
+    $env:REACT_APP_API_BASE_URL = "http://localhost:$($env:GEOSAFE_BACKEND_PORT)"
+}
+Write-Host "   Running: docker compose up -d --build" -ForegroundColor Gray
+docker compose up -d --build
 Start-Sleep -Seconds 3
 Write-Host "   OK: Containers started" -ForegroundColor Green
 Write-Host ""
@@ -104,7 +113,7 @@ Write-Host "   npm start" -ForegroundColor Gray
 Write-Host ""
 Write-Host "Then visit:" -ForegroundColor Yellow
 Write-Host "   Frontend:  http://localhost:3000" -ForegroundColor Cyan
-Write-Host "   Backend:   http://localhost:8000/docs" -ForegroundColor Cyan
+Write-Host "   Backend:   http://localhost:$($env:GEOSAFE_BACKEND_PORT)/docs" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Happy coding! GeoSafe is ready for development." -ForegroundColor Green
 Write-Host ""
