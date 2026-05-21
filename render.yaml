@@ -17,3 +17,5 @@ services:
         sync: false
       - key: CORS_ORIGIN_REGEX
         value: https://.*\.vercel\.app
+      - key: SUPABASE_POOLER_HOST
+        value: aws-0-eu-central-1.pooler.supabase.com
