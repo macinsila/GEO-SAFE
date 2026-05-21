@@ -9,6 +9,10 @@ from urllib.parse import quote, unquote, urlsplit, urlunsplit
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
+SUPABASE_PROJECT_POOLER_HOSTS = {
+    "jihsjgirttfipldhhfxx": "aws-1-ap-northeast-1.pooler.supabase.com",
+}
+
 
 def _repair_unescaped_fragment(url: str) -> str:
     """Treat an unescaped # in a DB password as part of the password."""
@@ -38,7 +42,10 @@ def _normalize_database_url(raw_url: str) -> str:
 
     if host.startswith("db.") and host.endswith(".supabase.co"):
         project_ref = host.removeprefix("db.").removesuffix(".supabase.co")
-        pooler_host = os.getenv("SUPABASE_POOLER_HOST", "aws-1-ap-northeast-1.pooler.supabase.com").strip()
+        pooler_host = SUPABASE_PROJECT_POOLER_HOSTS.get(
+            project_ref,
+            os.getenv("SUPABASE_POOLER_HOST", "aws-1-ap-northeast-1.pooler.supabase.com").strip(),
+        )
         user = parsed.username or "postgres"
         password = unquote(parsed.password or "")
         username = user if "." in user else f"{user}.{project_ref}"
