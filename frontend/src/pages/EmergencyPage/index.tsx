@@ -6,37 +6,48 @@ import {
 } from "../../offlineQueue/context";
 import { geoSafeAPI } from "../../services";
 
-type Phase = "select" | "loading" | "done" | "error";
+type Phase = "form" | "loading" | "done" | "error";
 
-const TYPES = [
-  { label: "Enkaz Altindayim", value: "Enkaz Altindayim" },
-  { label: "Yaraliyim", value: "Yaraliyim" },
-  { label: "Yangin Var", value: "Yangin Var" },
+const CATEGORIES = [
+  { label: "Enkaz Altındayım", value: "Enkaz Altindayim" },
+  { label: "Yaralıyım", value: "Yaraliyim" },
+  { label: "Yangın Var", value: "Yangin Var" },
   { label: "Sel Var", value: "Sel Var" },
-  { label: "Diger Acil", value: "Diger Acil" },
+  { label: "Diğer Acil", value: "Diger Acil" },
 ];
 
 export default function EmergencyPage() {
   const navigate = useNavigate();
   const { isOnline, submitOrQueue } = useOfflineQueue();
-  const [phase, setPhase] = useState<Phase>("select");
+  const [phase, setPhase] = useState<Phase>("form");
   const [errMsg, setErrMsg] = useState("");
-  const [sent, setSent] = useState("");
+  const [sentMsg, setSentMsg] = useState("");
+
+  const [kategori, setKategori] = useState(CATEGORIES[0].value);
+  const [aciklama, setAciklama] = useState("");
+
   const [manualLat, setManualLat] = useState("");
   const [manualLon, setManualLon] = useState("");
   const [needManual, setNeedManual] = useState(false);
-  const [pendingType, setPendingType] = useState("");
   const [queueConsent, setQueueConsent] = useState(false);
   const [needsConsent, setNeedsConsent] = useState(false);
 
-  const send = async (type: string, lat: number, lon: number) => {
+  const send = async (lat: number, lon: number) => {
     setPhase("loading");
     const saat = new Date().toLocaleString("tr-TR");
     const haritaLink = `https://www.google.com/maps?q=${lat},${lon}`;
     try {
       const result = await submitOrQueue({
         type: "emergency",
-        payload: { durum: type, saat, harita_link: haritaLink, enlem: lat, boylam: lon },
+        payload: {
+          durum: kategori,
+          kategori,
+          aciklama: aciklama.trim() || undefined,
+          saat,
+          harita_link: haritaLink,
+          enlem: lat,
+          boylam: lon,
+        },
         hasConsent: isOnline ? true : queueConsent,
         submitOnline: async (payload) => {
           await geoSafeAPI.sendEmergency(payload);
@@ -45,48 +56,48 @@ export default function EmergencyPage() {
 
       if (result === "consent_required") {
         setNeedsConsent(true);
-        setErrMsg("Cevrimdisi kayit icin once acik onay vermelisiniz.");
-        setPhase("select");
+        setErrMsg("Çevrimdışı kayıt için önce açık onay vermelisiniz.");
+        setPhase("form");
         return;
       }
 
-      setSent(
+      setSentMsg(
         result === "queued"
-          ? `${type} bildirimi internet gelince gonderilecek.`
-          : type
+          ? `${kategori} bildirimi internet gelince gönderilecek.`
+          : kategori
       );
       setNeedsConsent(false);
       setQueueConsent(false);
       setErrMsg("");
       setPhase("done");
     } catch {
-      setErrMsg("Sunucuya baglanilamadi.");
+      setErrMsg("Sunucuya bağlanılamadı.");
       setPhase("error");
     }
   };
 
-  const handleType = async (type: string) => {
-    setPendingType(type);
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (needManual) {
+      const lat = parseFloat(manualLat);
+      const lon = parseFloat(manualLon);
+      if (Number.isNaN(lat) || Number.isNaN(lon)) {
+        setErrMsg("Geçerli koordinat girin.");
+        return;
+      }
+      await send(lat, lon);
+      return;
+    }
+
     setPhase("loading");
     navigator.geolocation.getCurrentPosition(
-      (pos) => void send(type, pos.coords.latitude, pos.coords.longitude),
+      (pos) => void send(pos.coords.latitude, pos.coords.longitude),
       () => {
         setNeedManual(true);
-        setPhase("select");
+        setPhase("form");
       },
       { timeout: 6000 }
     );
-  };
-
-  const handleManualSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    const lat = parseFloat(manualLat);
-    const lon = parseFloat(manualLon);
-    if (Number.isNaN(lat) || Number.isNaN(lon)) {
-      setErrMsg("Gecerli koordinat girin.");
-      return;
-    }
-    await send(pendingType, lat, lon);
   };
 
   return (
@@ -121,107 +132,127 @@ export default function EmergencyPage() {
           Acil Durum
         </h1>
         <p style={{ color: "#555", fontSize: 14, marginBottom: 28 }}>
-          Durumunuzu secin, konumunuz eklenerek bildirim olusturulsun.
+          Yardım kategorisini seçin, açıklama ekleyin. Konumunuz otomatik alınır.
         </p>
 
         {phase === "loading" && (
           <div style={{ padding: 40, color: "#b71c1c", fontWeight: 700, fontSize: 16 }}>
-            Konum aliniyor ve bildirim hazirlaniyor...
+            Konum alınıyor ve bildirim hazırlanıyor...
           </div>
         )}
 
         {phase === "done" && (
           <div style={{ background: "#d1fae5", border: "1px solid #6ee7b7", borderRadius: 16, padding: 32, color: "#065f46" }}>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>OK</div>
+            <div style={{ fontSize: 48, marginBottom: 12 }}>✓</div>
             <h2 style={{ margin: 0, fontSize: 20 }}>Bildirim Kaydedildi</h2>
-            <p style={{ marginTop: 8, fontSize: 14 }}>{sent}</p>
+            <p style={{ marginTop: 8, fontSize: 14 }}>{sentMsg}</p>
             <p style={{ marginTop: 4, fontSize: 13, opacity: 0.8 }}>
-              Cevrimiciyseniz hemen gonderildi. Cevrimdisiyseniz internet gelince otomatik veya manuel sync ile iletilecek.
+              Çevrimiçiyseniz hemen gönderildi. Çevrimdışıyseniz internet gelince otomatik veya manuel sync ile iletilecek.
             </p>
             <button
               onClick={() => navigate("/")}
               style={{ marginTop: 20, padding: "10px 28px", background: "#065f46", color: "#fff", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" }}
             >
-              Ana Sayfaya Don
+              Ana Sayfaya Dön
             </button>
           </div>
         )}
 
         {phase === "error" && (
           <div style={{ background: "#fee2e2", border: "1px solid #fca5a5", borderRadius: 16, padding: 32, color: "#991b1b" }}>
-            <div style={{ fontSize: 40, marginBottom: 10 }}>X</div>
+            <div style={{ fontSize: 40, marginBottom: 10 }}>✕</div>
             <p style={{ fontWeight: 700 }}>{errMsg}</p>
-            <button onClick={() => setPhase("select")} style={{ marginTop: 16, padding: "9px 22px", background: "#b91c1c", color: "#fff", border: "none", borderRadius: 10, cursor: "pointer", fontWeight: 700 }}>
+            <button onClick={() => setPhase("form")} style={{ marginTop: 16, padding: "9px 22px", background: "#b91c1c", color: "#fff", border: "none", borderRadius: 10, cursor: "pointer", fontWeight: 700 }}>
               Tekrar Dene
             </button>
           </div>
         )}
 
-        {phase === "select" && !needManual && (
-          <>
-            {(needsConsent || !isOnline) && (
-              <div style={{ marginBottom: 16 }}>
-                <OfflineConsentNotice checked={queueConsent} onChange={setQueueConsent} />
-              </div>
-            )}
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              {TYPES.map((typeOption) => (
-                <button
-                  key={typeOption.value}
-                  onClick={() => void handleType(typeOption.value)}
-                  style={{
-                    padding: "20px 24px",
-                    background: "#d32f2f",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 50,
-                    fontSize: 18,
-                    fontWeight: 800,
-                    cursor: "pointer",
-                    boxShadow: "0 6px 18px rgba(211,47,47,0.4)",
-                    textTransform: "uppercase",
-                    letterSpacing: 1,
-                  }}
-                >
-                  {typeOption.label}
-                </button>
-              ))}
-            </div>
-          </>
-        )}
-
-        {phase === "select" && needManual && (
+        {(phase === "form") && (
           <div style={{ background: "#fff", borderRadius: 16, padding: 28, boxShadow: "0 8px 24px rgba(0,0,0,.10)" }}>
-            <p style={{ color: "#c53030", fontWeight: 700, marginBottom: 16 }}>
-              Konum izni verilmedi. Koordinati manuel girin.
-            </p>
             {(needsConsent || !isOnline) && (
               <div style={{ marginBottom: 16 }}>
                 <OfflineConsentNotice checked={queueConsent} onChange={setQueueConsent} />
               </div>
             )}
-            <form onSubmit={handleManualSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <input
-                type="number"
-                step="any"
-                placeholder="Enlem (or: 41.01)"
-                value={manualLat}
-                onChange={(event) => setManualLat(event.target.value)}
-                required
-                style={{ padding: "10px 12px", borderRadius: 8, border: "1px solid #ccc", fontSize: 14 }}
-              />
-              <input
-                type="number"
-                step="any"
-                placeholder="Boylam (or: 28.97)"
-                value={manualLon}
-                onChange={(event) => setManualLon(event.target.value)}
-                required
-                style={{ padding: "10px 12px", borderRadius: 8, border: "1px solid #ccc", fontSize: 14 }}
-              />
-              {errMsg && <p style={{ color: "#c53030", fontSize: 13 }}>{errMsg}</p>}
-              <button type="submit" style={{ padding: "13px", background: "#d32f2f", color: "#fff", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 800, cursor: "pointer" }}>
-                Bildir: {pendingType}
+
+            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14, textAlign: "left" }}>
+              <div>
+                <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#7f1d1d", marginBottom: 6 }}>
+                  Yardım Kategorisi *
+                </label>
+                <select
+                  value={kategori}
+                  onChange={(e) => setKategori(e.target.value)}
+                  required
+                  style={{ width: "100%", padding: "12px 14px", borderRadius: 8, border: "2px solid #fca5a5", fontSize: 15, fontWeight: 600, color: "#7f1d1d", background: "#fff7f7", cursor: "pointer" }}
+                >
+                  {CATEGORIES.map((cat) => (
+                    <option key={cat.value} value={cat.value}>{cat.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#555", marginBottom: 6 }}>
+                  Açıklama (isteğe bağlı)
+                </label>
+                <textarea
+                  value={aciklama}
+                  onChange={(e) => setAciklama(e.target.value)}
+                  maxLength={280}
+                  rows={3}
+                  placeholder="Durumunuzu kısaca açıklayın... (kat, konum ipucu vb.)"
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid #ccc", fontSize: 14, resize: "vertical", boxSizing: "border-box" }}
+                />
+                <div style={{ fontSize: 11, color: "#999", textAlign: "right", marginTop: 2 }}>{aciklama.length}/280</div>
+              </div>
+
+              {needManual && (
+                <>
+                  <p style={{ color: "#c53030", fontWeight: 600, fontSize: 13, margin: 0 }}>
+                    Konum izni verilmedi. Koordinatı manuel girin.
+                  </p>
+                  <input
+                    type="number"
+                    step="any"
+                    placeholder="Enlem (örn: 41.01)"
+                    value={manualLat}
+                    onChange={(e) => setManualLat(e.target.value)}
+                    required
+                    style={{ padding: "10px 12px", borderRadius: 8, border: "1px solid #ccc", fontSize: 14 }}
+                  />
+                  <input
+                    type="number"
+                    step="any"
+                    placeholder="Boylam (örn: 28.97)"
+                    value={manualLon}
+                    onChange={(e) => setManualLon(e.target.value)}
+                    required
+                    style={{ padding: "10px 12px", borderRadius: 8, border: "1px solid #ccc", fontSize: 14 }}
+                  />
+                </>
+              )}
+
+              {errMsg && <p style={{ color: "#c53030", fontSize: 13, margin: 0 }}>{errMsg}</p>}
+
+              <button
+                type="submit"
+                style={{
+                  padding: "16px",
+                  background: "#d32f2f",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 10,
+                  fontSize: 16,
+                  fontWeight: 800,
+                  cursor: "pointer",
+                  boxShadow: "0 6px 18px rgba(211,47,47,0.4)",
+                  textTransform: "uppercase",
+                  letterSpacing: 1,
+                }}
+              >
+                Yardım Çağır
               </button>
             </form>
           </div>

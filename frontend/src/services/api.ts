@@ -1,5 +1,9 @@
 import axios, { AxiosInstance } from "axios";
 import {
+  Announcement,
+  AnnouncementAdmin,
+  AnnouncementCreate,
+  AnnouncementUpdate,
   CriticalStockRecord,
   EmergencyAdminRecord,
   EmergencyPayload,
@@ -143,6 +147,13 @@ class GeoSafeAPI {
 
   async updateProfile(data: Record<string, string>): Promise<void> {
     await this.client.put("/api/v1/profile", data);
+  }
+
+  async fetchQRIdentity(): Promise<{ qr_payload: Record<string, unknown>; display_name: string; issued_at: string }> {
+    const res = await this.client.get<ApiEnvelope<{ qr_payload: Record<string, unknown>; display_name: string; issued_at: string }>>(
+      "/api/v1/qr/identity"
+    );
+    return this.unwrap(res.data);
   }
 
   // ── Warehouses ────────────────────────────────────────────────────────
@@ -385,6 +396,47 @@ class GeoSafeAPI {
       { status }
     );
     return this.unwrap(res.data);
+  }
+
+  // ── Announcements ─────────────────────────────────────────────────────
+  async fetchAnnouncements(kategori?: string): Promise<Announcement[]> {
+    const params = kategori ? { kategori } : undefined;
+    const res = await this.publicClient.get<ApiEnvelope<Announcement[]>>(
+      "/api/v1/announcements",
+      { params }
+    );
+    return this.unwrap(res.data);
+  }
+
+  async fetchAnnouncementsAdmin(status?: string, kategori?: string): Promise<AnnouncementAdmin[]> {
+    const params: Record<string, string> = {};
+    if (status) params.status = status;
+    if (kategori) params.kategori = kategori;
+    const res = await this.client.get<ApiEnvelope<AnnouncementAdmin[]>>(
+      "/api/v1/announcements/admin",
+      { params: Object.keys(params).length ? params : undefined }
+    );
+    return this.unwrap(res.data);
+  }
+
+  async createAnnouncement(payload: AnnouncementCreate): Promise<AnnouncementAdmin> {
+    const res = await this.client.post<ApiEnvelope<AnnouncementAdmin>>(
+      "/api/v1/announcements",
+      payload
+    );
+    return this.unwrap(res.data);
+  }
+
+  async updateAnnouncement(id: number, payload: AnnouncementUpdate): Promise<AnnouncementAdmin> {
+    const res = await this.client.patch<ApiEnvelope<AnnouncementAdmin>>(
+      `/api/v1/announcements/${id}`,
+      payload
+    );
+    return this.unwrap(res.data);
+  }
+
+  async deleteAnnouncement(id: number): Promise<void> {
+    await this.client.delete(`/api/v1/announcements/${id}`);
   }
 
   // ── Health ────────────────────────────────────────────────────────────

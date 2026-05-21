@@ -13,6 +13,10 @@ import AdminDashboard from "./pages/AdminDashboard";
 import VolunteerPage from "./pages/VolunteerPage";
 import ShelterOfferPage from "./pages/ShelterOfferPage";
 import PsychologicalSupportPage from "./pages/PsychologicalSupportPage";
+import ProfilePage from "./pages/ProfilePage";
+import QRCardPage from "./pages/QRCardPage";
+import QRScanResultPage from "./pages/QRScanResultPage";
+import AnnouncementsPage from "./pages/AnnouncementsPage";
 
 function ProtectedRoute({
   children,
@@ -44,6 +48,10 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+      <Route path="/qr-card" element={<ProtectedRoute><QRCardPage /></ProtectedRoute>} />
+      <Route path="/qr-result" element={<QRScanResultPage />} />
+      <Route path="/duyurular" element={<AnnouncementsPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

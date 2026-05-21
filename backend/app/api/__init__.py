@@ -1,5 +1,5 @@
 # API package
-from . import warehouses, safe_zones, auth, emergency, inventory, earthquakes, profile, spatial, volunteers, shelter_offers
+from . import warehouses, safe_zones, auth, emergency, inventory, earthquakes, profile, spatial, volunteers, shelter_offers, qr
 
 __all__ = [
 	"warehouses",
@@ -12,4 +12,5 @@ __all__ = [
 	"spatial",
 	"volunteers",
 	"shelter_offers",
+	"qr",
 ]

@@ -296,7 +296,7 @@ class ShelterOfferAdminResponse(ShelterOfferPublicResponse):
 
 _VOLUNTEER_STATUSES = {"pending", "approved", "rejected", "inactive"}
 _SHELTER_STATUSES = {"pending", "approved", "rejected", "inactive"}
-_EMERGENCY_STATUSES = {"new", "reviewing", "resolved", "dismissed", "spam"}
+_EMERGENCY_STATUSES = {"new", "reviewing", "verified", "resolved", "dismissed", "spam"}
 
 
 class VolunteerStatusUpdate(BaseModel):
@@ -341,12 +341,110 @@ class EmergencyStatusUpdate(BaseModel):
 class EmergencyAdminResponse(BaseModel):
     id: int
     durum: str
+    kategori: Optional[str] = None
+    aciklama: Optional[str] = None
     saat: str
     harita_link: Optional[str] = None
     enlem: float
     boylam: float
     status: str
     created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# ===== Announcement Schemas =====
+
+_ANNOUNCEMENT_STATUSES = {"draft", "published", "archived"}
+_ANNOUNCEMENT_CATEGORIES = {"genel", "uyari", "tahliye", "saglik", "lojistik", "guvenlik"}
+_ANNOUNCEMENT_PRIORITIES = {"low", "normal", "high", "critical"}
+
+
+class AnnouncementCreate(BaseModel):
+    title: str
+    content: str
+    kategori: Optional[str] = None
+    priority: str = "normal"
+
+    @field_validator("kategori")
+    @classmethod
+    def validate_kategori(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and v not in _ANNOUNCEMENT_CATEGORIES:
+            raise ValueError(
+                f"Geçersiz kategori '{v}'. İzin verilenler: {sorted(_ANNOUNCEMENT_CATEGORIES)}"
+            )
+        return v
+
+    @field_validator("priority")
+    @classmethod
+    def validate_priority(cls, v: str) -> str:
+        if v not in _ANNOUNCEMENT_PRIORITIES:
+            raise ValueError(
+                f"Geçersiz öncelik '{v}'. İzin verilenler: {sorted(_ANNOUNCEMENT_PRIORITIES)}"
+            )
+        return v
+
+
+class AnnouncementUpdate(BaseModel):
+    title: Optional[str] = None
+    content: Optional[str] = None
+    kategori: Optional[str] = None
+    priority: Optional[str] = None
+    status: Optional[str] = None
+
+    @field_validator("kategori")
+    @classmethod
+    def validate_kategori(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and v not in _ANNOUNCEMENT_CATEGORIES:
+            raise ValueError(
+                f"Geçersiz kategori '{v}'. İzin verilenler: {sorted(_ANNOUNCEMENT_CATEGORIES)}"
+            )
+        return v
+
+    @field_validator("priority")
+    @classmethod
+    def validate_priority(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and v not in _ANNOUNCEMENT_PRIORITIES:
+            raise ValueError(
+                f"Geçersiz öncelik '{v}'. İzin verilenler: {sorted(_ANNOUNCEMENT_PRIORITIES)}"
+            )
+        return v
+
+    @field_validator("status")
+    @classmethod
+    def validate_status(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and v not in _ANNOUNCEMENT_STATUSES:
+            raise ValueError(
+                f"Geçersiz durum '{v}'. İzin verilenler: {sorted(_ANNOUNCEMENT_STATUSES)}"
+            )
+        return v
+
+
+class AnnouncementPublicResponse(BaseModel):
+    id: int
+    title: str
+    content: str
+    kategori: Optional[str] = None
+    priority: str
+    published_at: Optional[datetime] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class AnnouncementAdminResponse(BaseModel):
+    id: int
+    title: str
+    content: str
+    kategori: Optional[str] = None
+    priority: str
+    status: str
+    created_by: Optional[int] = None
+    published_at: Optional[datetime] = None
+    created_at: datetime
+    updated_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True

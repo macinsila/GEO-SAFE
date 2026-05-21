@@ -75,6 +75,8 @@ function sanitizeEmergencyPayload(payload: EmergencyPayload): EmergencyPayload {
     harita_link: payload.harita_link,
     enlem: payload.enlem,
     boylam: payload.boylam,
+    ...(payload.kategori !== undefined && { kategori: payload.kategori }),
+    ...(payload.aciklama !== undefined && { aciklama: payload.aciklama }),
   };
 }
 

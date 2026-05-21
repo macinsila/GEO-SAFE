@@ -235,6 +235,8 @@ export interface ShelterOfferAdmin extends ShelterOfferPublic {
 export interface EmergencyAdminRecord {
   id: number;
   durum: string;
+  kategori?: string;
+  aciklama?: string;
   saat: string;
   harita_link?: string;
   enlem?: number;
@@ -249,5 +251,38 @@ export interface EmergencyPayload {
   harita_link: string;
   enlem: number;
   boylam: number;
+  kategori?: string;
+  aciklama?: string;
+}
+
+export interface Announcement {
+  id: number;
+  title: string;
+  content: string;
+  kategori?: string;
+  priority: string;
+  published_at?: string;
+  created_at: string;
+}
+
+export interface AnnouncementAdmin extends Announcement {
+  status: string;
+  created_by?: number;
+  updated_at?: string;
+}
+
+export interface AnnouncementCreate {
+  title: string;
+  content: string;
+  kategori?: string;
+  priority?: string;
+}
+
+export interface AnnouncementUpdate {
+  title?: string;
+  content?: string;
+  kategori?: string;
+  priority?: string;
+  status?: string;
 }
 

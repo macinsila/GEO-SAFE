@@ -3,7 +3,7 @@ Emergency Report Model
 Stores incoming emergency notifications from citizens.
 """
 
-from sqlalchemy import Column, Integer, String, Float, DateTime
+from sqlalchemy import Column, Integer, String, Text, Float, DateTime
 from sqlalchemy.sql import func
 
 from .base import Base
@@ -18,6 +18,8 @@ class EmergencyReport(Base):
     harita_link = Column(String, nullable=True)
     enlem = Column(Float, nullable=False)
     boylam = Column(Float, nullable=False)
+    kategori = Column(String(100), nullable=True)
+    aciklama = Column(Text, nullable=True)
     status = Column(String(50), default="new", nullable=False)
     created_at = Column(DateTime, server_default=func.now())
 
