@@ -27,6 +27,7 @@ type NavItem = {
   icon: string;
   sectionId?: string;
   adminOnly?: boolean;
+  path?: string;
 };
 
 const NAV_ITEMS: NavItem[] = [
@@ -38,6 +39,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Alerts", icon: "A", sectionId: "alerts" },
   { label: "Admin", icon: "R", adminOnly: true },
   { label: "Reports", icon: "P", sectionId: "reports" },
+  { label: "QR Kimlik", icon: "Q", path: "/qr-card" },
 ];
 
 const SOS_OPTIONS = [
@@ -335,6 +337,11 @@ export default function MainPage() {
       return;
     }
 
+    if (item.path) {
+      navigate(item.path);
+      return;
+    }
+
     if (!item.sectionId) return;
 
     setActiveSection(item.sectionId);
@@ -446,6 +453,14 @@ export default function MainPage() {
                     </button>
                     <button className="ops-button primary" onClick={saveProfile} type="button">
                       Kaydet
+                    </button>
+                  </div>
+                  <div style={{ borderTop: "1px solid #374151", marginTop: "8px", paddingTop: "8px", display: "flex", gap: "8px" }}>
+                    <button className="ops-button secondary" style={{ flex: 1 }} onClick={() => navigate("/profile")} type="button">
+                      Profil
+                    </button>
+                    <button className="ops-button primary" style={{ flex: 1 }} onClick={() => navigate("/qr-card")} type="button">
+                      QR Kimlik
                     </button>
                   </div>
                 </div>

@@ -17,6 +17,9 @@ class ProfileUpdate(BaseModel):
     meds: Optional[str] = ""
     allergy: Optional[str] = ""
     phone: Optional[str] = ""
+    disability_notes: Optional[str] = ""
+    emergency_contact_name: Optional[str] = ""
+    emergency_contact_phone: Optional[str] = ""
 
 @router.get("")
 async def get_profile(
@@ -36,7 +39,10 @@ async def get_profile(
         "chronic": data.get("chronic", ""),
         "meds": data.get("meds", ""),
         "allergy": data.get("allergy", ""),
-        "phone": data.get("phone", "")
+        "phone": data.get("phone", ""),
+        "disability_notes": data.get("disability_notes", ""),
+        "emergency_contact_name": data.get("emergency_contact_name", ""),
+        "emergency_contact_phone": data.get("emergency_contact_phone", ""),
     }, message="Profile fetched")
 
 @router.put("")
@@ -59,6 +65,9 @@ async def update_profile(
     new_data["meds"] = payload.meds
     new_data["allergy"] = payload.allergy
     new_data["phone"] = payload.phone
+    new_data["disability_notes"] = payload.disability_notes
+    new_data["emergency_contact_name"] = payload.emergency_contact_name
+    new_data["emergency_contact_phone"] = payload.emergency_contact_phone
     user.data = new_data
     flag_modified(user, "data")
 

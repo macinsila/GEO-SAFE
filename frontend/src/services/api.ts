@@ -145,6 +145,13 @@ class GeoSafeAPI {
     await this.client.put("/api/v1/profile", data);
   }
 
+  async fetchQRIdentity(): Promise<{ qr_payload: Record<string, unknown>; display_name: string; issued_at: string }> {
+    const res = await this.client.get<ApiEnvelope<{ qr_payload: Record<string, unknown>; display_name: string; issued_at: string }>>(
+      "/api/v1/qr/identity"
+    );
+    return this.unwrap(res.data);
+  }
+
   // ── Warehouses ────────────────────────────────────────────────────────
   async fetchWarehouses(): Promise<Warehouse[]> {
     const res = await this.client.get<Warehouse[] | ApiEnvelope<Warehouse[]>>(
