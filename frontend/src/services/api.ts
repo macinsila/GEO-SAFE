@@ -61,6 +61,10 @@ const getApiConfig = (): { baseUrl: string; error: string | null } => {
 };
 
 const { baseUrl: API_BASE_URL, error: API_CONFIG_ERROR } = getApiConfig();
+export const API_DIAGNOSTICS = {
+  baseUrl: API_BASE_URL || "not-configured",
+  build: "login-fix-2026-05-21-3",
+};
 
 const TOKEN_KEY = "geosafe_token";
 

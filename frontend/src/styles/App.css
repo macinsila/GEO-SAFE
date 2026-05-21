@@ -1408,17 +1408,27 @@ code {
   cursor: not-allowed;
 }
 
-.auth-footer {
-  margin-top: 22px;
-  padding-top: 16px;
-  border-top: 1px solid var(--ops-soft);
-  color: var(--ops-muted);
+  .auth-footer {
+    margin-top: 22px;
+    padding-top: 16px;
+    border-top: 1px solid var(--ops-soft);
+    color: var(--ops-muted);
   font-size: 10px;
   font-weight: 850;
   text-align: center;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-}
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+
+  .auth-footer span {
+    display: block;
+    margin-top: 6px;
+    overflow-wrap: anywhere;
+    font-size: 9px;
+    font-weight: 750;
+    letter-spacing: 0;
+    text-transform: none;
+  }
 
 .leaflet-container {
   background-color: #d9e1e8;

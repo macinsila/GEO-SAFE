@@ -2,7 +2,7 @@ import axios from "axios";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { geoSafeAPI } from "../../services";
+import { API_DIAGNOSTICS, geoSafeAPI } from "../../services";
 
 type Tab = "login" | "register";
 type MsgType = "success" | "error" | "info" | null;
@@ -247,7 +247,10 @@ export default function LoginPage() {
           </form>
         )}
 
-        <div className="auth-footer">2026 GEOSAFE GLOBAL / Controlled Access</div>
+        <div className="auth-footer">
+          2026 GEOSAFE GLOBAL / Controlled Access
+          <span>Build {API_DIAGNOSTICS.build} / API {API_DIAGNOSTICS.baseUrl}</span>
+        </div>
       </section>
     </main>
   );
