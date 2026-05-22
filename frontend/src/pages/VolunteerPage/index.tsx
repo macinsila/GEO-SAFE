@@ -8,13 +8,13 @@ import { geoSafeAPI } from "../../services";
 import { VolunteerApplicationPayload } from "../../types";
 
 const SKILLS = [
-  "Ilk yardim",
-  "Arac destegi",
-  "Tasimacilik/lojistik",
-  "Ceviri",
+  "İlk yardım",
+  "Araç desteği",
+  "Taşımacılık/lojistik",
+  "Çeviri",
   "Psikolojik destek",
   "Teknik destek",
-  "Diger",
+  "Diğer",
 ];
 
 export default function VolunteerPage() {
@@ -63,14 +63,14 @@ export default function VolunteerPage() {
 
       if (result === "consent_required") {
         setNeedsConsent(true);
-        setMessage("Cevrimdisi kayit icin once acik onay vermelisiniz.");
+        setMessage("Çevrim dışı kayıt için önce açık onay vermelisiniz.");
         return;
       }
 
       setMessage(
         result === "queued"
-          ? "Basvurunuz internet gelince gonderilmek uzere bu cihazda gecici olarak saklandi."
-          : "Basvurunuz alindi. Yetkililer tarafindan degerlendirilecektir."
+          ? "Başvurunuz internet gelince gönderilmek üzere bu cihazda geçici olarak saklandı."
+          : "Başvurunuz alındı. Yetkililer tarafından değerlendirilecektir."
       );
       setNeedsConsent(false);
       setQueueConsent(false);
@@ -83,7 +83,7 @@ export default function VolunteerPage() {
         availability_note: "",
       });
     } catch {
-      setMessage("Basvuru gonderilemedi. Lutfen tekrar deneyin.");
+      setMessage("Başvuru gönderilemedi. Lütfen tekrar deneyin.");
     } finally {
       setSending(false);
     }
@@ -100,9 +100,9 @@ export default function VolunteerPage() {
         </button>
 
         <div style={{ background: "#fff", borderRadius: 16, padding: "24px 26px", boxShadow: "0 10px 30px rgba(15,118,110,.12)", border: "1px solid #ccfbf1" }}>
-          <h1 style={{ margin: 0, fontSize: 22, color: "#0f766e" }}>Gonullu Olabilirim</h1>
+          <h1 style={{ margin: 0, fontSize: 22, color: "#0f766e" }}>Gönüllü Olabilirim</h1>
           <p style={{ marginTop: 6, color: "#475569", fontSize: 13 }}>
-            Bilgileriniz halka acik olarak paylasilmaz. Basvurular yetkililer tarafindan incelenir.
+            Bilgileriniz halka açık olarak paylaşılmaz. Başvurular yetkililer tarafından incelenir.
           </p>
 
           <form onSubmit={handleSubmit} style={{ marginTop: 20, display: "grid", gap: 14 }}>
@@ -117,7 +117,7 @@ export default function VolunteerPage() {
             </div>
 
             <div style={{ display: "grid", gap: 6 }}>
-              <label style={{ fontSize: 12, fontWeight: 700, color: "#0f766e" }}>Telefon / Iletisim</label>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#0f766e" }}>Telefon / İletişim</label>
               <input
                 required
                 value={form.contact_info}
@@ -128,7 +128,7 @@ export default function VolunteerPage() {
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 12 }}>
               <div style={{ display: "grid", gap: 6 }}>
-                <label style={{ fontSize: 12, fontWeight: 700, color: "#0f766e" }}>Ilce</label>
+                <label style={{ fontSize: 12, fontWeight: 700, color: "#0f766e" }}>İlçe</label>
                 <input
                   value={form.district}
                   onChange={(e) => setForm((prev) => ({ ...prev, district: e.target.value }))}
@@ -174,7 +174,7 @@ export default function VolunteerPage() {
             </div>
 
             <div style={{ display: "grid", gap: 6 }}>
-              <label style={{ fontSize: 12, fontWeight: 700, color: "#0f766e" }}>Musaitlik Notu</label>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#0f766e" }}>Müsaitlik Notu</label>
               <textarea
                 rows={3}
                 value={form.availability_note}
@@ -188,7 +188,7 @@ export default function VolunteerPage() {
             )}
 
             {message && (
-              <div style={{ fontSize: 13, fontWeight: 600, color: message.startsWith("Basvurunuz") ? "#166534" : "#b91c1c" }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: message.startsWith("Başvurunuz") ? "#166534" : "#b91c1c" }}>
                 {message}
               </div>
             )}
@@ -206,7 +206,7 @@ export default function VolunteerPage() {
                 cursor: sending ? "not-allowed" : "pointer",
               }}
             >
-              {sending ? "Gonderiliyor..." : "Basvuruyu Gonder"}
+              {sending ? "Gönderiliyor..." : "Başvuruyu Gönder"}
             </button>
           </form>
         </div>

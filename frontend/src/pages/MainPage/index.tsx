@@ -65,43 +65,43 @@ type NavItem = {
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "Dashboard", icon: "D", sectionId: "dashboard" },
-  { label: "Map Intelligence", icon: "M", sectionId: "map-intelligence" },
-  { label: "Shelter Zones", icon: "S", sectionId: "shelter-zones" },
-  { label: "Logistics", icon: "L", sectionId: "logistics" },
-  { label: "Inventory", icon: "I", sectionId: "inventory" },
-  { label: "Alerts", icon: "A", sectionId: "alerts" },
-  { label: "Admin", icon: "R", adminOnly: true },
-  { label: "Reports", icon: "P", sectionId: "reports" },
+  { label: "Panel", icon: "D", sectionId: "dashboard" },
+  { label: "Harita", icon: "M", sectionId: "map-intelligence" },
+  { label: "Barınma Alanları", icon: "S", sectionId: "shelter-zones" },
+  { label: "Lojistik", icon: "L", sectionId: "logistics" },
+  { label: "Envanter", icon: "I", sectionId: "inventory" },
+  { label: "Uyarılar", icon: "A", sectionId: "alerts" },
+  { label: "Yönetim", icon: "R", adminOnly: true },
+  { label: "Raporlar", icon: "P", sectionId: "reports" },
   { label: "QR Kimlik", icon: "Q", path: "/qr-card" },
 ];
 
 const SOS_OPTIONS = [
-  { label: "Enkaz Altindayim", value: "Enkaz Altindayim" },
-  { label: "Yaraliyim", value: "Yaraliyim" },
-  { label: "Yangin Var", value: "Yangin Var" },
+  { label: "Enkaz Altındayım", value: "Enkaz Altindayim" },
+  { label: "Yaralıyım", value: "Yaraliyim" },
+  { label: "Yangın Var", value: "Yangin Var" },
   { label: "Sel Var", value: "Sel Var" },
 ];
 
 const SUPPORT_CARDS = [
   {
-    title: "Gonullu Havuzu",
-    desc: "Saha destek kapasitesi ve uygunluk bilgisi toplayin.",
-    action: "Basvuru akisina git",
+    title: "Gönüllü Havuzu",
+    desc: "Saha destek kapasitesi ve uygunluk bilgisi toplayın.",
+    action: "Başvuru akışına git",
     path: "/volunteer",
     tone: "safe" as Tone,
   },
   {
-    title: "Barinma Kapasitesi",
-    desc: "Gecici konaklama tekliflerini operasyon havuzuna alin.",
-    action: "Teklif kaydi ac",
+    title: "Barınma Kapasitesi",
+    desc: "Geçici konaklama tekliflerini operasyon havuzuna alın.",
+    action: "Teklif kaydı aç",
     path: "/shelter-offer",
     tone: "warning" as Tone,
   },
   {
     title: "Psikolojik Destek",
-    desc: "Afetzede ve saha ekipleri icin dogrulanmis kaynaklar.",
-    action: "Kaynaklari gor",
+    desc: "Afetzede ve saha ekipleri için doğrulanmış kaynaklar.",
+    action: "Kaynakları gör",
     path: "/psychological-support",
     tone: "info" as Tone,
   },
@@ -109,51 +109,51 @@ const SUPPORT_CARDS = [
 
 const VIDEO_CARDS = [
   {
-    tag: "Hazirlik",
-    title: "Afet ve acil durum cantasi nasil hazirlanir?",
+    tag: "Hazırlık",
+    title: "Afet ve acil durum çantası nasıl hazırlanır?",
     url: "https://youtu.be/K0keerAalYE",
     summary:
-      "Acil durum cantasi, ilk 72 saat boyunca temel ihtiyaclari karsilayacak sekilde sade ve tasinabilir olmalidir.",
+      "Acil durum çantası, ilk 72 saat boyunca temel ihtiyaçları karşılayacak şekilde sade ve taşınabilir olmalıdır.",
     guidance: [
-      "Su, kuru gida, el feneri, pil, powerbank, ilk yardim seti, ilaclar ve hijyen malzemelerini ayni yerde tutun.",
-      "Kimlik fotokopisi, onemli telefonlar, nakit para ve temel belgeleri su gecirmez bir kilifta saklayin.",
-      "Cantayi ailede herkesin bildigi, cikisa yakin ve kolay erisilebilir bir noktada konumlandirin.",
+      "Su, kuru gıda, el feneri, pil, powerbank, ilk yardım seti, ilaçlar ve hijyen malzemelerini aynı yerde tutun.",
+      "Kimlik fotokopisi, önemli telefonlar, nakit para ve temel belgeleri su geçirmez bir kılıfta saklayın.",
+      "Çantayı ailede herkesin bildiği, çıkışa yakın ve kolay erişilebilir bir noktada konumlandırın.",
     ],
   },
   {
     tag: "Deprem",
-    title: "Deprem aninda yapilmasi gerekenler",
+    title: "Deprem anında yapılması gerekenler",
     url: "https://youtu.be/oZeI0X40EEY",
     summary:
-      "Deprem aninda temel hedef panik yapmadan dusen/esneyen nesnelerden korunmak ve sarsinti bitmeden hareket etmemektir.",
+      "Deprem anında temel hedef, panik yapmadan düşen veya esneyen nesnelerden korunmak ve sarsıntı bitmeden hareket etmemektir.",
     guidance: [
-      "Cok, kapan, tutun pozisyonu alin; pencere, dolap, raf ve agir esyalardan uzak durun.",
-      "Merdiven, asansor veya balkonlara yonelmeyin; sarsinti bitene kadar bulundugunuz yerde korunun.",
-      "Sarsinti sonrasi gaz, elektrik ve su risklerini kontrol edin; guvenli cikis rotasini izleyin.",
+      "Çök, kapan, tutun pozisyonu alın; pencere, dolap, raf ve ağır eşyalardan uzak durun.",
+      "Merdiven, asansör veya balkonlara yönelmeyin; sarsıntı bitene kadar bulunduğunuz yerde korunun.",
+      "Sarsıntı sonrası gaz, elektrik ve su risklerini kontrol edin; güvenli çıkış rotasını izleyin.",
     ],
   },
   {
-    tag: "Yangin",
-    title: "Yangin aninda yapilmasi gerekenler",
+    tag: "Yangın",
+    title: "Yangın anında yapılması gerekenler",
     url: "https://youtu.be/yQjUhzNMNe8",
     summary:
-      "Yanginda hizli karar, dumandan korunma ve kontrollu tahliye hayati onemdedir.",
+      "Yangında hızlı karar, dumandan korunma ve kontrollü tahliye hayati önemdedir.",
     guidance: [
-      "Duman varsa yere yakin ilerleyin, agiz ve burnu mumkunse nemli bezle kapatin.",
-      "Kapi kolu sicaksa kapıyı acmayin; alternatif cikis veya pencere yaninda yardim sinyali kullanin.",
-      "Kucuk ve baslangic asamasindaki yangin disinda mudahale etmeyin; 112'yi arayin ve tahliye olun.",
+      "Duman varsa yere yakın ilerleyin, ağız ve burnu mümkünse nemli bezle kapatın.",
+      "Kapı kolu sıcaksa kapıyı açmayın; alternatif çıkış veya pencere yanında yardım sinyali kullanın.",
+      "Küçük ve başlangıç aşamasındaki yangın dışında müdahale etmeyin; 112'yi arayın ve tahliye olun.",
     ],
   },
   {
     tag: "Sel",
-    title: "Sel aninda yapilmasi gerekenler",
+    title: "Sel anında yapılması gerekenler",
     url: "https://youtu.be/jy2yf7a5A10",
     summary:
-      "Sel durumunda en buyuk risk hizli akan suya girmek ve aracla gecis denemektir.",
+      "Sel durumunda en büyük risk, hızlı akan suya girmek ve araçla geçiş denemektir.",
     guidance: [
-      "Dere yatagi, alt gecit, bodrum ve su biriken yollardan uzaklasin; yuksek ve guvenli noktalara cikın.",
-      "Aracla su birikintisinden gecmeye calismayin; az derinlikteki akinti bile araci surukleyebilir.",
-      "Elektrik temas riskine karsi priz, pano ve islak elektrikli cihazlardan uzak durun.",
+      "Dere yatağı, alt geçit, bodrum ve su biriken yollardan uzaklaşın; yüksek ve güvenli noktalara çıkın.",
+      "Araçla su birikintisinden geçmeye çalışmayın; az derinlikteki akıntı bile aracı sürükleyebilir.",
+      "Elektrik temas riskine karşı priz, pano ve ıslak elektrikli cihazlardan uzak durun.",
     ],
   },
 ];
@@ -329,13 +329,13 @@ export default function MainPage() {
       setProfileMsg("Kaydedildi.");
       setTimeout(() => setProfileMsg(""), 3000);
     } catch {
-      setProfileMsg("Hata olustu.");
+      setProfileMsg("Hata oluştu.");
     }
   };
 
   const sendSOS = async (type: string) => {
     setSosSending(true);
-    setSosMsg("Konum aliniyor...");
+    setSosMsg("Konum alınıyor...");
 
     const doSend = async (lat: number, lon: number) => {
       try {
@@ -346,13 +346,13 @@ export default function MainPage() {
           enlem: lat,
           boylam: lon,
         } satisfies EmergencyPayload);
-        setSosMsg("Bildirim alindi. Operasyon ekibi tarafindan degerlendirilecek.");
+        setSosMsg("Bildirim alındı. Operasyon ekibi tarafından değerlendirilecek.");
         setTimeout(() => {
           setSosOpen(false);
           setSosMsg("");
         }, 3000);
       } catch {
-        setSosMsg("Gonderilemedi.");
+        setSosMsg("Gönderilemedi.");
       }
       setSosSending(false);
     };
@@ -360,7 +360,7 @@ export default function MainPage() {
     navigator.geolocation.getCurrentPosition(
       (position) => doSend(position.coords.latitude, position.coords.longitude),
       () => {
-        setSosMsg("Konum alinamadi.");
+        setSosMsg("Konum alınamadı.");
         setSosSending(false);
       },
       { timeout: 7000 }
@@ -431,7 +431,7 @@ export default function MainPage() {
           <div className="ops-mark">GS</div>
           <div>
             <strong>GeoSafe</strong>
-            <span>Emergency Logistics</span>
+            <span>Acil Durum Lojistiği</span>
           </div>
         </div>
         <nav className="ops-nav">
@@ -448,15 +448,15 @@ export default function MainPage() {
               >
                 <i aria-hidden="true">{item.icon}</i>
                 <span>{item.label}</span>
-                {item.label === "Alerts" && emergencies.length > 0 ? <b>{emergencies.length}</b> : null}
+                {item.label === "Uyarılar" && emergencies.length > 0 ? <b>{emergencies.length}</b> : null}
               </button>
             );
           })}
         </nav>
         <div className="ops-sidebar-footer">
-          <span>Incident Mode</span>
+          <span>Olay Modu</span>
           <strong>IST-OPS / Marmara</strong>
-          <small>Live GIS + logistics view</small>
+          <small>Canlı CBS ve lojistik görünümü</small>
         </div>
       </aside>
 
@@ -467,24 +467,24 @@ export default function MainPage() {
             <span>GeoSafe</span>
           </div>
           <div className="incident-context">
-            <span className="ops-eyebrow">Active Incident Context</span>
-            <strong>Marmara Regional Readiness</strong>
-            <span>Operational dashboard, map intelligence, shelter and depot visibility</span>
+            <span className="ops-eyebrow">Aktif Olay Bağlamı</span>
+            <strong>Marmara Bölgesel Hazırlığı</strong>
+            <span>Operasyon paneli, harita analizi, barınma alanları ve depo görünürlüğü</span>
           </div>
 
           <label className="ops-search">
-            <span className="sr-only">Search operations</span>
+            <span className="sr-only">Operasyonlarda ara</span>
             <input
               type="search"
-              placeholder="Search zone, depot, alert..."
+              placeholder="Alan, depo veya uyarı ara..."
               value={searchQuery}
               onChange={handleSearch}
             />
           </label>
 
           <div className="ops-topbar-actions">
-            <ResourceBadge tone="safe">System Online</ResourceBadge>
-            <button className="ops-icon-button" type="button" aria-label="Notifications">
+            <ResourceBadge tone="safe">Sistem Çevrim İçi</ResourceBadge>
+            <button className="ops-icon-button" type="button" aria-label="Bildirimler">
               {emergencies.length || 0}
             </button>
             <div ref={profileRef} className="profile-menu">
@@ -496,8 +496,8 @@ export default function MainPage() {
               {profileOpen && (
                 <div className="profile-popover">
                   <div className="profile-popover-head">
-                    <strong>Kisisel Acil Durum Bilgileri</strong>
-                    <span>Saha operasyonlarinda dogrulanabilir bilgi</span>
+                    <strong>Kişisel Acil Durum Bilgileri</strong>
+                    <span>Saha operasyonlarında doğrulanabilir bilgi</span>
                   </div>
                   <div className="profile-fields">
                     {(["name", "blood", "chronic", "meds", "allergy", "phone"] as (keyof Profile)[]).map((key) => (
@@ -508,12 +508,12 @@ export default function MainPage() {
                             : key === "blood"
                               ? "Kan Grubu"
                               : key === "chronic"
-                                ? "Kronik Rahatsizlik"
+                                ? "Kronik Rahatsızlık"
                                 : key === "meds"
-                                  ? "Kullanilan Ilaclar"
+                                  ? "Kullanılan İlaçlar"
                                   : key === "allergy"
                                     ? "Alerjiler"
-                                    : "Yakin Telefon"}
+                                    : "Yakın Telefon"}
                         </span>
                         <input
                           type={key === "phone" ? "tel" : "text"}
@@ -527,7 +527,7 @@ export default function MainPage() {
                   {profileMsg ? <div className="profile-message">{profileMsg}</div> : null}
                   <div className="profile-actions">
                     <button className="ops-button secondary" onClick={() => setProfileEdit(true)} type="button">
-                      Guncelle
+                      Güncelle
                     </button>
                     <button className="ops-button primary" onClick={saveProfile} type="button">
                       Kaydet
@@ -548,52 +548,52 @@ export default function MainPage() {
               Acil Durum
             </button>
             <button className="ops-button secondary" onClick={logout} type="button">
-              Cikis
+              Çıkış
             </button>
           </div>
         </header>
 
         <main className="ops-main">
-          <section id="dashboard" className="situation-strip ops-scroll-target" aria-label="Situation summary">
+          <section id="dashboard" className="situation-strip ops-scroll-target" aria-label="Durum özeti">
             <div className="incident-hero">
-              <span className="ops-eyebrow">Situation Summary</span>
+              <span className="ops-eyebrow">Durum Özeti</span>
               <h1>Afet Operasyon Merkezi</h1>
               <p>
-                Mahalle bazli risk, stok, toplanma alani ve yonlendirme gorunurlugu tek map-first komuta ekraninda toplanir.
+                Mahalle bazlı risk, stok, toplanma alanı ve yönlendirme görünürlüğü tek harita odaklı komuta ekranında toplanır.
               </p>
               <div className="incident-status-row">
-                <ResourceBadge tone="safe">Live backend</ResourceBadge>
-                <ResourceBadge tone={criticalStock.length ? "warning" : "info"}>Updated {lastUpdated}</ResourceBadge>
+                <ResourceBadge tone="safe">Canlı backend</ResourceBadge>
+                <ResourceBadge tone={criticalStock.length ? "warning" : "info"}>Güncelleme {lastUpdated}</ResourceBadge>
               </div>
             </div>
             <div className="situation-metrics">
-              <StatusCard label="Active Depots" value={activeWarehouses} detail={`${warehouses.length} total depot`} tone="info" />
-              <StatusCard label="Shelter Capacity" value={totalCapacity || "-"} detail={`${activeSafeZones} active zones`} tone="safe" />
-              <StatusCard label="Critical Stock" value={criticalStock.length} detail="items below threshold" tone={criticalStock.length ? "warning" : "safe"} />
-              <StatusCard label="Open Alerts" value={emergencies.length} detail="new emergency records" tone={emergencies.length ? "critical" : "neutral"} />
+              <StatusCard label="Aktif Depolar" value={activeWarehouses} detail={`Toplam ${warehouses.length} depo`} tone="info" />
+              <StatusCard label="Barınma Kapasitesi" value={totalCapacity || "-"} detail={`${activeSafeZones} aktif alan`} tone="safe" />
+              <StatusCard label="Kritik Stok" value={criticalStock.length} detail="Eşik altındaki kalemler" tone={criticalStock.length ? "warning" : "safe"} />
+              <StatusCard label="Açık Uyarılar" value={emergencies.length} detail="Yeni acil durum kayıtları" tone={emergencies.length ? "critical" : "neutral"} />
             </div>
           </section>
 
           <section className="ops-grid">
             <div className="ops-map-column">
               <section id="map-intelligence" className="ops-panel map-panel ops-scroll-target">
-                <SectionHeader eyebrow="Map Intelligence" title="Live Operational Map" meta="Shelters / Depots / Route support" />
+                <SectionHeader eyebrow="Harita Analizi" title="Canlı Operasyon Haritası" meta="Barınma / Depolar / Rota desteği" />
                 <div className="map-command-row">
-                  <ResourceBadge tone="safe">Shelter zones</ResourceBadge>
-                  <ResourceBadge tone="info">Depot markers</ResourceBadge>
-                  <ResourceBadge tone="warning">Route finder</ResourceBadge>
+                  <ResourceBadge tone="safe">Barınma alanları</ResourceBadge>
+                  <ResourceBadge tone="info">Depo işaretleri</ResourceBadge>
+                  <ResourceBadge tone="warning">Rota bulucu</ResourceBadge>
                 </div>
-                <div className="map-floating-metrics" aria-label="Map operational metrics">
-                  <MiniMetric label="Toplanma Alani" value={activeSafeZones} tone="safe" />
+                <div className="map-floating-metrics" aria-label="Harita operasyon ölçümleri">
+                  <MiniMetric label="Toplanma Alanı" value={activeSafeZones} tone="safe" />
                   <MiniMetric label="Kritik Depo" value={criticalWarehouseCount} tone={criticalWarehouseCount ? "critical" : "safe"} />
-                  <MiniMetric label="Dusuk Stok" value={criticalStock.length} tone={criticalStock.length ? "warning" : "safe"} />
-                  <MiniMetric label="Riskli Bolge" value={inactiveSafeZones} tone={inactiveSafeZones ? "warning" : "info"} />
+                  <MiniMetric label="Düşük Stok" value={criticalStock.length} tone={criticalStock.length ? "warning" : "safe"} />
+                  <MiniMetric label="Riskli Bölge" value={inactiveSafeZones} tone={inactiveSafeZones ? "warning" : "info"} />
                 </div>
                 <Map onClickCoordinates={setClickedCoord} />
               </section>
 
               <section id="alerts" className="ops-panel ops-scroll-target">
-                <SectionHeader eyebrow="Regional Alerts" title="Seismic Activity" meta="Kandilli / last feed" />
+                <SectionHeader eyebrow="Bölgesel Uyarılar" title="Sismik Aktivite" meta="Kandilli / son akış" />
                 <div className="alert-timeline">
                   {(earthquakes.length ? earthquakes.slice(0, 3) : []).map((earthquake, index) => (
                     <article key={`${earthquake.title}-timeline-${index}`} className={`timeline-item ${toneLabel(magTone(earthquake.mag))}`}>
@@ -604,29 +604,29 @@ export default function MainPage() {
                       </div>
                     </article>
                   ))}
-                  {!opsLoading && earthquakes.length === 0 ? <EmptyState message="Alert timeline is clear." /> : null}
+                  {!opsLoading && earthquakes.length === 0 ? <EmptyState message="Uyarı zaman akışı boş." /> : null}
                 </div>
                 <div className="ops-table-wrap">
                   <table className="ops-table">
                     <thead>
                       <tr>
-                        <th>Magnitude</th>
-                        <th>Location</th>
-                        <th>Date & Time</th>
-                        <th>Depth</th>
+                        <th>Büyüklük</th>
+                        <th>Konum</th>
+                        <th>Tarih ve Saat</th>
+                        <th>Derinlik</th>
                       </tr>
                     </thead>
                     <tbody>
                       {opsLoading ? (
                         <tr>
                           <td colSpan={4}>
-                            <EmptyState message="Operational feed loading..." />
+                            <EmptyState message="Operasyon akışı yükleniyor..." />
                           </td>
                         </tr>
                       ) : earthquakes.length === 0 ? (
                         <tr>
                           <td colSpan={4}>
-                            <EmptyState message="No recent M 3.5+ earthquake records." />
+                            <EmptyState message="Yakın tarihli M 3.5+ deprem kaydı yok." />
                           </td>
                         </tr>
                       ) : (
@@ -651,25 +651,25 @@ export default function MainPage() {
 
             <aside className="ops-side-column">
               <section id="logistics" className="ops-panel ops-scroll-target">
-                <SectionHeader eyebrow="Resource Risk" title="Critical Resource Panels" />
+                <SectionHeader eyebrow="Kaynak Riski" title="Kritik Kaynak Panelleri" />
                 <div className="risk-list">
                   <div className="risk-row">
-                    <span>Depot availability</span>
+                    <span>Depo kullanılabilirliği</span>
                     <ResourceBadge tone={activeWarehouses ? "safe" : "critical"}>{activeWarehouses}/{warehouses.length || 0}</ResourceBadge>
                   </div>
                   <div className="risk-row">
-                    <span>Major seismic events</span>
+                    <span>Büyük sismik olaylar</span>
                     <ResourceBadge tone={majorEarthquakes ? "warning" : "safe"}>{majorEarthquakes}</ResourceBadge>
                   </div>
                   <div className="risk-row">
-                    <span>Low-stock items</span>
+                    <span>Düşük stoklu kalemler</span>
                     <ResourceBadge tone={criticalStock.length ? "critical" : "safe"}>{criticalStock.length}</ResourceBadge>
                   </div>
                 </div>
               </section>
 
               <section id="inventory" className="ops-panel ops-scroll-target">
-                <SectionHeader eyebrow="Inventory Health" title="Priority Stock" />
+                <SectionHeader eyebrow="Envanter Durumu" title="Öncelikli Stok" />
                 <div className="filter-toolbar">
                   <button
                     type="button"
@@ -694,9 +694,9 @@ export default function MainPage() {
                   </button>
                 </div>
                 {role !== "admin" ? (
-                  <EmptyState message="Admin role required for critical stock detail." />
+                  <EmptyState message="Kritik stok ayrıntısı için admin rolü gerekir." />
                 ) : criticalStock.length === 0 ? (
-                  <EmptyState message="No critical stock warning at this time." />
+                  <EmptyState message="Şu anda kritik stok uyarısı yok." />
                 ) : filteredStock.length === 0 ? (
                   <EmptyState message="Bu filtrede gösterilecek kalem yok." />
                 ) : (
@@ -717,7 +717,7 @@ export default function MainPage() {
               </section>
 
               <section id="shelter-zones" className="ops-panel ops-scroll-target">
-                <SectionHeader eyebrow="Field Actions" title="Support Intake" />
+                <SectionHeader eyebrow="Saha Eylemleri" title="Destek Başvuruları" />
                 <div className="support-stack">
                   {SUPPORT_CARDS.map((card) => (
                     <button key={card.title} className={`support-card ${toneLabel(card.tone)}`} onClick={() => navigate(card.path)} type="button">
@@ -730,7 +730,7 @@ export default function MainPage() {
               </section>
 
               <section id="reports" className="ops-panel ops-scroll-target">
-                <SectionHeader eyebrow="Readiness" title="Training Briefs" />
+                <SectionHeader eyebrow="Hazırlık" title="Eğitim Özetleri" />
                 <div className="brief-list">
                   {VIDEO_CARDS.map((card) => (
                     <button
@@ -756,7 +756,7 @@ export default function MainPage() {
                     ))}
                   </ul>
                   <a href={selectedBrief.url} target="_blank" rel="noreferrer">
-                    Kaynak videosunu ac
+                    Kaynak videosunu aç
                   </a>
                 </article>
               </section>
@@ -809,10 +809,10 @@ export default function MainPage() {
       </button>
 
       {sosOpen && (
-        <div className="sos-panel" role="dialog" aria-label="Emergency action panel">
+        <div className="sos-panel" role="dialog" aria-label="Acil durum eylem paneli">
           <div className="sos-panel-head">
-            <ResourceBadge tone="critical">Emergency Action</ResourceBadge>
-            <span>Konum bazli acil bildirim</span>
+            <ResourceBadge tone="critical">Acil Durum Eylemi</ResourceBadge>
+            <span>Konum bazlı acil bildirim</span>
           </div>
           <div className="sos-panel-body">
             {sosSending || sosMsg ? (

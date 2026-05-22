@@ -49,7 +49,7 @@ const getApiConfig = (): { baseUrl: string; error: string | null } => {
     return {
       baseUrl: "",
       error:
-        "API adresi ayarlanmamis. Vercel ortam degiskenlerinde REACT_APP_API_BASE_URL Render backend URL'i olmali.",
+        "API adresi ayarlanmamış. Vercel ortam değişkenlerinde REACT_APP_API_BASE_URL Render backend URL'i olmalı.",
     };
   }
 

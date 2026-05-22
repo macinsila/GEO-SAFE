@@ -88,16 +88,16 @@ export const WarehouseLayer: React.FC = () => {
               <div>
                 <h3 style={{ margin: "0 0 6px 0" }}>{warehouse.name}</h3>
                 <p style={{ margin: "4px 0" }}>
-                  <strong>Status:</strong> {warehouse.status}
+                  <strong>Durum:</strong> {warehouse.status}
                 </p>
                 {warehouse.capacity !== undefined && warehouse.capacity !== null && (
                   <p style={{ margin: "4px 0" }}>
-                    <strong>Capacity:</strong> {warehouse.capacity}
+                    <strong>Kapasite:</strong> {warehouse.capacity}
                   </p>
                 )}
                 {warehouse.address && (
                   <p style={{ margin: "4px 0" }}>
-                    <strong>Address:</strong> {warehouse.address}
+                    <strong>Adres:</strong> {warehouse.address}
                   </p>
                 )}
               </div>

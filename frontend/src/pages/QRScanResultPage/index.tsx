@@ -43,7 +43,7 @@ export default function QRScanResultPage() {
         <div className="text-4xl">⚠️</div>
         <h1 className="text-lg font-bold text-gray-800">Geçersiz QR Kodu</h1>
         <p className="text-sm text-gray-500 text-center">
-          Bu QR kodu GeoSafe Afet Kimlik Kartına ait değil veya hasarlı.
+          Bu QR kodu GeoSafe Afet Kimlik Kartı'na ait değil veya hasarlı.
         </p>
       </div>
     );

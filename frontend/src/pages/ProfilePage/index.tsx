@@ -74,7 +74,7 @@ export default function ProfilePage() {
           <div>
             <h1 className="text-xl font-bold">Afet Kimlik Profili</h1>
             <p className="text-xs text-gray-400 mt-0.5">
-              TC, açık adres ve detaylı tıbbi geçmiş kaydedilmez.
+              T.C. kimlik numarası, açık adres ve detaylı tıbbi geçmiş kaydedilmez.
             </p>
           </div>
           <button
@@ -163,7 +163,7 @@ export default function ProfilePage() {
 
         <section className="bg-gray-900 rounded-lg p-5 space-y-4 border border-gray-800">
           <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">Acil İletişim</h2>
-          <p className="text-xs text-gray-500">Bu bilgiler yalnızca profilinizde saklanır, QR koda yazılmaz.</p>
+          <p className="text-xs text-gray-500">Bu bilgiler yalnızca profilinizde saklanır, QR koduna yazılmaz.</p>
           <label className="block space-y-1">
             <span className="text-xs text-gray-400">Yakın Kişi Adı</span>
             <input

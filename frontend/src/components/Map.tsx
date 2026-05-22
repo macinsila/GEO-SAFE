@@ -134,13 +134,13 @@ export const Map: React.FC<MapProps> = ({ onClickCoordinates }) => {
       );
 
       if (!matchedWarehouse) {
-        alert("Hedef depo detayı bulunamadı");
+        alert("Hedef depo detayı bulunamadı.");
         return;
       }
 
       const coordinates = extractWarehouseCoordinates(matchedWarehouse);
       if (!coordinates) {
-        alert("Depo koordinatı alınamadı");
+        alert("Depo koordinatı alınamadı.");
         return;
       }
 
@@ -152,7 +152,7 @@ export const Map: React.FC<MapProps> = ({ onClickCoordinates }) => {
       }
     } catch (error) {
       console.error("Target depot location fetch failed:", error);
-      alert("Depo konumu yüklenirken API hatası oluştu");
+      alert("Depo konumu yüklenirken API hatası oluştu.");
     }
   };
 

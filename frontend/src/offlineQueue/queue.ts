@@ -208,13 +208,13 @@ export function maskQueueItemSummary(item: OfflineQueueItem) {
   if (item.type === "volunteer") {
     const payload = item.payload as VolunteerApplicationPayload;
     const location = [payload.district, payload.neighborhood].filter(Boolean).join(" / ");
-    return location ? `Gonullu basvurusu - ${location}` : "Gonullu basvurusu";
+    return location ? `Gönüllü başvurusu - ${location}` : "Gönüllü başvurusu";
   }
 
   const payload = item.payload as ShelterOfferPayload;
   const area = [payload.city, payload.district, payload.neighborhood].filter(Boolean).join(" / ");
   const capacity = payload.capacity ? `Kapasite: ${payload.capacity}` : "Kapasite bilgisi yok";
-  return area ? `Barinma teklifi - ${area} - ${capacity}` : `Barinma teklifi - ${capacity}`;
+  return area ? `Barınma teklifi - ${area} - ${capacity}` : `Barınma teklifi - ${capacity}`;
 }
 
 export async function submitWithOfflineSupport<T extends OfflineQueueItemType>({

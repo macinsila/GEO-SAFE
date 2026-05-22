@@ -27,11 +27,11 @@ function withTimeout<T>(promise: Promise<T>, timeoutMessage: string): Promise<T>
 function getErrorMessage(error: unknown, fallback: string): string {
   if (axios.isAxiosError(error)) {
     if (error.code === "ECONNABORTED") {
-      return "Backend 60 saniye icinde yanit vermedi. Render servisi uyaniyor olabilir; biraz sonra tekrar deneyin veya Render loglarini kontrol edin.";
+      return "Backend 60 saniye içinde yanıt vermedi. Render servisi uyanıyor olabilir; biraz sonra tekrar deneyin veya Render loglarını kontrol edin.";
     }
 
     if (!error.response && error.message === "Network Error") {
-      return "Backend'e ulasilamadi. Render URL'i veya CORS_ORIGINS ayari hatali olabilir.";
+      return "Backend'e ulaşılamadı. Render URL'i veya CORS_ORIGINS ayarı hatalı olabilir.";
     }
 
     const detail = error.response?.data?.detail;
@@ -82,12 +82,12 @@ export default function LoginPage() {
     try {
       const token = await withTimeout(
         geoSafeAPI.login(loginEmail, loginPassword),
-        "Login istegi 60 saniye icinde yanit alamadi. Render servisi, Supabase baglantisi veya backend loglari kontrol edilmeli."
+        "Giriş isteği 60 saniye içinde yanıt alamadı. Render servisi, Supabase bağlantısı veya backend logları kontrol edilmeli."
       );
       login(token);
       navigate("/");
     } catch (error) {
-      showMsg("error", getErrorMessage(error, "E-posta veya sifre hatali."));
+      showMsg("error", getErrorMessage(error, "E-posta veya şifre hatalı."));
     } finally {
       setLoading(false);
     }
@@ -99,17 +99,17 @@ export default function LoginPage() {
     clearMsg();
     try {
       await withTimeout(
-        geoSafeAPI.register(regName || "Kullanici", regEmail, regPassword),
-        "Kayit istegi 60 saniye icinde yanit alamadi. Render servisi, Supabase baglantisi veya backend loglari kontrol edilmeli."
+        geoSafeAPI.register(regName || "Kullanıcı", regEmail, regPassword),
+        "Kayıt isteği 60 saniye içinde yanıt alamadı. Render servisi, Supabase bağlantısı veya backend logları kontrol edilmeli."
       );
       const token = await withTimeout(
         geoSafeAPI.login(regEmail, regPassword),
-        "Login istegi 60 saniye icinde yanit alamadi. Render servisi, Supabase baglantisi veya backend loglari kontrol edilmeli."
+        "Giriş isteği 60 saniye içinde yanıt alamadı. Render servisi, Supabase bağlantısı veya backend logları kontrol edilmeli."
       );
       login(token);
       navigate("/");
     } catch (error) {
-      showMsg("error", getErrorMessage(error, "Kayit basarisiz. E-posta zaten kullaniliyor olabilir."));
+      showMsg("error", getErrorMessage(error, "Kayıt başarısız. E-posta zaten kullanılıyor olabilir."));
     } finally {
       setLoading(false);
     }
@@ -117,48 +117,48 @@ export default function LoginPage() {
 
   return (
     <main className="auth-shell">
-      <section className="auth-intel-panel" aria-label="GeoSafe platform context">
+      <section className="auth-intel-panel" aria-label="GeoSafe platform bağlamı">
         <div className="ops-brand auth-brand">
           <div className="ops-mark">GS</div>
           <div>
             <strong>GeoSafe</strong>
-            <span>Emergency Logistics</span>
+            <span>Acil Durum Lojistiği</span>
           </div>
         </div>
 
         <div className="auth-intel-copy">
-          <span className="ops-eyebrow">Secure Operations Access</span>
-          <h1>Geospatial decision support for field-ready disaster operations.</h1>
+          <span className="ops-eyebrow">Güvenli Operasyon Erişimi</span>
+          <h1>Saha afet operasyonları için coğrafi karar desteği.</h1>
           <p>
-            Shelter zones, depot readiness, emergency reports and logistics signals are kept in one
-            controlled operational workspace.
+            Barınma alanları, depo hazırlığı, acil durum raporları ve lojistik sinyaller tek
+            kontrollü operasyon alanında tutulur.
           </p>
         </div>
 
         <div className="auth-signal-grid">
           <div>
-            <span>Mode</span>
-            <strong>Incident Ready</strong>
+            <span>Mod</span>
+            <strong>Olaya Hazır</strong>
           </div>
           <div>
-            <span>Coverage</span>
-            <strong>Marmara Ops</strong>
+            <span>Kapsam</span>
+            <strong>Marmara Operasyonu</strong>
           </div>
           <div>
-            <span>Data</span>
-            <strong>GIS + Logistics</strong>
+            <span>Veri</span>
+            <strong>CBS + Lojistik</strong>
           </div>
         </div>
       </section>
 
-      <section className="auth-card" aria-label="Authentication">
+      <section className="auth-card" aria-label="Kimlik doğrulama">
         <div className="auth-card-header">
-          <span className="ops-eyebrow">Identity Verification</span>
-          <h2>{tab === "login" ? "Sisteme Giris" : "Operasyon Hesabi Olustur"}</h2>
-          <p>Yetkili kullanici erisimi. Kimlik dogrulamadan sonra operasyon ekranina gecilir.</p>
+          <span className="ops-eyebrow">Kimlik Doğrulama</span>
+          <h2>{tab === "login" ? "Sisteme Giriş" : "Operasyon Hesabı Oluştur"}</h2>
+          <p>Yetkili kullanıcı erişimi. Kimlik doğrulamadan sonra operasyon ekranına geçilir.</p>
         </div>
 
-        <div className="auth-tabs" role="tablist" aria-label="Authentication mode">
+        <div className="auth-tabs" role="tablist" aria-label="Kimlik doğrulama modu">
           {(["login", "register"] as Tab[]).map((item) => (
             <button
               key={item}
@@ -168,7 +168,7 @@ export default function LoginPage() {
               role="tab"
               aria-selected={tab === item}
             >
-              {item === "login" ? "Giris" : "Yeni Kayit"}
+              {item === "login" ? "Giriş" : "Yeni Kayıt"}
             </button>
           ))}
         </div>
@@ -188,7 +188,7 @@ export default function LoginPage() {
               />
             </label>
             <label>
-              <span>Sifre</span>
+              <span>Şifre</span>
               <input
                 type="password"
                 placeholder="********"
@@ -200,12 +200,12 @@ export default function LoginPage() {
             <button
               className="auth-forgot"
               type="button"
-              onClick={() => showMsg("info", "Sifre sifirlama icin yonetici ile iletisime gecin.")}
+              onClick={() => showMsg("info", "Şifre sıfırlama için yönetici ile iletişime geçin.")}
             >
-              Sifremi Unuttum?
+              Şifremi Unuttum?
             </button>
             <button className="auth-submit" type="submit" disabled={loading}>
-              {loading ? "Giris yapiliyor..." : "Sisteme Giris Yap"}
+              {loading ? "Giriş yapılıyor..." : "Sisteme Giriş Yap"}
             </button>
           </form>
         )}
@@ -213,7 +213,7 @@ export default function LoginPage() {
         {tab === "register" && (
           <form className="auth-form" onSubmit={handleRegister}>
             <label>
-              <span>Tam Adiniz</span>
+              <span>Tam Adınız</span>
               <input
                 type="text"
                 placeholder="Ad Soyad"
@@ -232,7 +232,7 @@ export default function LoginPage() {
               />
             </label>
             <label>
-              <span>Sifre Secin</span>
+              <span>Şifre Seçin</span>
               <input
                 type="password"
                 placeholder="********"
@@ -242,13 +242,13 @@ export default function LoginPage() {
               />
             </label>
             <button className="auth-submit" type="submit" disabled={loading}>
-              {loading ? "Hesap olusturuluyor..." : "Hesabi Olustur"}
+              {loading ? "Hesap oluşturuluyor..." : "Hesabı Oluştur"}
             </button>
           </form>
         )}
 
         <div className="auth-footer">
-          2026 GEOSAFE GLOBAL / Controlled Access
+          2026 GEOSAFE GLOBAL / Kontrollü Erişim
           <span>Build {API_DIAGNOSTICS.build} / API {API_DIAGNOSTICS.baseUrl}</span>
         </div>
       </section>

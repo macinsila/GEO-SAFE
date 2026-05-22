@@ -51,14 +51,14 @@ export default function ShelterOfferPage() {
 
       if (result === "consent_required") {
         setNeedsConsent(true);
-        setMessage("Cevrimdisi kayit icin once acik onay vermelisiniz.");
+        setMessage("Çevrim dışı kayıt için önce açık onay vermelisiniz.");
         return;
       }
 
       setMessage(
         result === "queued"
-          ? "Teklifiniz internet gelince gonderilmek uzere bu cihazda gecici olarak saklandi."
-          : "Teklifiniz alindi. Yetkililer tarafindan degerlendirilecektir."
+          ? "Teklifiniz internet gelince gönderilmek üzere bu cihazda geçici olarak saklandı."
+          : "Teklifiniz alındı. Yetkililer tarafından değerlendirilecektir."
       );
       setNeedsConsent(false);
       setQueueConsent(false);
@@ -77,7 +77,7 @@ export default function ShelterOfferPage() {
         suitability_notes: "",
       });
     } catch {
-      setMessage("Teklif gonderilemedi. Lutfen tekrar deneyin.");
+      setMessage("Teklif gönderilemedi. Lütfen tekrar deneyin.");
     } finally {
       setSending(false);
     }
@@ -94,9 +94,9 @@ export default function ShelterOfferPage() {
         </button>
 
         <div style={{ background: "#fff", borderRadius: 16, padding: "24px 26px", boxShadow: "0 10px 30px rgba(15,118,110,.12)", border: "1px solid #ccfbf1" }}>
-          <h1 style={{ margin: 0, fontSize: 22, color: "#0f766e" }}>Evimi Barinma Destegi Icin Bildirmek Istiyorum</h1>
+          <h1 style={{ margin: 0, fontSize: 22, color: "#0f766e" }}>Evimi Barınma Desteği İçin Bildirmek İstiyorum</h1>
           <p style={{ marginTop: 6, color: "#475569", fontSize: 13 }}>
-            Bu bilgiler halka acik paylasilmaz. Basvurular yetkililer tarafindan degerlendirilir. Otomatik eslestirme yapilmaz.
+            Bu bilgiler halka açık paylaşılmaz. Başvurular yetkililer tarafından değerlendirilir. Otomatik eşleştirme yapılmaz.
           </p>
 
           <form onSubmit={handleSubmit} style={{ marginTop: 20, display: "grid", gap: 14 }}>
@@ -111,7 +111,7 @@ export default function ShelterOfferPage() {
             </div>
 
             <div style={{ display: "grid", gap: 6 }}>
-              <label style={{ fontSize: 12, fontWeight: 700, color: "#0f766e" }}>Telefon / Iletisim</label>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#0f766e" }}>Telefon / İletişim</label>
               <input
                 required
                 value={form.contact_info}
@@ -122,7 +122,7 @@ export default function ShelterOfferPage() {
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 12 }}>
               <div style={{ display: "grid", gap: 6 }}>
-                <label style={{ fontSize: 12, fontWeight: 700, color: "#0f766e" }}>Sehir</label>
+                <label style={{ fontSize: 12, fontWeight: 700, color: "#0f766e" }}>Şehir</label>
                 <input
                   value={form.city}
                   onChange={(e) => setForm((prev) => ({ ...prev, city: e.target.value }))}
@@ -130,7 +130,7 @@ export default function ShelterOfferPage() {
                 />
               </div>
               <div style={{ display: "grid", gap: 6 }}>
-                <label style={{ fontSize: 12, fontWeight: 700, color: "#0f766e" }}>Ilce</label>
+                <label style={{ fontSize: 12, fontWeight: 700, color: "#0f766e" }}>İlçe</label>
                 <input
                   value={form.district}
                   onChange={(e) => setForm((prev) => ({ ...prev, district: e.target.value }))}
@@ -148,7 +148,7 @@ export default function ShelterOfferPage() {
             </div>
 
             <div style={{ display: "grid", gap: 6 }}>
-              <label style={{ fontSize: 12, fontWeight: 700, color: "#0f766e" }}>Acik Adres Detayi (Admin gorur)</label>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#0f766e" }}>Açık Adres Detayı (Admin Görür)</label>
               <textarea
                 rows={3}
                 value={form.address_detail}
@@ -170,7 +170,7 @@ export default function ShelterOfferPage() {
                 />
               </div>
               <div style={{ display: "grid", gap: 6 }}>
-                <label style={{ fontSize: 12, fontWeight: 700, color: "#0f766e" }}>Baslangic Tarihi</label>
+                <label style={{ fontSize: 12, fontWeight: 700, color: "#0f766e" }}>Başlangıç Tarihi</label>
                 <input
                   type="date"
                   value={form.available_from}
@@ -179,7 +179,7 @@ export default function ShelterOfferPage() {
                 />
               </div>
               <div style={{ display: "grid", gap: 6 }}>
-                <label style={{ fontSize: 12, fontWeight: 700, color: "#0f766e" }}>Bitis Tarihi</label>
+                <label style={{ fontSize: 12, fontWeight: 700, color: "#0f766e" }}>Bitiş Tarihi</label>
                 <input
                   type="date"
                   value={form.available_until}
@@ -190,7 +190,7 @@ export default function ShelterOfferPage() {
             </div>
 
             <div style={{ display: "grid", gap: 6 }}>
-              <label style={{ fontSize: 12, fontWeight: 700, color: "#0f766e" }}>Sure / Musaitlik Notu</label>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#0f766e" }}>Süre / Müsaitlik Notu</label>
               <textarea
                 rows={2}
                 value={form.duration_note}
@@ -200,7 +200,7 @@ export default function ShelterOfferPage() {
             </div>
 
             <div style={{ display: "grid", gap: 6 }}>
-              <label style={{ fontSize: 12, fontWeight: 700, color: "#0f766e" }}>Hane Notlari</label>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#0f766e" }}>Hane Notları</label>
               <textarea
                 rows={2}
                 value={form.household_notes}
@@ -210,7 +210,7 @@ export default function ShelterOfferPage() {
             </div>
 
             <div style={{ display: "grid", gap: 6 }}>
-              <label style={{ fontSize: 12, fontWeight: 700, color: "#0f766e" }}>Uygunluk Notlari</label>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#0f766e" }}>Uygunluk Notları</label>
               <textarea
                 rows={2}
                 value={form.suitability_notes}
@@ -242,7 +242,7 @@ export default function ShelterOfferPage() {
                 cursor: sending ? "not-allowed" : "pointer",
               }}
             >
-              {sending ? "Gonderiliyor..." : "Teklifi Gonder"}
+              {sending ? "Gönderiliyor..." : "Teklifi Gönder"}
             </button>
           </form>
         </div>

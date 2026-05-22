@@ -27,7 +27,7 @@ export const CitizenSearch: React.FC<CitizenSearchProps> = ({ onSearchResult }) 
 
   const handleUseMyLocation = () => {
     if (!navigator.geolocation) {
-      alert("Tarayıcı konum servisini desteklemiyor");
+      alert("Tarayıcı konum servisini desteklemiyor.");
       return;
     }
 
@@ -38,18 +38,18 @@ export const CitizenSearch: React.FC<CitizenSearchProps> = ({ onSearchResult }) 
       },
       (error) => {
         if (error.code === error.PERMISSION_DENIED) {
-          alert("Konum erişimi reddedildi");
+          alert("Konum erişimi reddedildi.");
           return;
         }
 
-        alert("Konum alınamadı");
+        alert("Konum alınamadı.");
       }
     );
   };
 
   const handleSearchNearestDepot = async () => {
     if (!userPosition) {
-      alert("Önce konumunuzu alın");
+      alert("Önce konumunuzu alın.");
       return;
     }
 
@@ -66,7 +66,7 @@ export const CitizenSearch: React.FC<CitizenSearchProps> = ({ onSearchResult }) 
       if (!response.length) {
         setResult(null);
         onSearchResult({ userPosition, result: null });
-        alert("10 km içinde uygun depo bulunamadı");
+        alert("10 km içinde uygun depo bulunamadı.");
         return;
       }
 
@@ -83,7 +83,7 @@ export const CitizenSearch: React.FC<CitizenSearchProps> = ({ onSearchResult }) 
 
   return (
     <div className="citizen-search-panel">
-      <h3>Vatandaş Arama</h3>
+      <h3>Vatandaş Araması</h3>
 
       <button className="citizen-button" onClick={handleUseMyLocation} type="button">
         Konumumu Kullan
@@ -128,7 +128,7 @@ export const CitizenSearch: React.FC<CitizenSearchProps> = ({ onSearchResult }) 
             </p>
           </>
         ) : (
-          <p>Henüz sonuç yok</p>
+          <p>Henüz sonuç yok.</p>
         )}
       </div>
     </div>
