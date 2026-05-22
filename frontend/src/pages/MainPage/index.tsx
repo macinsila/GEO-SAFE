@@ -258,6 +258,8 @@ export default function MainPage() {
   const [activeSection, setActiveSection] = useState("dashboard");
   const [selectedBriefTag, setSelectedBriefTag] = useState(VIDEO_CARDS[0].tag);
   const [, setClickedCoord] = useState<MapClickEvent | null>(null);
+  const [stockFilter, setStockFilter] = useState<"all" | "critical" | "available">("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -374,6 +376,34 @@ export default function MainPage() {
   const selectedBrief = VIDEO_CARDS.find((card) => card.tag === selectedBriefTag) ?? VIDEO_CARDS[0];
   const lastUpdated = new Date().toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
 
+  // Stok filtresi: "critical" → sıfır stoklu kalemler, "available" → stoku var ama düşük
+  const filteredStock = criticalStock.filter((item) => {
+    if (stockFilter === "critical") return item.quantity === 0;
+    if (stockFilter === "available") return item.quantity > 0;
+    return true;
+  });
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const q = e.target.value.toLowerCase();
+    setSearchQuery(q);
+    if (q.length < 3) return;
+    const sectionMap: [RegExp, string][] = [
+      [/harita|map|intel/i, "map-intelligence"],
+      [/depo|depot|lojistik|logistic/i, "logistics"],
+      [/alan|zone|toplan|shelter/i, "shelter-zones"],
+      [/stok|stock|inventory/i, "inventory"],
+      [/alert|deprem|seismic|uyar/i, "alerts"],
+      [/duyuru|announce/i, "announcements"],
+    ];
+    for (const [pattern, sectionId] of sectionMap) {
+      if (pattern.test(q)) {
+        document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+        setActiveSection(sectionId);
+        break;
+      }
+    }
+  };
+
   const handleNavClick = (item: NavItem) => {
     if (item.adminOnly) {
       navigate("/admin");
@@ -444,7 +474,12 @@ export default function MainPage() {
 
           <label className="ops-search">
             <span className="sr-only">Search operations</span>
-            <input type="search" placeholder="Search zone, depot, alert..." />
+            <input
+              type="search"
+              placeholder="Search zone, depot, alert..."
+              value={searchQuery}
+              onChange={handleSearch}
+            />
           </label>
 
           <div className="ops-topbar-actions">
@@ -636,23 +671,43 @@ export default function MainPage() {
               <section id="inventory" className="ops-panel ops-scroll-target">
                 <SectionHeader eyebrow="Inventory Health" title="Priority Stock" />
                 <div className="filter-toolbar">
-                  <button type="button" className="active">All resources</button>
-                  <button type="button">Critical</button>
-                  <button type="button">Available</button>
+                  <button
+                    type="button"
+                    className={stockFilter === "all" ? "active" : ""}
+                    onClick={() => setStockFilter("all")}
+                  >
+                    Tümü ({criticalStock.length})
+                  </button>
+                  <button
+                    type="button"
+                    className={stockFilter === "critical" ? "active" : ""}
+                    onClick={() => setStockFilter("critical")}
+                  >
+                    Sıfır Stok ({criticalStock.filter((i) => i.quantity === 0).length})
+                  </button>
+                  <button
+                    type="button"
+                    className={stockFilter === "available" ? "active" : ""}
+                    onClick={() => setStockFilter("available")}
+                  >
+                    Düşük Stok ({criticalStock.filter((i) => i.quantity > 0).length})
+                  </button>
                 </div>
                 {role !== "admin" ? (
                   <EmptyState message="Admin role required for critical stock detail." />
                 ) : criticalStock.length === 0 ? (
                   <EmptyState message="No critical stock warning at this time." />
+                ) : filteredStock.length === 0 ? (
+                  <EmptyState message="Bu filtrede gösterilecek kalem yok." />
                 ) : (
                   <div className="inventory-list">
-                    {criticalStock.slice(0, 5).map((item) => (
+                    {filteredStock.slice(0, 5).map((item) => (
                       <article key={`${item.warehouse_id}-${item.item_id}`} className="inventory-item">
                         <div>
                           <strong>{item.item_name}</strong>
                           <span>{item.warehouse_name}</span>
                         </div>
-                        <ResourceBadge tone="critical">
+                        <ResourceBadge tone={item.quantity === 0 ? "critical" : "warning"}>
                           {item.quantity}/{item.threshold} {item.item_unit}
                         </ResourceBadge>
                       </article>

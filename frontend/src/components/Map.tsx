@@ -46,7 +46,6 @@ function MapClickHandler({
 }) {
   useMapEvents({
     click(e) {
-      console.log("Map clicked at:", e.latlng.lat, e.latlng.lng);
       if (onClickCoordinates) {
         onClickCoordinates({
           lat: e.latlng.lat,
