@@ -71,6 +71,7 @@ export const API_DIAGNOSTICS = {
 };
 
 const TOKEN_KEY = "geosafe_token";
+const AUTH_EXPIRED_EVENT = "geosafe-auth-expired";
 
 interface ApiEnvelope<T> {
   status?: string;
@@ -111,6 +112,20 @@ class GeoSafeAPI {
       }
       return config;
     });
+
+    this.client.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (axios.isAxiosError(error) && error.response?.status === 401) {
+          localStorage.removeItem(TOKEN_KEY);
+          window.dispatchEvent(new Event(AUTH_EXPIRED_EVENT));
+          if (window.location.pathname !== "/login") {
+            window.location.assign("/login");
+          }
+        }
+        return Promise.reject(error);
+      }
+    );
   }
 
   private unwrap<T>(payload: T | ApiEnvelope<T>): T {
