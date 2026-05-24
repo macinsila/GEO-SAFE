@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import {
   OfflineQueuePanel,
@@ -31,15 +31,30 @@ function ProtectedRoute({
   roles?: string[];
 }) {
   const { isAuthenticated, role } = useAuth();
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (roles && (!role || !roles.includes(role))) return <Navigate to="/" replace />;
+  const location = useLocation();
+  if (!isAuthenticated) return <Navigate to="/login" replace state={{ from: location }} />;
+  if (roles && (!role || !roles.includes(role))) {
+    return <Navigate to="/ops" replace state={{ accessDenied: true, requiredRoles: roles }} />;
+  }
   return <>{children}</>;
 }
 
-function AppRoutes() {
+function LoginRoute() {
+  const { isAuthenticated } = useAuth();
+  const location = useLocation();
+  const state = location.state as { from?: { pathname?: string; search?: string } } | null;
+  const returnPath = state?.from?.pathname && state.from.pathname !== "/login"
+    ? `${state.from.pathname}${state.from.search ?? ""}`
+    : "/ops";
+
+  if (isAuthenticated) return <Navigate to={returnPath} replace />;
+  return <LoginPage />;
+}
+
+export function AppRoutes() {
   return (
     <Routes>
-      <Route path="/login" element={<LoginPage />} />
+      <Route path="/login" element={<LoginRoute />} />
       <Route path="/" element={<Navigate to="/ops" replace />} />
       <Route
         path="/ops"

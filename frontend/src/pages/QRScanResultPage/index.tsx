@@ -22,9 +22,9 @@ function decode(encoded: string): QRPayload | null {
 function Row({ label, value }: { label: string; value?: string }) {
   if (!value) return null;
   return (
-    <div className="flex gap-3 py-2 border-b border-gray-100 last:border-0">
-      <span className="text-sm font-semibold text-gray-500 w-28 shrink-0">{label}</span>
-      <span className="text-sm text-gray-900">{value}</span>
+    <div className="identity-scan-row">
+      <span>{label}</span>
+      <strong>{value}</strong>
     </div>
   );
 }
@@ -39,60 +39,57 @@ export default function QRScanResultPage() {
 
   if (!payload) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-3 bg-gray-50 px-4">
-        <div className="text-4xl">⚠️</div>
-        <h1 className="text-lg font-bold text-gray-800">Geçersiz QR Kodu</h1>
-        <p className="text-sm text-gray-500 text-center">
-          Bu QR kodu GeoSafe Afet Kimlik Kartı'na ait değil veya hasarlı.
-        </p>
+      <div className="identity-shell">
+        <main className="identity-main identity-centered">
+          <section className="ops-panel identity-error-state">
+            <span className="ops-eyebrow">QR Tarama</span>
+            <h1>Geçersiz QR Kodu</h1>
+            <p>Bu QR kodu GeoSafe Afet Kimlik Kartı'na ait değil veya hasarlı.</p>
+          </section>
+        </main>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50 px-4 py-8">
-      <div className="max-w-sm mx-auto space-y-6">
-        <div className="text-center space-y-1">
-          <p className="text-xs font-bold text-blue-700 uppercase tracking-widest">GeoSafe</p>
-          <h1 className="text-2xl font-bold text-gray-900">Afet Kimlik Kartı</h1>
-          <p className="text-sm text-gray-500">Kritik sağlık bilgileri</p>
-        </div>
+  const hasHealthInfo = Boolean(
+    payload.allergies || payload.medications || payload.conditions || payload.disability
+  );
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 space-y-1">
-          <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-            <span className="text-lg font-bold text-gray-900">{payload.name || "—"}</span>
-            {payload.blood && (
-              <span className="bg-red-100 text-red-700 text-sm font-bold px-3 py-1 rounded-full">
-                {payload.blood}
-              </span>
-            )}
+  return (
+    <div className="identity-shell">
+      <main className="identity-main identity-scan-main">
+        <section className="identity-scan-header">
+          <span className="ops-eyebrow">GeoSafe</span>
+          <h1>Afet Kimlik Kartı</h1>
+          <p>Kritik sağlık bilgileri</p>
+        </section>
+
+        <section className="ops-panel identity-scan-card" aria-label="Taranan afet kimlik kartı">
+          <div className="identity-scan-person">
+            <strong>{payload.name || "Ad bilgisi yok"}</strong>
+            {payload.blood ? <span>{payload.blood}</span> : null}
           </div>
 
-          <Row label="Alerjiler" value={payload.allergies} />
-          <Row label="İlaçlar" value={payload.medications} />
-          <Row label="Kronik" value={payload.conditions} />
-          <Row label="Kısıt" value={payload.disability} />
+          <div className="identity-scan-rows">
+            <Row label="Alerjiler" value={payload.allergies} />
+            <Row label="İlaçlar" value={payload.medications} />
+            <Row label="Kronik" value={payload.conditions} />
+            <Row label="Kısıt" value={payload.disability} />
+            {!hasHealthInfo ? <p className="identity-qr-empty">Sağlık bilgisi girilmemiş.</p> : null}
+          </div>
+        </section>
 
-          {!payload.allergies && !payload.medications && !payload.conditions && !payload.disability && (
-            <p className="text-sm text-gray-400 italic py-2">Sağlık bilgisi girilmemiş.</p>
-          )}
-        </div>
+        <section className="identity-scan-note">
+          <strong>Sağlık personeli için not</strong>
+          <p>Bu bilgiler afet kimlik sahibi tarafından beyan edilmiştir. Klinik karar için doğrulayınız.</p>
+        </section>
 
-        <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3">
-          <p className="text-xs text-blue-700 font-medium">Sağlık personeli için not</p>
-          <p className="text-xs text-blue-600 mt-0.5">
-            Bu bilgiler afet kimlik sahibi tarafından beyan edilmiştir. Klinik karar için doğrulayınız.
-          </p>
-        </div>
+        {payload.issued ? <p className="identity-scan-meta">Kart tarihi: {payload.issued}</p> : null}
 
-        {payload.issued && (
-          <p className="text-xs text-center text-gray-400">Kart tarihi: {payload.issued}</p>
-        )}
-
-        <p className="text-xs text-center text-gray-400">
-          Bu sayfa çevrimdışı çalışır — sunucu bağlantısı gerekmez.
+        <p className="identity-scan-meta">
+          Bu sayfa çevrimdışı çalışır; sunucu bağlantısı gerekmez.
         </p>
-      </div>
+      </main>
     </div>
   );
 }

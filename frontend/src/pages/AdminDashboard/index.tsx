@@ -176,7 +176,7 @@ interface Props {
 export default function AdminDashboard({ onNavigateToMap }: Props) {
   const { logout } = useAuth();
   const navigate = useNavigate();
-  const goHome = onNavigateToMap ?? (() => navigate("/"));
+  const goHome = onNavigateToMap ?? (() => navigate("/ops"));
 
   const [activeTab, setActiveTab] = useState<AdminTab>("warehouses");
 
@@ -651,7 +651,7 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
         }}
       >
         <div>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>GeoSafe Admin Panel</h1>
+          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>GeoSafe Admin Konsolu</h1>
           <p style={{ margin: "4px 0 0", fontSize: 13, opacity: 0.88 }}>
             Depo, stok ve operasyon görünürlüğü
           </p>
@@ -668,7 +668,7 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
               cursor: "pointer",
             }}
           >
-            Ana Sayfa
+            Operasyon Paneli
           </button>
           <button
             onClick={logout}

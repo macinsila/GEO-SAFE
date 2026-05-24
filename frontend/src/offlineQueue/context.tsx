@@ -359,4 +359,3 @@ export function OfflineConsentNotice({
     </div>
   );
 }
-

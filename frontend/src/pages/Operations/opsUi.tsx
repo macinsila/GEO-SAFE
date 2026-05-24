@@ -1,7 +1,15 @@
 import React from "react";
-import { Announcement } from "../../types";
+import {
+  AnnouncementTone,
+  announcementTone,
+  loadAnnouncementCache,
+  saveAnnouncementCache,
+  toneLabel,
+} from "../../components/Announcements/announcementUtils";
 
-export type Tone = "safe" | "warning" | "critical" | "info" | "neutral";
+export type Tone = AnnouncementTone;
+
+export { announcementTone, loadAnnouncementCache, saveAnnouncementCache, toneLabel };
 
 export const ANNOUNCEMENT_CACHE_KEY = "geosafe_announcements_v1";
 
@@ -95,43 +103,6 @@ export const VIDEO_CARDS = [
     ],
   },
 ];
-
-type AnnouncementCache = {
-  items: Announcement[];
-  cachedAt: string;
-};
-
-export function loadAnnouncementCache(): AnnouncementCache | null {
-  try {
-    const raw = localStorage.getItem(ANNOUNCEMENT_CACHE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw) as AnnouncementCache;
-  } catch {
-    return null;
-  }
-}
-
-export function saveAnnouncementCache(items: Announcement[]) {
-  try {
-    localStorage.setItem(
-      ANNOUNCEMENT_CACHE_KEY,
-      JSON.stringify({ items, cachedAt: new Date().toISOString() })
-    );
-  } catch {
-    // Announcements still render when browser storage is unavailable.
-  }
-}
-
-export function announcementTone(priority: string): Tone {
-  if (priority === "critical") return "critical";
-  if (priority === "high") return "warning";
-  if (priority === "normal") return "info";
-  return "neutral";
-}
-
-export function toneLabel(tone: Tone) {
-  return `tone-${tone}`;
-}
 
 export function SectionHeader({
   eyebrow,

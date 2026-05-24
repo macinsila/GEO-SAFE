@@ -72,6 +72,7 @@ export const API_DIAGNOSTICS = {
 
 const TOKEN_KEY = "geosafe_token";
 const AUTH_EXPIRED_EVENT = "geosafe-auth-expired";
+const AUTH_NOTICE_KEY = "geosafe_auth_notice";
 
 interface ApiEnvelope<T> {
   status?: string;
@@ -118,6 +119,10 @@ class GeoSafeAPI {
       (error) => {
         if (axios.isAxiosError(error) && error.response?.status === 401) {
           localStorage.removeItem(TOKEN_KEY);
+          sessionStorage.setItem(
+            AUTH_NOTICE_KEY,
+            "Oturum süreniz doldu. Güvenliğiniz için yeniden giriş yapmanız gerekiyor."
+          );
           window.dispatchEvent(new Event(AUTH_EXPIRED_EVENT));
           if (window.location.pathname !== "/login") {
             window.location.assign("/login");
@@ -140,7 +145,7 @@ class GeoSafeAPI {
     const form = new URLSearchParams();
     form.append("username", email);
     form.append("password", password);
-    const res = await this.client.post<ApiEnvelope<{ access_token: string }>>(
+    const res = await this.publicClient.post<ApiEnvelope<{ access_token: string }>>(
       "/api/v1/auth/token",
       form,
       { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
@@ -149,7 +154,7 @@ class GeoSafeAPI {
   }
 
   async register(name: string, email: string, password: string): Promise<void> {
-    await this.client.post("/api/v1/auth/register", { name, email, password });
+    await this.publicClient.post("/api/v1/auth/register", { name, email, password });
   }
 
   // ── Profile ───────────────────────────────────────────────────────────

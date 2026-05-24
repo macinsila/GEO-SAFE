@@ -19,7 +19,6 @@ type OperationNavItem = {
   icon: string;
   path: string;
   end?: boolean;
-  adminOnly?: boolean;
 };
 
 const OPERATION_NAV_ITEMS: OperationNavItem[] = [
@@ -28,9 +27,18 @@ const OPERATION_NAV_ITEMS: OperationNavItem[] = [
   { label: "Depremler", icon: "S", path: "/ops/earthquakes" },
   { label: "Lojistik", icon: "L", path: "/ops/logistics" },
   { label: "Duyurular", icon: "A", path: "/ops/announcements" },
-  { label: "Yönetim", icon: "R", path: "/admin", adminOnly: true },
+];
+
+const IDENTITY_NAV_ITEMS: OperationNavItem[] = [
+  { label: "Profil", icon: "P", path: "/profile" },
   { label: "QR Kimlik", icon: "Q", path: "/qr-card" },
 ];
+
+const ADMIN_NAV_ITEM: OperationNavItem = {
+  label: "Admin Konsolu",
+  icon: "K",
+  path: "/admin",
+};
 
 const SEARCH_ROUTES = [
   { path: "/ops/map", terms: ["harita", "map", "depo", "rota", "alan"] },
@@ -47,10 +55,24 @@ const SOS_OPTIONS = [
   { label: "Sel Var", value: "Sel Var" },
 ];
 
+function NavItem({ item }: { item: OperationNavItem }) {
+  return (
+    <NavLink
+      className={({ isActive }) => `ops-nav-item${isActive ? " active" : ""}`}
+      end={item.end}
+      to={item.path}
+    >
+      <i aria-hidden="true">{item.icon}</i>
+      <span>{item.label}</span>
+    </NavLink>
+  );
+}
+
 export default function OperationsLayout() {
   const { role, logout } = useAuth();
   const navigate = useNavigate();
   const profileRef = useRef<HTMLDivElement>(null);
+  const isAdmin = role === "admin";
 
   const [profile, setProfile] = useState<Profile>({});
   const [profileOpen, setProfileOpen] = useState(false);
@@ -81,7 +103,7 @@ export default function OperationsLayout() {
   }, []);
 
   useEffect(() => {
-    if (role !== "admin") {
+    if (!isAdmin) {
       setEmergencyCount(0);
       return;
     }
@@ -99,7 +121,7 @@ export default function OperationsLayout() {
     return () => {
       mounted = false;
     };
-  }, [role]);
+  }, [isAdmin]);
 
   useEffect(() => {
     const handler = (event: MouseEvent) => {
@@ -189,33 +211,41 @@ export default function OperationsLayout() {
         </div>
 
         <nav className="ops-nav">
-          {OPERATION_NAV_ITEMS.map((item) => {
-            if (item.adminOnly && role !== "admin") {
-              return (
-                <span key={item.label} className="ops-nav-item disabled" aria-disabled="true">
-                  <i aria-hidden="true">{item.icon}</i>
-                  <span>{item.label}</span>
-                </span>
-              );
-            }
+          <span className="ops-nav-section-label">Operasyon</span>
+          {OPERATION_NAV_ITEMS.map((item) => (
+            <NavItem key={item.path} item={item} />
+          ))}
 
-            return (
-              <NavLink
-                key={item.label}
-                className={({ isActive }) => `ops-nav-item${isActive ? " active" : ""}`}
-                end={item.end}
-                to={item.path}
-              >
-                <i aria-hidden="true">{item.icon}</i>
-                <span>{item.label}</span>
-                {item.path === "/admin" && emergencyCount ? <b>{emergencyCount}</b> : null}
-              </NavLink>
-            );
-          })}
+          <span className="ops-nav-section-label">Kimlik</span>
+          {IDENTITY_NAV_ITEMS.map((item) => (
+            <NavItem key={item.path} item={item} />
+          ))}
+
+          <span className="ops-nav-section-label">Yetki</span>
+          {isAdmin ? (
+            <NavLink
+              className={({ isActive }) => `ops-nav-item ops-nav-admin${isActive ? " active" : ""}`}
+              to={ADMIN_NAV_ITEM.path}
+            >
+              <i aria-hidden="true">{ADMIN_NAV_ITEM.icon}</i>
+              <span>{ADMIN_NAV_ITEM.label}</span>
+              {emergencyCount ? <b>{emergencyCount}</b> : null}
+            </NavLink>
+          ) : (
+            <span
+              className="ops-nav-item disabled locked"
+              aria-disabled="true"
+              title="Admin konsolu sadece yetkili kullanıcılar içindir."
+            >
+              <i aria-hidden="true">{ADMIN_NAV_ITEM.icon}</i>
+              <span>{ADMIN_NAV_ITEM.label}</span>
+              <small>Admin yetkisi gerekir</small>
+            </span>
+          )}
         </nav>
 
         <div className="ops-sidebar-footer">
-          <span>Olay Modu</span>
+          <span>Operasyon Alanı</span>
           <strong>IST-OPS / Marmara</strong>
           <small>Canlı CBS ve lojistik görünümü</small>
         </div>
@@ -253,15 +283,17 @@ export default function OperationsLayout() {
 
           <div className="ops-topbar-actions">
             <ResourceBadge tone="safe">Sistem Çevrim İçi</ResourceBadge>
-            <button
-              className="ops-icon-button"
-              onClick={() => navigate("/admin")}
-              disabled={role !== "admin"}
-              type="button"
-              aria-label={`Yeni acil bildirimler: ${emergencyCount}`}
-            >
-              {emergencyCount}
-            </button>
+            <span className="ops-role-badge">{isAdmin ? "Rol: Admin" : "Rol: Operasyon"}</span>
+            {isAdmin ? (
+              <button
+                className="ops-icon-button ops-admin-alert-button"
+                onClick={() => navigate("/admin")}
+                type="button"
+                aria-label={`Admin acil bildirim kuyruğu: ${emergencyCount}`}
+              >
+                {emergencyCount}
+              </button>
+            ) : null}
 
             <div ref={profileRef} className="profile-menu">
               <button

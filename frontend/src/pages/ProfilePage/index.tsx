@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
+import { FieldError, FormStatus } from "../../components/FormUX";
 import { geoSafeAPI } from "../../services";
 
 interface ProfileForm {
@@ -26,6 +27,8 @@ interface QRPayload {
   issued: string;
 }
 
+type ProfileErrors = Partial<Record<keyof ProfileForm, string>>;
+
 const BLOOD_TYPES = ["", "A Rh+", "A Rh-", "B Rh+", "B Rh-", "AB Rh+", "AB Rh-", "0 Rh+", "0 Rh-"];
 
 const empty: ProfileForm = {
@@ -40,18 +43,22 @@ const empty: ProfileForm = {
   phone: "",
 };
 
-function encode(obj: object): string {
+export function encodeQrPayload(obj: object): string {
   return btoa(unescape(encodeURIComponent(JSON.stringify(obj))));
 }
 
-function maskName(fullName: string): string {
+export function decodeQrPayload<T = unknown>(value: string): T {
+  return JSON.parse(decodeURIComponent(escape(atob(value)))) as T;
+}
+
+export function maskName(fullName: string): string {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "Profil adı bekleniyor";
   if (parts.length === 1) return parts[0];
   return `${parts[0]} ${parts[parts.length - 1][0]}.`;
 }
 
-function buildPreviewPayload(form: ProfileForm): QRPayload {
+export function buildPreviewPayload(form: ProfileForm): QRPayload {
   return {
     v: 1,
     name: maskName(form.name),
@@ -91,12 +98,27 @@ function QRRow({ label, value }: { label: string; value: string }) {
   );
 }
 
+export function validateProfile(form: ProfileForm) {
+  const errors: ProfileErrors = {};
+  if (!form.name.trim()) {
+    errors.name = "Ad Soyad alanı zorunludur. QR kartında adınız maskeli gösterilir.";
+  }
+  if (form.phone.trim() && form.phone.trim().length < 10) {
+    errors.phone = "Telefon numarasını alan koduyla birlikte girin.";
+  }
+  if (form.emergency_contact_phone.trim() && form.emergency_contact_phone.trim().length < 10) {
+    errors.emergency_contact_phone = "Yakın kişi telefonu alan koduyla birlikte girilmelidir.";
+  }
+  return errors;
+}
+
 export default function ProfilePage() {
   const navigate = useNavigate();
   const [form, setForm] = useState<ProfileForm>(empty);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<ProfileErrors>({});
 
   useEffect(() => {
     geoSafeAPI
@@ -107,7 +129,7 @@ export default function ProfilePage() {
   }, []);
 
   const previewPayload = useMemo(() => buildPreviewPayload(form), [form]);
-  const qrUrl = `${window.location.origin}/qr-result?d=${encode(previewPayload)}`;
+  const qrUrl = `${window.location.origin}/qr-result?d=${encodeQrPayload(previewPayload)}`;
   const healthFieldCount = [form.allergy, form.meds, form.chronic, form.disability_notes].filter((value) =>
     value.trim()
   ).length;
@@ -119,15 +141,21 @@ export default function ProfilePage() {
   );
   const hasHealthInfo = healthFieldCount > 0;
 
-  const set = (key: keyof ProfileForm, val: string) => setForm((current) => ({ ...current, [key]: val }));
+  const set = (key: keyof ProfileForm, val: string) => {
+    setForm((current) => ({ ...current, [key]: val }));
+    setFieldErrors((current) => ({ ...current, [key]: undefined }));
+  };
 
   const save = async () => {
-    if (!form.name.trim()) {
-      setMsg({ text: "Ad Soyad alanı zorunludur. QR kartında adınız maskeli gösterilir.", ok: false });
+    const nextErrors = validateProfile(form);
+    if (Object.keys(nextErrors).length > 0) {
+      setFieldErrors(nextErrors);
+      setMsg({ text: "Lütfen işaretlenen alanları düzeltin.", ok: false });
       return;
     }
 
     setSaving(true);
+    setFieldErrors({});
     setMsg(null);
     try {
       await geoSafeAPI.updateProfile(form as unknown as Record<string, string>);
@@ -188,7 +216,21 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {msg ? <div className={`identity-message ${msg.ok ? "success" : "error"}`}>{msg.text}</div> : null}
+        {msg ? (
+          <FormStatus
+            tone={msg.ok ? "success" : "error"}
+            title={msg.ok ? "Profil kaydedildi" : "Profil kaydedilemedi"}
+            actions={
+              msg.ok ? (
+                <button className="ops-button primary" onClick={() => navigate("/qr-card")} type="button">
+                  QR Kartı Aç
+                </button>
+              ) : null
+            }
+          >
+            {msg.text}
+          </FormStatus>
+        ) : null}
 
         <div className="identity-grid">
           <div className="identity-form-stack">
@@ -208,10 +250,13 @@ export default function ProfilePage() {
                     type="text"
                     maxLength={100}
                     required
+                    aria-describedby={fieldErrors.name ? "profile-name-error" : undefined}
+                    aria-invalid={Boolean(fieldErrors.name)}
                     value={form.name}
                     onChange={(event) => set("name", event.target.value)}
                     placeholder="Adınız Soyadınız"
                   />
+                  <FieldError id="profile-name-error" message={fieldErrors.name} />
                   <small>QR kartında tam ad yerine maskeli ad görünür. Örnek: Ayşe Y.</small>
                 </label>
 
@@ -237,10 +282,13 @@ export default function ProfilePage() {
                     className="identity-input"
                     type="tel"
                     maxLength={20}
+                    aria-describedby={fieldErrors.phone ? "profile-phone-error" : undefined}
+                    aria-invalid={Boolean(fieldErrors.phone)}
                     value={form.phone}
                     onChange={(event) => set("phone", event.target.value)}
                     placeholder="0532 XXX XXXX"
                   />
+                  <FieldError id="profile-phone-error" message={fieldErrors.phone} />
                   <small>Bu bilgi profilinizde saklanır, QR sağlık özetine yazılmaz.</small>
                 </label>
               </div>
@@ -250,7 +298,7 @@ export default function ProfilePage() {
               <div className="ops-section-header">
                 <div>
                   <span className="ops-eyebrow">Sağlık Bilgileri</span>
-                  <h2>QR’da Gösterilecek Alanlar</h2>
+                  <h2>QR'da Gösterilecek Alanlar</h2>
                 </div>
                 <span className="ops-meta">Opsiyonel</span>
               </div>
@@ -311,7 +359,7 @@ export default function ProfilePage() {
                   <span className="ops-eyebrow">Acil İletişim</span>
                   <h2>Profilde Saklanan Bilgiler</h2>
                 </div>
-                <span className="ops-meta">QR’a yazılmaz</span>
+                <span className="ops-meta">QR'a yazılmaz</span>
               </div>
               <div className="identity-section-body">
                 <p className="identity-note">
@@ -336,10 +384,13 @@ export default function ProfilePage() {
                     className="identity-input"
                     type="tel"
                     maxLength={20}
+                    aria-describedby={fieldErrors.emergency_contact_phone ? "profile-emergency-phone-error" : undefined}
+                    aria-invalid={Boolean(fieldErrors.emergency_contact_phone)}
                     value={form.emergency_contact_phone}
                     onChange={(event) => set("emergency_contact_phone", event.target.value)}
                     placeholder="0532 XXX XXXX"
                   />
+                  <FieldError id="profile-emergency-phone-error" message={fieldErrors.emergency_contact_phone} />
                 </label>
               </div>
             </section>
@@ -390,14 +441,14 @@ export default function ProfilePage() {
 
               <div className="identity-info-list">
                 <div>
-                  <strong>Profil eksikse QR’da ne görünür?</strong>
+                  <strong>Profil eksikse QR'da ne görünür?</strong>
                   <span>
                     QR kartı yine oluşturulur; boş bırakılan sağlık alanları kartta ve tarama ekranında
                     gösterilmez.
                   </span>
                 </div>
                 <div>
-                  <strong>Hangi bilgiler QR’a yazılmaz?</strong>
+                  <strong>Hangi bilgiler QR'a yazılmaz?</strong>
                   <span>Telefon ve acil yakın bilgileri yalnızca profil kaydında tutulur.</span>
                 </div>
                 <div>

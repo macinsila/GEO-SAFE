@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { FieldError, FormStatus } from "../../components/FormUX";
 import {
   OfflineConsentNotice,
   useOfflineQueue,
@@ -7,6 +8,7 @@ import {
 import { geoSafeAPI } from "../../services";
 
 type Phase = "form" | "loading" | "done" | "error";
+type EmergencyErrors = Partial<Record<"kategori" | "manualLat" | "manualLon" | "queue", string>>;
 
 const CATEGORIES = [
   { label: "Enkaz Altındayım", value: "Enkaz Altindayim" },
@@ -16,16 +18,29 @@ const CATEGORIES = [
   { label: "Diğer Acil", value: "Diger Acil" },
 ];
 
+function validateManualCoordinates(latValue: string, lonValue: string) {
+  const errors: EmergencyErrors = {};
+  const lat = Number(latValue);
+  const lon = Number(lonValue);
+  if (!latValue.trim() || Number.isNaN(lat) || lat < -90 || lat > 90) {
+    errors.manualLat = "Geçerli bir enlem girin. Örn. 41.01";
+  }
+  if (!lonValue.trim() || Number.isNaN(lon) || lon < -180 || lon > 180) {
+    errors.manualLon = "Geçerli bir boylam girin. Örn. 28.97";
+  }
+  return errors;
+}
+
 export default function EmergencyPage() {
   const navigate = useNavigate();
   const { isOnline, submitOrQueue } = useOfflineQueue();
   const [phase, setPhase] = useState<Phase>("form");
-  const [errMsg, setErrMsg] = useState("");
   const [sentMsg, setSentMsg] = useState("");
+  const [sentQueued, setSentQueued] = useState(false);
+  const [errors, setErrors] = useState<EmergencyErrors>({});
 
   const [kategori, setKategori] = useState(CATEGORIES[0].value);
   const [aciklama, setAciklama] = useState("");
-
   const [manualLat, setManualLat] = useState("");
   const [manualLon, setManualLon] = useState("");
   const [needManual, setNeedManual] = useState(false);
@@ -34,6 +49,7 @@ export default function EmergencyPage() {
 
   const send = async (lat: number, lon: number) => {
     setPhase("loading");
+    setErrors({});
     const saat = new Date().toLocaleString("tr-TR");
     const haritaLink = `https://www.google.com/maps?q=${lat},${lon}`;
     try {
@@ -56,44 +72,50 @@ export default function EmergencyPage() {
 
       if (result === "consent_required") {
         setNeedsConsent(true);
-        setErrMsg("Çevrimdışı kayıt için önce açık onay vermelisiniz.");
+        setErrors({ queue: "Çevrimdışı kayıt için açık onay vermelisiniz." });
         setPhase("form");
         return;
       }
 
+      setSentQueued(result === "queued");
       setSentMsg(
         result === "queued"
           ? `${kategori} bildirimi internet gelince gönderilecek.`
-          : kategori
+          : `${kategori} bildirimi operasyon ekibine iletildi.`
       );
       setNeedsConsent(false);
       setQueueConsent(false);
-      setErrMsg("");
       setPhase("done");
     } catch {
-      setErrMsg("Sunucuya bağlanılamadı.");
+      setErrors({ queue: "Sunucuya bağlanılamadı. Konum ve bağlantıyı kontrol edip tekrar deneyin." });
       setPhase("error");
     }
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (!kategori) {
+      setErrors({ kategori: "Yardım kategorisi seçin." });
+      return;
+    }
+
     if (needManual) {
-      const lat = parseFloat(manualLat);
-      const lon = parseFloat(manualLon);
-      if (Number.isNaN(lat) || Number.isNaN(lon)) {
-        setErrMsg("Geçerli koordinat girin.");
+      const nextErrors = validateManualCoordinates(manualLat, manualLon);
+      if (Object.keys(nextErrors).length > 0) {
+        setErrors(nextErrors);
         return;
       }
-      await send(lat, lon);
+      await send(Number(manualLat), Number(manualLon));
       return;
     }
 
     setPhase("loading");
+    setErrors({});
     navigator.geolocation.getCurrentPosition(
       (pos) => void send(pos.coords.latitude, pos.coords.longitude),
       () => {
         setNeedManual(true);
+        setErrors({ manualLat: "Konum izni alınamadı. Koordinatı manuel girin." });
         setPhase("form");
       },
       { timeout: 6000 }
@@ -101,163 +123,144 @@ export default function EmergencyPage() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#FFF0F5",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        fontFamily: "'Segoe UI', system-ui, sans-serif",
-        padding: 20,
-        position: "relative",
-      }}
-    >
-      <div style={{ position: "fixed", inset: 0, display: "grid", gridTemplateColumns: "repeat(6,1fr)", gridTemplateRows: "repeat(5,1fr)", pointerEvents: "none", zIndex: 0 }}>
-        {Array.from({ length: 30 }).map((_, index) => (
-          <span key={index} style={{ display: "flex", alignItems: "center", justifyContent: "center", fontSize: 80, fontWeight: 900, color: "rgba(211,47,47,0.12)" }}>112</span>
-        ))}
-      </div>
-
-      <div style={{ position: "relative", zIndex: 2, width: "100%", maxWidth: 520, textAlign: "center" }}>
-        <button
-          onClick={() => navigate("/")}
-          style={{ position: "absolute", top: -50, left: 0, background: "none", border: "1px solid #c53030", color: "#c53030", borderRadius: 8, padding: "6px 14px", cursor: "pointer", fontSize: 13, fontWeight: 600 }}
-        >
+    <div className="emergency-form-shell">
+      <main className="emergency-form-main">
+        <button className="ops-button secondary emergency-back-button" onClick={() => navigate("/")} type="button">
           Ana Sayfa
         </button>
 
-        <h1 style={{ color: "#b71c1c", fontSize: "2rem", textTransform: "uppercase", letterSpacing: 2, marginBottom: 6 }}>
-          Acil Durum
-        </h1>
-        <p style={{ color: "#555", fontSize: 14, marginBottom: 28 }}>
-          Yardım kategorisini seçin, açıklama ekleyin. Konumunuz otomatik alınır.
-        </p>
+        <div className="emergency-form-head">
+          <span className="ops-eyebrow">Acil Bildirim</span>
+          <h1>Acil Durum</h1>
+          <p>Yardım kategorisini seçin, açıklama ekleyin. Konumunuz otomatik alınır.</p>
+        </div>
 
-        {phase === "loading" && (
-          <div style={{ padding: 40, color: "#b71c1c", fontWeight: 700, fontSize: 16 }}>
-            Konum alınıyor ve bildirim hazırlanıyor...
-          </div>
-        )}
+        {phase === "loading" ? (
+          <FormStatus tone="info" title="Kaydediliyor">
+            Konum alınıyor ve acil bildirim hazırlanıyor. Lütfen bu ekranı kapatmayın.
+          </FormStatus>
+        ) : null}
 
-        {phase === "done" && (
-          <div style={{ background: "#d1fae5", border: "1px solid #6ee7b7", borderRadius: 16, padding: 32, color: "#065f46" }}>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>✓</div>
-            <h2 style={{ margin: 0, fontSize: 20 }}>Bildirim Kaydedildi</h2>
-            <p style={{ marginTop: 8, fontSize: 14 }}>{sentMsg}</p>
-            <p style={{ marginTop: 4, fontSize: 13, opacity: 0.8 }}>
-              Çevrimiçiyseniz hemen gönderildi. Çevrimdışıyseniz internet gelince otomatik veya manuel sync ile iletilecek.
-            </p>
-            <button
-              onClick={() => navigate("/")}
-              style={{ marginTop: 20, padding: "10px 28px", background: "#065f46", color: "#fff", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" }}
-            >
-              Ana Sayfaya Dön
-            </button>
-          </div>
-        )}
+        {phase === "done" ? (
+          <FormStatus
+            tone={sentQueued ? "warning" : "success"}
+            title={sentQueued ? "İnternet gelince gönderilecek" : "Bildirim kaydedildi"}
+            actions={
+              <>
+                <button className="ops-button primary" onClick={() => navigate("/duyurular")} type="button">
+                  Duyurulara Git
+                </button>
+                <button className="ops-button secondary" onClick={() => navigate("/")} type="button">
+                  Ana Sayfaya Dön
+                </button>
+              </>
+            }
+          >
+            {sentMsg}
+          </FormStatus>
+        ) : null}
 
-        {phase === "error" && (
-          <div style={{ background: "#fee2e2", border: "1px solid #fca5a5", borderRadius: 16, padding: 32, color: "#991b1b" }}>
-            <div style={{ fontSize: 40, marginBottom: 10 }}>✕</div>
-            <p style={{ fontWeight: 700 }}>{errMsg}</p>
-            <button onClick={() => setPhase("form")} style={{ marginTop: 16, padding: "9px 22px", background: "#b91c1c", color: "#fff", border: "none", borderRadius: 10, cursor: "pointer", fontWeight: 700 }}>
-              Tekrar Dene
-            </button>
-          </div>
-        )}
+        {phase === "error" ? (
+          <FormStatus
+            tone="error"
+            title="Bildirim gönderilemedi"
+            actions={
+              <button className="ops-button danger" onClick={() => setPhase("form")} type="button">
+                Tekrar Dene
+              </button>
+            }
+          >
+            {errors.queue}
+          </FormStatus>
+        ) : null}
 
-        {(phase === "form") && (
-          <div style={{ background: "#fff", borderRadius: 16, padding: 28, boxShadow: "0 8px 24px rgba(0,0,0,.10)" }}>
-            {(needsConsent || !isOnline) && (
-              <div style={{ marginBottom: 16 }}>
-                <OfflineConsentNotice checked={queueConsent} onChange={setQueueConsent} />
-              </div>
-            )}
+        {phase === "form" ? (
+          <section className="ops-panel public-form-card emergency-form-card">
+            {(needsConsent || !isOnline) ? (
+              <OfflineConsentNotice checked={queueConsent} onChange={setQueueConsent} />
+            ) : null}
 
-            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14, textAlign: "left" }}>
-              <div>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#7f1d1d", marginBottom: 6 }}>
-                  Yardım Kategorisi *
-                </label>
+            {errors.queue ? <FormStatus tone="error" title="Form gönderilemedi">{errors.queue}</FormStatus> : null}
+
+            <form className="public-form-grid" onSubmit={handleSubmit} noValidate>
+              <label className="form-field danger" htmlFor="emergency-category">
+                <span>Yardım Kategorisi <b>Zorunlu</b></span>
                 <select
+                  id="emergency-category"
                   value={kategori}
-                  onChange={(e) => setKategori(e.target.value)}
-                  required
-                  style={{ width: "100%", padding: "12px 14px", borderRadius: 8, border: "2px solid #fca5a5", fontSize: 15, fontWeight: 600, color: "#7f1d1d", background: "#fff7f7", cursor: "pointer" }}
+                  onChange={(event) => {
+                    setKategori(event.target.value);
+                    setErrors((prev) => ({ ...prev, kategori: undefined }));
+                  }}
+                  aria-describedby={errors.kategori ? "emergency-category-error" : undefined}
+                  aria-invalid={Boolean(errors.kategori)}
                 >
                   {CATEGORIES.map((cat) => (
                     <option key={cat.value} value={cat.value}>{cat.label}</option>
                   ))}
                 </select>
-              </div>
+                <FieldError id="emergency-category-error" message={errors.kategori} />
+              </label>
 
-              <div>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#555", marginBottom: 6 }}>
-                  Açıklama (isteğe bağlı)
-                </label>
+              <label className="form-field" htmlFor="emergency-description">
+                <span>Açıklama</span>
                 <textarea
+                  id="emergency-description"
                   value={aciklama}
-                  onChange={(e) => setAciklama(e.target.value)}
+                  onChange={(event) => setAciklama(event.target.value)}
                   maxLength={280}
                   rows={3}
                   placeholder="Durumunuzu kısaca açıklayın... (kat, konum ipucu vb.)"
-                  style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid #ccc", fontSize: 14, resize: "vertical", boxSizing: "border-box" }}
                 />
-                <div style={{ fontSize: 11, color: "#999", textAlign: "right", marginTop: 2 }}>{aciklama.length}/280</div>
-              </div>
+                <small>{aciklama.length}/280</small>
+              </label>
 
-              {needManual && (
-                <>
-                  <p style={{ color: "#c53030", fontWeight: 600, fontSize: 13, margin: 0 }}>
-                    Konum izni verilmedi. Koordinatı manuel girin.
-                  </p>
-                  <input
-                    type="number"
-                    step="any"
-                    placeholder="Enlem (örn: 41.01)"
-                    value={manualLat}
-                    onChange={(e) => setManualLat(e.target.value)}
-                    required
-                    style={{ padding: "10px 12px", borderRadius: 8, border: "1px solid #ccc", fontSize: 14 }}
-                  />
-                  <input
-                    type="number"
-                    step="any"
-                    placeholder="Boylam (örn: 28.97)"
-                    value={manualLon}
-                    onChange={(e) => setManualLon(e.target.value)}
-                    required
-                    style={{ padding: "10px 12px", borderRadius: 8, border: "1px solid #ccc", fontSize: 14 }}
-                  />
-                </>
-              )}
+              {needManual ? (
+                <div className="public-form-row">
+                  <label className="form-field danger" htmlFor="emergency-lat">
+                    <span>Enlem <b>Zorunlu</b></span>
+                    <input
+                      id="emergency-lat"
+                      type="number"
+                      step="any"
+                      placeholder="41.01"
+                      value={manualLat}
+                      onChange={(event) => {
+                        setManualLat(event.target.value);
+                        setErrors((prev) => ({ ...prev, manualLat: undefined }));
+                      }}
+                      aria-describedby={errors.manualLat ? "emergency-lat-error" : undefined}
+                      aria-invalid={Boolean(errors.manualLat)}
+                    />
+                    <FieldError id="emergency-lat-error" message={errors.manualLat} />
+                  </label>
+                  <label className="form-field danger" htmlFor="emergency-lon">
+                    <span>Boylam <b>Zorunlu</b></span>
+                    <input
+                      id="emergency-lon"
+                      type="number"
+                      step="any"
+                      placeholder="28.97"
+                      value={manualLon}
+                      onChange={(event) => {
+                        setManualLon(event.target.value);
+                        setErrors((prev) => ({ ...prev, manualLon: undefined }));
+                      }}
+                      aria-describedby={errors.manualLon ? "emergency-lon-error" : undefined}
+                      aria-invalid={Boolean(errors.manualLon)}
+                    />
+                    <FieldError id="emergency-lon-error" message={errors.manualLon} />
+                  </label>
+                </div>
+              ) : null}
 
-              {errMsg && <p style={{ color: "#c53030", fontSize: 13, margin: 0 }}>{errMsg}</p>}
-
-              <button
-                type="submit"
-                style={{
-                  padding: "16px",
-                  background: "#d32f2f",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: 10,
-                  fontSize: 16,
-                  fontWeight: 800,
-                  cursor: "pointer",
-                  boxShadow: "0 6px 18px rgba(211,47,47,0.4)",
-                  textTransform: "uppercase",
-                  letterSpacing: 1,
-                }}
-              >
+              <button className="ops-button danger public-form-submit" type="submit">
                 Yardım Çağır
               </button>
             </form>
-          </div>
-        )}
-      </div>
+          </section>
+        ) : null}
+      </main>
     </div>
   );
 }
