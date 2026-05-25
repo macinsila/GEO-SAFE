@@ -2,7 +2,7 @@ import axios from "axios";
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { API_DIAGNOSTICS, geoSafeAPI } from "../../services";
+import { geoSafeAPI } from "../../services";
 
 type Tab = "login" | "register";
 type MsgType = "success" | "error" | "info" | null;
@@ -330,7 +330,6 @@ export default function LoginPage() {
 
         <div className="auth-footer">
           2026 GEOSAFE GLOBAL / Kontrollü Erişim
-          <span>Build {API_DIAGNOSTICS.build} / API {API_DIAGNOSTICS.baseUrl}</span>
         </div>
       </section>
     </main>
