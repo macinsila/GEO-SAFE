@@ -7,10 +7,13 @@ describe("API auth interceptor", () => {
     localStorage.clear();
     sessionStorage.clear();
     window.history.pushState({}, "", "/login");
+    delete process.env.REACT_APP_API_BASE_URL;
+    delete process.env.REACT_APP_API_URL;
 
     jest.doMock("axios", () => {
-      const create = jest.fn(() => {
+      const create = jest.fn((config) => {
         const client = {
+          config,
           interceptors: {
             request: { use: jest.fn() },
             response: { use: jest.fn() },
@@ -56,5 +59,17 @@ describe("API auth interceptor", () => {
     expect(authExpiredListener).toHaveBeenCalled();
 
     window.removeEventListener("geosafe-auth-expired", authExpiredListener);
+  });
+
+  it("accepts the legacy REACT_APP_API_URL deployment variable", () => {
+    process.env.REACT_APP_API_BASE_URL = "";
+    process.env.REACT_APP_API_URL = "https://geosafe-backend.onrender.com";
+
+    const { API_DIAGNOSTICS } = require("./services/api");
+
+    expect(createdClients[0].config.baseURL).toBe("https://geosafe-backend.onrender.com");
+    expect(createdClients[1].config.baseURL).toBe("https://geosafe-backend.onrender.com");
+    expect(API_DIAGNOSTICS.baseUrl).toBe("https://geosafe-backend.onrender.com");
+    expect(API_DIAGNOSTICS.env).toBe("REACT_APP_API_URL");
   });
 });

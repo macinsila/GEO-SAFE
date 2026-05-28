@@ -23,7 +23,11 @@ import {
   WarehouseInventoryData,
 } from "../types";
 
-const configuredApiBaseUrl = (process.env.REACT_APP_API_BASE_URL as string | undefined)?.trim();
+const configuredApiBaseUrl = (
+  (process.env.REACT_APP_API_BASE_URL as string | undefined) ||
+  (process.env.REACT_APP_API_URL as string | undefined)
+)?.trim();
+const apiEnvName = process.env.REACT_APP_API_BASE_URL ? "REACT_APP_API_BASE_URL" : "REACT_APP_API_URL";
 const API_TIMEOUT_MS = 60000;
 
 const isLocalHostname = (hostname: string): boolean =>
@@ -49,7 +53,7 @@ const getApiConfig = (): { baseUrl: string; error: string | null } => {
     return {
       baseUrl: "",
       error:
-        "API adresi ayarlanmamış. Vercel ortam değişkenlerinde REACT_APP_API_BASE_URL Render backend URL'i olmalı.",
+        "API adresi ayarlanmamış. Vercel ortam değişkenlerinde REACT_APP_API_BASE_URL Render backend URL'i olmalı. Eski REACT_APP_API_URL adı da desteklenir.",
     };
   }
 
@@ -67,6 +71,7 @@ const getApiConfig = (): { baseUrl: string; error: string | null } => {
 const { baseUrl: API_BASE_URL, error: API_CONFIG_ERROR } = getApiConfig();
 export const API_DIAGNOSTICS = {
   baseUrl: API_BASE_URL || "not-configured",
+  env: API_BASE_URL ? apiEnvName : "not-configured",
   build: "login-fix-2026-05-21-3",
 };
 

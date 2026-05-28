@@ -1,0 +1,112 @@
+{
+  "app": {
+    "name": "GeoSafe",
+    "tagline": "Smart Disaster Logistics System"
+  },
+  "nav": {
+    "map": "Map",
+    "dashboard": "Dashboard",
+    "logistics": "Logistics",
+    "earthquakes": "Earthquakes",
+    "announcements": "Announcements",
+    "emergency": "Emergency Report",
+    "profile": "Profile",
+    "volunteer": "Volunteer",
+    "shelter": "Offer Shelter",
+    "logout": "Log Out",
+    "login": "Log In"
+  },
+  "map": {
+    "warehouses": "Warehouses",
+    "safeZones": "Safe Zones",
+    "routes": "Routes",
+    "findNearest": "Find Nearest Depot",
+    "myLocation": "My Location",
+    "selectItem": "Select Item",
+    "search": "Search",
+    "distance": "Distance",
+    "eta": "Estimated Time",
+    "routeDirections": "Directions"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "risky": "Risky",
+    "full": "Full"
+  },
+  "inventory": {
+    "item": "Item",
+    "quantity": "Quantity",
+    "threshold": "Threshold",
+    "critical": "Critical",
+    "lowStock": "Low Stock",
+    "update": "Update",
+    "movements": "Movements"
+  },
+  "transfer": {
+    "title": "Transfer Request",
+    "from": "Source Warehouse",
+    "to": "Destination Warehouse",
+    "quantity": "Quantity",
+    "approve": "Approve",
+    "reject": "Reject",
+    "pending": "Pending",
+    "completed": "Completed",
+    "rejected": "Rejected"
+  },
+  "checkin": {
+    "title": "I'm Safe",
+    "subtitle": "Report your location and status",
+    "submit": "Report",
+    "success": "Safety report received",
+    "note": "Note (optional)"
+  },
+  "emergency": {
+    "title": "Emergency Report",
+    "submit": "Submit",
+    "status": "Status",
+    "description": "Description",
+    "category": "Category"
+  },
+  "announcement": {
+    "title": "Announcement",
+    "all": "All Announcements",
+    "new": "New Announcement",
+    "publish": "Publish",
+    "draft": "Draft"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "login": "Log In",
+    "register": "Register",
+    "name": "Full Name",
+    "logout": "Log Out"
+  },
+  "profile": {
+    "title": "My Profile",
+    "blood": "Blood Type",
+    "chronic": "Chronic Conditions",
+    "meds": "Medications",
+    "allergy": "Allergies",
+    "phone": "Phone",
+    "disability": "Disability Notes",
+    "emergencyContact": "Emergency Contact",
+    "save": "Save",
+    "exportData": "Download My Data",
+    "deleteAccount": "Delete My Account"
+  },
+  "common": {
+    "loading": "Loading…",
+    "error": "An error occurred",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "search": "Search",
+    "noData": "No data",
+    "confirm": "Confirm",
+    "success": "Success"
+  }
+}
