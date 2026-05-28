@@ -1,8 +1,8 @@
 import axios from "axios";
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { API_DIAGNOSTICS, geoSafeAPI } from "../../services";
+import { geoSafeAPI } from "../../services";
 
 type Tab = "login" | "register";
 type MsgType = "success" | "error" | "info" | null;
@@ -12,7 +12,15 @@ interface Msg {
   text: string;
 }
 
+interface LoginLocationState {
+  from?: {
+    pathname?: string;
+    search?: string;
+  };
+}
+
 const LOGIN_TIMEOUT_MS = 60000;
+const AUTH_NOTICE_KEY = "geosafe_auth_notice";
 
 function withTimeout<T>(promise: Promise<T>, timeoutMessage: string): Promise<T> {
   let timeoutId: ReturnType<typeof setTimeout>;
@@ -27,11 +35,11 @@ function withTimeout<T>(promise: Promise<T>, timeoutMessage: string): Promise<T>
 function getErrorMessage(error: unknown, fallback: string): string {
   if (axios.isAxiosError(error)) {
     if (error.code === "ECONNABORTED") {
-      return "Backend 60 saniye icinde yanit vermedi. Render servisi uyaniyor olabilir; biraz sonra tekrar deneyin veya Render loglarini kontrol edin.";
+      return "Backend 60 saniye içinde yanıt vermedi. Servis uyanıyor olabilir; biraz sonra tekrar deneyin.";
     }
 
     if (!error.response && error.message === "Network Error") {
-      return "Backend'e ulasilamadi. Render URL'i veya CORS_ORIGINS ayari hatali olabilir.";
+      return "Backend'e ulaşılamadı. API adresi veya CORS ayarı kontrol edilmeli.";
     }
 
     const detail = error.response?.data?.detail;
@@ -56,21 +64,47 @@ function getErrorMessage(error: unknown, fallback: string): string {
   return fallback;
 }
 
+function getReturnPath(state: unknown): string {
+  const loginState = state as LoginLocationState | null;
+  const pathname = loginState?.from?.pathname;
+  if (!pathname || pathname === "/login") return "/ops";
+  return `${pathname}${loginState?.from?.search ?? ""}`;
+}
+
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { isAuthenticated, login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const returnPath = useMemo(() => getReturnPath(location.state), [location.state]);
   const [tab, setTab] = useState<Tab>("login");
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [regName, setRegName] = useState("");
   const [regEmail, setRegEmail] = useState("");
   const [regPassword, setRegPassword] = useState("");
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [msg, setMsg] = useState<Msg>({ type: null, text: "" });
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(returnPath, { replace: true });
+    }
+  }, [isAuthenticated, navigate, returnPath]);
+
+  useEffect(() => {
+    const notice = sessionStorage.getItem(AUTH_NOTICE_KEY);
+    if (notice) {
+      setMsg({ type: "info", text: notice });
+      sessionStorage.removeItem(AUTH_NOTICE_KEY);
+    }
+  }, []);
 
   const showMsg = (type: MsgType, text: string) => setMsg({ type, text });
   const clearMsg = () => setMsg({ type: null, text: "" });
   const switchTab = (nextTab: Tab) => {
+    if (loading) return;
     setTab(nextTab);
     clearMsg();
   };
@@ -81,13 +115,13 @@ export default function LoginPage() {
     clearMsg();
     try {
       const token = await withTimeout(
-        geoSafeAPI.login(loginEmail, loginPassword),
-        "Login istegi 60 saniye icinde yanit alamadi. Render servisi, Supabase baglantisi veya backend loglari kontrol edilmeli."
+        geoSafeAPI.login(loginEmail.trim(), loginPassword),
+        "Giriş isteği 60 saniye içinde yanıt alamadı. Backend bağlantısı veya servis logları kontrol edilmeli."
       );
       login(token);
-      navigate("/");
+      navigate(returnPath, { replace: true });
     } catch (error) {
-      showMsg("error", getErrorMessage(error, "E-posta veya sifre hatali."));
+      showMsg("error", getErrorMessage(error, "E-posta veya şifre hatalı."));
     } finally {
       setLoading(false);
     }
@@ -95,21 +129,29 @@ export default function LoginPage() {
 
   const handleRegister = async (event: React.FormEvent) => {
     event.preventDefault();
+    const cleanName = regName.trim();
+    const cleanEmail = regEmail.trim();
+
+    if (regPassword.length < 8) {
+      showMsg("error", "Şifre en az 8 karakter olmalı.");
+      return;
+    }
+
     setLoading(true);
     clearMsg();
     try {
       await withTimeout(
-        geoSafeAPI.register(regName || "Kullanici", regEmail, regPassword),
-        "Kayit istegi 60 saniye icinde yanit alamadi. Render servisi, Supabase baglantisi veya backend loglari kontrol edilmeli."
+        geoSafeAPI.register(cleanName || "Kullanıcı", cleanEmail, regPassword),
+        "Kayıt isteği 60 saniye içinde yanıt alamadı. Backend bağlantısı veya servis logları kontrol edilmeli."
       );
       const token = await withTimeout(
-        geoSafeAPI.login(regEmail, regPassword),
-        "Login istegi 60 saniye icinde yanit alamadi. Render servisi, Supabase baglantisi veya backend loglari kontrol edilmeli."
+        geoSafeAPI.login(cleanEmail, regPassword),
+        "Giriş isteği 60 saniye içinde yanıt alamadı. Backend bağlantısı veya servis logları kontrol edilmeli."
       );
       login(token);
-      navigate("/");
+      navigate("/profile", { replace: true });
     } catch (error) {
-      showMsg("error", getErrorMessage(error, "Kayit basarisiz. E-posta zaten kullaniliyor olabilir."));
+      showMsg("error", getErrorMessage(error, "Kayıt başarısız. E-posta zaten kullanılıyor olabilir."));
     } finally {
       setLoading(false);
     }
@@ -117,48 +159,51 @@ export default function LoginPage() {
 
   return (
     <main className="auth-shell">
-      <section className="auth-intel-panel" aria-label="GeoSafe platform context">
+      <section className="auth-intel-panel" aria-label="GeoSafe platform bağlamı">
         <div className="ops-brand auth-brand">
           <div className="ops-mark">GS</div>
           <div>
             <strong>GeoSafe</strong>
-            <span>Emergency Logistics</span>
+            <span>Acil Durum Lojistiği</span>
           </div>
         </div>
 
         <div className="auth-intel-copy">
-          <span className="ops-eyebrow">Secure Operations Access</span>
-          <h1>Geospatial decision support for field-ready disaster operations.</h1>
+          <span className="ops-eyebrow">Güvenli Operasyon Erişimi</span>
+          <h1>Saha afet operasyonları için coğrafi karar desteği.</h1>
           <p>
-            Shelter zones, depot readiness, emergency reports and logistics signals are kept in one
-            controlled operational workspace.
+            Barınma alanları, depo hazırlığı, acil durum raporları ve lojistik sinyaller tek
+            kontrollü operasyon alanında tutulur.
           </p>
         </div>
 
         <div className="auth-signal-grid">
           <div>
-            <span>Mode</span>
-            <strong>Incident Ready</strong>
+            <span>Mod</span>
+            <strong>Olaya Hazır</strong>
           </div>
           <div>
-            <span>Coverage</span>
-            <strong>Marmara Ops</strong>
+            <span>Kapsam</span>
+            <strong>Marmara Operasyonu</strong>
           </div>
           <div>
-            <span>Data</span>
-            <strong>GIS + Logistics</strong>
+            <span>Veri</span>
+            <strong>CBS + Lojistik</strong>
           </div>
         </div>
       </section>
 
-      <section className="auth-card" aria-label="Authentication">
+      <section className="auth-card" aria-label="Kimlik doğrulama">
         <div className="auth-card-header">
-          <span className="ops-eyebrow">Identity Verification</span>
-          <h2>{tab === "login" ? "Sisteme Giris" : "Operasyon Hesabi Olustur"}</h2>
-          <p>Yetkili kullanici erisimi. Kimlik dogrulamadan sonra operasyon ekranina gecilir.</p>
+          <span className="ops-eyebrow">Kimlik Doğrulama</span>
+          <h2>{tab === "login" ? "Sisteme Giriş" : "Operasyon Hesabı Oluştur"}</h2>
+          <p>
+            Yetkili kullanıcı erişimi. Korunan bir ekrandan geldiyseniz girişten sonra aynı
+            noktaya dönersiniz.
+          </p>
         </div>
 
-        <div className="auth-tabs" role="tablist" aria-label="Authentication mode">
+        <div className="auth-tabs" role="tablist" aria-label="Kimlik doğrulama modu">
           {(["login", "register"] as Tab[]).map((item) => (
             <button
               key={item}
@@ -167,56 +212,73 @@ export default function LoginPage() {
               type="button"
               role="tab"
               aria-selected={tab === item}
+              disabled={loading}
             >
-              {item === "login" ? "Giris" : "Yeni Kayit"}
+              {item === "login" ? "Giriş" : "Yeni Kayıt"}
             </button>
           ))}
         </div>
 
-        {msg.type && <div className={`auth-message ${msg.type}`}>{msg.text}</div>}
+        {msg.type && (
+          <div className={`auth-message ${msg.type}`} role="status" aria-live="polite">
+            {msg.text}
+          </div>
+        )}
 
         {tab === "login" && (
-          <form className="auth-form" onSubmit={handleLogin}>
+          <form className="auth-form" onSubmit={handleLogin} aria-busy={loading}>
             <label>
               <span>E-posta</span>
               <input
                 type="email"
                 placeholder="ornek@mail.com"
+                autoComplete="email"
                 required
                 value={loginEmail}
                 onChange={(event) => setLoginEmail(event.target.value)}
               />
             </label>
             <label>
-              <span>Sifre</span>
-              <input
-                type="password"
-                placeholder="********"
-                required
-                value={loginPassword}
-                onChange={(event) => setLoginPassword(event.target.value)}
-              />
+              <span>Şifre</span>
+              <div className="auth-password-field">
+                <input
+                  type={showLoginPassword ? "text" : "password"}
+                  placeholder="********"
+                  autoComplete="current-password"
+                  required
+                  value={loginPassword}
+                  onChange={(event) => setLoginPassword(event.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowLoginPassword((value) => !value)}
+                  aria-pressed={showLoginPassword}
+                >
+                  {showLoginPassword ? "Gizle" : "Göster"}
+                </button>
+              </div>
             </label>
             <button
               className="auth-forgot"
               type="button"
-              onClick={() => showMsg("info", "Sifre sifirlama icin yonetici ile iletisime gecin.")}
+              onClick={() => showMsg("info", "Şifre sıfırlama için sistem yöneticisiyle iletişime geçin.")}
             >
-              Sifremi Unuttum?
+              Şifremi unuttum
             </button>
             <button className="auth-submit" type="submit" disabled={loading}>
-              {loading ? "Giris yapiliyor..." : "Sisteme Giris Yap"}
+              {loading ? "Giriş yapılıyor..." : "Sisteme giriş yap"}
             </button>
           </form>
         )}
 
         {tab === "register" && (
-          <form className="auth-form" onSubmit={handleRegister}>
+          <form className="auth-form" onSubmit={handleRegister} aria-busy={loading}>
             <label>
-              <span>Tam Adiniz</span>
+              <span>Tam adınız</span>
               <input
                 type="text"
                 placeholder="Ad Soyad"
+                autoComplete="name"
                 value={regName}
                 onChange={(event) => setRegName(event.target.value)}
               />
@@ -226,30 +288,48 @@ export default function LoginPage() {
               <input
                 type="email"
                 placeholder="ornek@mail.com"
+                autoComplete="email"
                 required
                 value={regEmail}
                 onChange={(event) => setRegEmail(event.target.value)}
               />
             </label>
             <label>
-              <span>Sifre Secin</span>
-              <input
-                type="password"
-                placeholder="********"
-                required
-                value={regPassword}
-                onChange={(event) => setRegPassword(event.target.value)}
-              />
+              <span>Şifre seçin</span>
+              <div className="auth-password-field">
+                <input
+                  type={showRegisterPassword ? "text" : "password"}
+                  placeholder="En az 8 karakter"
+                  autoComplete="new-password"
+                  required
+                  minLength={8}
+                  value={regPassword}
+                  onChange={(event) => setRegPassword(event.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowRegisterPassword((value) => !value)}
+                  aria-pressed={showRegisterPassword}
+                >
+                  {showRegisterPassword ? "Gizle" : "Göster"}
+                </button>
+              </div>
+              <small className="auth-field-hint">Profil ve QR kimliği daha sonra profil ekranında tamamlanır.</small>
             </label>
             <button className="auth-submit" type="submit" disabled={loading}>
-              {loading ? "Hesap olusturuluyor..." : "Hesabi Olustur"}
+              {loading ? "Hesap oluşturuluyor..." : "Hesabı oluştur"}
             </button>
           </form>
         )}
 
+        <div className="auth-public-links" aria-label="Public afet akışları">
+          <Link to="/emergency">Acil yardım bildir</Link>
+          <Link to="/volunteer">Gönüllü ol</Link>
+          <Link to="/shelter-offer">Barınma desteği sun</Link>
+        </div>
+
         <div className="auth-footer">
-          2026 GEOSAFE GLOBAL / Controlled Access
-          <span>Build {API_DIAGNOSTICS.build} / API {API_DIAGNOSTICS.baseUrl}</span>
+          2026 GEOSAFE GLOBAL / Kontrollü Erişim
         </div>
       </section>
     </main>

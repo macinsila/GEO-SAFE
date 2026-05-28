@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { FieldError, FormStatus } from "../../components/FormUX";
 import {
   OfflineConsentNotice,
   useOfflineQueue,
@@ -8,30 +9,51 @@ import { geoSafeAPI } from "../../services";
 import { VolunteerApplicationPayload } from "../../types";
 
 const SKILLS = [
-  "Ilk yardim",
-  "Arac destegi",
-  "Tasimacilik/lojistik",
-  "Ceviri",
+  "İlk yardım",
+  "Araç desteği",
+  "Taşımacılık/lojistik",
+  "Çeviri",
   "Psikolojik destek",
   "Teknik destek",
-  "Diger",
+  "Diğer",
 ];
+
+type VolunteerErrors = Partial<Record<keyof VolunteerApplicationPayload | "queue", string>>;
+type SubmitState = "idle" | "submitting" | "submitted" | "queued" | "error";
+
+const emptyForm: VolunteerApplicationPayload = {
+  full_name: "",
+  contact_info: "",
+  district: "",
+  neighborhood: "",
+  skills: [],
+  availability_note: "",
+};
+
+function validateVolunteer(form: VolunteerApplicationPayload) {
+  const errors: VolunteerErrors = {};
+  if (!form.full_name.trim()) errors.full_name = "Ad soyad alanı zorunludur.";
+  if (!form.contact_info.trim()) errors.contact_info = "Telefon veya erişilebilir iletişim bilgisi girin.";
+  if (form.skills.length === 0) errors.skills = "En az bir destek alanı seçin.";
+  return errors;
+}
 
 export default function VolunteerPage() {
   const navigate = useNavigate();
   const { isOnline, submitOrQueue } = useOfflineQueue();
-  const [form, setForm] = useState<VolunteerApplicationPayload>({
-    full_name: "",
-    contact_info: "",
-    district: "",
-    neighborhood: "",
-    skills: [],
-    availability_note: "",
-  });
-  const [sending, setSending] = useState(false);
-  const [message, setMessage] = useState("");
+  const [form, setForm] = useState<VolunteerApplicationPayload>(emptyForm);
+  const [submitState, setSubmitState] = useState<SubmitState>("idle");
+  const [errors, setErrors] = useState<VolunteerErrors>({});
   const [queueConsent, setQueueConsent] = useState(false);
   const [needsConsent, setNeedsConsent] = useState(false);
+
+  const sending = submitState === "submitting";
+
+  const update = <K extends keyof VolunteerApplicationPayload>(key: K, value: VolunteerApplicationPayload[K]) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+    setErrors((prev) => ({ ...prev, [key]: undefined }));
+    if (submitState === "error") setSubmitState("idle");
+  };
 
   const toggleSkill = (skill: string) => {
     setForm((prev) => {
@@ -41,16 +63,26 @@ export default function VolunteerPage() {
         : [...prev.skills, skill];
       return { ...prev, skills: nextSkills };
     });
+    setErrors((prev) => ({ ...prev, skills: undefined }));
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    setSending(true);
-    setMessage("");
+    const nextErrors = validateVolunteer(form);
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors);
+      setSubmitState("error");
+      return;
+    }
+
+    setSubmitState("submitting");
+    setErrors({});
     try {
-      const payload = {
+      const payload: VolunteerApplicationPayload = {
         ...form,
-        skills: form.skills,
+        district: form.district?.trim() || undefined,
+        neighborhood: form.neighborhood?.trim() || undefined,
+        availability_note: form.availability_note?.trim() || undefined,
       };
       const result = await submitOrQueue({
         type: "volunteer",
@@ -63,154 +95,157 @@ export default function VolunteerPage() {
 
       if (result === "consent_required") {
         setNeedsConsent(true);
-        setMessage("Cevrimdisi kayit icin once acik onay vermelisiniz.");
+        setErrors({ queue: "Çevrimdışı kayıt için açık onay vermelisiniz." });
+        setSubmitState("error");
         return;
       }
 
-      setMessage(
-        result === "queued"
-          ? "Basvurunuz internet gelince gonderilmek uzere bu cihazda gecici olarak saklandi."
-          : "Basvurunuz alindi. Yetkililer tarafindan degerlendirilecektir."
-      );
       setNeedsConsent(false);
       setQueueConsent(false);
-      setForm({
-        full_name: "",
-        contact_info: "",
-        district: "",
-        neighborhood: "",
-        skills: [],
-        availability_note: "",
-      });
+      setForm(emptyForm);
+      setSubmitState(result === "queued" ? "queued" : "submitted");
     } catch {
-      setMessage("Basvuru gonderilemedi. Lutfen tekrar deneyin.");
-    } finally {
-      setSending(false);
+      setErrors({ queue: "Başvuru gönderilemedi. Bağlantıyı kontrol edip tekrar deneyin." });
+      setSubmitState("error");
     }
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f8fafc", fontFamily: "'Outfit','Segoe UI',system-ui,sans-serif", padding: "24px" }}>
-      <div style={{ maxWidth: 720, margin: "0 auto" }}>
-        <button
-          onClick={() => navigate("/")}
-          style={{ background: "none", border: "1px solid #0f766e", color: "#0f766e", borderRadius: 10, padding: "6px 14px", fontWeight: 600, cursor: "pointer", marginBottom: 16 }}
-        >
+    <div className="public-form-shell">
+      <main className="public-form-main">
+        <button className="ops-button secondary" onClick={() => navigate("/")} type="button">
           Ana Sayfa
         </button>
 
-        <div style={{ background: "#fff", borderRadius: 16, padding: "24px 26px", boxShadow: "0 10px 30px rgba(15,118,110,.12)", border: "1px solid #ccfbf1" }}>
-          <h1 style={{ margin: 0, fontSize: 22, color: "#0f766e" }}>Gonullu Olabilirim</h1>
-          <p style={{ marginTop: 6, color: "#475569", fontSize: 13 }}>
-            Bilgileriniz halka acik olarak paylasilmaz. Basvurular yetkililer tarafindan incelenir.
-          </p>
+        <section className="ops-panel public-form-card">
+          <div className="public-form-head">
+            <span className="ops-eyebrow">Gönüllü Başvurusu</span>
+            <h1>Gönüllü olabilirim</h1>
+            <p>
+              Bilgileriniz halka açık paylaşılmaz. Başvurular operasyon ekibi tarafından değerlendirilir.
+            </p>
+          </div>
 
-          <form onSubmit={handleSubmit} style={{ marginTop: 20, display: "grid", gap: 14 }}>
-            <div style={{ display: "grid", gap: 6 }}>
-              <label style={{ fontSize: 12, fontWeight: 700, color: "#0f766e" }}>Ad Soyad</label>
+          {submitState === "submitted" ? (
+            <FormStatus
+              tone="success"
+              title="Başvurunuz alındı"
+              actions={
+                <>
+                  <button className="ops-button primary" onClick={() => navigate("/duyurular")} type="button">
+                    Duyurulara Git
+                  </button>
+                  <button className="ops-button secondary" onClick={() => setSubmitState("idle")} type="button">
+                    Yeni Başvuru
+                  </button>
+                </>
+              }
+            >
+              Yetkililer başvurunuzu inceleyecek. Güncel yönlendirmeleri duyurular ekranından takip edebilirsiniz.
+            </FormStatus>
+          ) : null}
+
+          {submitState === "queued" ? (
+            <FormStatus
+              tone="warning"
+              title="İnternet gelince gönderilecek"
+              actions={
+                <button className="ops-button secondary" onClick={() => navigate("/")} type="button">
+                  Ana Sayfaya Dön
+                </button>
+              }
+            >
+              Başvurunuz bu cihazda geçici olarak saklandı. Bağlantı geri geldiğinde gönderilecek.
+            </FormStatus>
+          ) : null}
+
+          {errors.queue ? <FormStatus tone="error" title="Form gönderilemedi">{errors.queue}</FormStatus> : null}
+
+          <form className="public-form-grid" onSubmit={handleSubmit} noValidate>
+            <label className="form-field" htmlFor="volunteer-full-name">
+              <span>Ad Soyad <b>Zorunlu</b></span>
               <input
-                required
+                id="volunteer-full-name"
+                aria-describedby={errors.full_name ? "volunteer-full-name-error" : undefined}
+                aria-invalid={Boolean(errors.full_name)}
                 value={form.full_name}
-                onChange={(e) => setForm((prev) => ({ ...prev, full_name: e.target.value }))}
-                style={{ padding: "10px 12px", borderRadius: 10, border: "1px solid #cbd5f5" }}
+                onChange={(event) => update("full_name", event.target.value)}
               />
-            </div>
+              <FieldError id="volunteer-full-name-error" message={errors.full_name} />
+            </label>
 
-            <div style={{ display: "grid", gap: 6 }}>
-              <label style={{ fontSize: 12, fontWeight: 700, color: "#0f766e" }}>Telefon / Iletisim</label>
+            <label className="form-field" htmlFor="volunteer-contact">
+              <span>Telefon / İletişim <b>Zorunlu</b></span>
               <input
-                required
+                id="volunteer-contact"
+                aria-describedby={errors.contact_info ? "volunteer-contact-error" : undefined}
+                aria-invalid={Boolean(errors.contact_info)}
                 value={form.contact_info}
-                onChange={(e) => setForm((prev) => ({ ...prev, contact_info: e.target.value }))}
-                style={{ padding: "10px 12px", borderRadius: 10, border: "1px solid #cbd5f5" }}
+                onChange={(event) => update("contact_info", event.target.value)}
               />
+              <FieldError id="volunteer-contact-error" message={errors.contact_info} />
+            </label>
+
+            <div className="public-form-row">
+              <label className="form-field" htmlFor="volunteer-district">
+                <span>İlçe</span>
+                <input
+                  id="volunteer-district"
+                  value={form.district ?? ""}
+                  onChange={(event) => update("district", event.target.value)}
+                />
+              </label>
+              <label className="form-field" htmlFor="volunteer-neighborhood">
+                <span>Mahalle</span>
+                <input
+                  id="volunteer-neighborhood"
+                  value={form.neighborhood ?? ""}
+                  onChange={(event) => update("neighborhood", event.target.value)}
+                />
+              </label>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 12 }}>
-              <div style={{ display: "grid", gap: 6 }}>
-                <label style={{ fontSize: 12, fontWeight: 700, color: "#0f766e" }}>Ilce</label>
-                <input
-                  value={form.district}
-                  onChange={(e) => setForm((prev) => ({ ...prev, district: e.target.value }))}
-                  style={{ padding: "10px 12px", borderRadius: 10, border: "1px solid #cbd5f5" }}
-                />
-              </div>
-              <div style={{ display: "grid", gap: 6 }}>
-                <label style={{ fontSize: 12, fontWeight: 700, color: "#0f766e" }}>Mahalle</label>
-                <input
-                  value={form.neighborhood}
-                  onChange={(e) => setForm((prev) => ({ ...prev, neighborhood: e.target.value }))}
-                  style={{ padding: "10px 12px", borderRadius: 10, border: "1px solid #cbd5f5" }}
-                />
-              </div>
-            </div>
-
-            <div style={{ display: "grid", gap: 10 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "#0f766e" }}>Beceriler</div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            <fieldset className="form-fieldset" aria-describedby={errors.skills ? "volunteer-skills-error" : undefined}>
+              <legend>Beceriler <b>Zorunlu</b></legend>
+              <div className="form-chip-grid">
                 {SKILLS.map((skill) => {
                   const selected = form.skills.includes(skill);
                   return (
                     <button
+                      className={`form-chip ${selected ? "selected" : ""}`}
                       type="button"
                       key={skill}
                       onClick={() => toggleSkill(skill)}
-                      style={{
-                        padding: "8px 12px",
-                        borderRadius: 999,
-                        border: selected ? "1px solid #0f766e" : "1px solid #cbd5f5",
-                        background: selected ? "#ccfbf1" : "#fff",
-                        color: "#0f766e",
-                        fontSize: 12,
-                        fontWeight: 600,
-                        cursor: "pointer",
-                      }}
+                      aria-pressed={selected}
                     >
                       {skill}
                     </button>
                   );
                 })}
               </div>
-            </div>
+              <FieldError id="volunteer-skills-error" message={errors.skills} />
+            </fieldset>
 
-            <div style={{ display: "grid", gap: 6 }}>
-              <label style={{ fontSize: 12, fontWeight: 700, color: "#0f766e" }}>Musaitlik Notu</label>
+            <label className="form-field" htmlFor="volunteer-note">
+              <span>Müsaitlik Notu</span>
               <textarea
+                id="volunteer-note"
                 rows={3}
-                value={form.availability_note}
-                onChange={(e) => setForm((prev) => ({ ...prev, availability_note: e.target.value }))}
-                style={{ padding: "10px 12px", borderRadius: 10, border: "1px solid #cbd5f5", resize: "vertical" }}
+                value={form.availability_note ?? ""}
+                onChange={(event) => update("availability_note", event.target.value)}
               />
-            </div>
+            </label>
 
-            {(!isOnline || needsConsent) && (
+            {(!isOnline || needsConsent) ? (
               <OfflineConsentNotice checked={queueConsent} onChange={setQueueConsent} />
-            )}
+            ) : null}
 
-            {message && (
-              <div style={{ fontSize: 13, fontWeight: 600, color: message.startsWith("Basvurunuz") ? "#166534" : "#b91c1c" }}>
-                {message}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={sending}
-              style={{
-                padding: "12px",
-                borderRadius: 12,
-                border: "none",
-                background: sending ? "#94a3b8" : "linear-gradient(135deg,#14b8a6,#0d9488)",
-                color: "#fff",
-                fontWeight: 700,
-                cursor: sending ? "not-allowed" : "pointer",
-              }}
-            >
-              {sending ? "Gonderiliyor..." : "Basvuruyu Gonder"}
+            <button className="ops-button primary public-form-submit" type="submit" disabled={sending}>
+              {sending ? "Kaydediliyor..." : "Başvuruyu Gönder"}
             </button>
           </form>
-        </div>
-      </div>
+        </section>
+      </main>
     </div>
   );
 }

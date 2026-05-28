@@ -25,7 +25,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: geosafe_backend
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    command: sh /app/docker-entrypoint.sh uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     ports:
       - "${GEOSAFE_BACKEND_PORT:-8011}:8000"
     environment:

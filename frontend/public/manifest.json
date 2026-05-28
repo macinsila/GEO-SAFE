@@ -1,7 +1,7 @@
 {
   "name": "GeoSafe Afet Dayanismasi",
   "short_name": "GeoSafe",
-  "description": "GeoSafe icin guvenli offline temel. Hassas form verileri cihazda saklanmaz.",
+  "description": "GeoSafe için güvenli çevrim dışı temel. Hassas form verileri cihazda saklanmaz.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f4f7fb",

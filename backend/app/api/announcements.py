@@ -16,6 +16,7 @@ from app.api.auth import require_roles
 from app.api.response import success_response
 from app.models.announcement import Announcement
 from app.models.user import User
+from app.api import sse as sse_broadcaster
 from app.schemas import (
     AnnouncementCreate,
     AnnouncementUpdate,
@@ -122,6 +123,7 @@ async def update_announcement(
         ann.kategori = payload.kategori
     if payload.priority is not None:
         ann.priority = payload.priority
+    was_published = ann.status == "published"
     if payload.status is not None:
         if payload.status == "published" and ann.published_at is None:
             ann.published_at = datetime.utcnow()
@@ -132,6 +134,11 @@ async def update_announcement(
     await db.commit()
     result = await db.execute(select(Announcement).where(Announcement.id == ann_id))
     ann = result.scalar_one()
+
+    # Push to SSE clients when an announcement transitions to published
+    if not was_published and ann.status == "published":
+        await sse_broadcaster.broadcast_announcement(_serialize_public(ann))
+
     return success_response(data=_serialize_admin(ann), message="Duyuru güncellendi")
 
 

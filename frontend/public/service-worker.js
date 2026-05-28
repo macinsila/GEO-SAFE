@@ -106,6 +106,50 @@ async function cacheFirst(request, cacheName) {
   return networkThenCache(request, cacheName);
 }
 
+// ── Web Push (GS-021) ─────────────────────────────────────────────────────────
+
+self.addEventListener("push", (event) => {
+  let payload = { title: "GeoSafe", body: "Yeni bildirim", url: "/", tag: "geosafe-alert" };
+  try {
+    if (event.data) {
+      payload = { ...payload, ...JSON.parse(event.data.text()) };
+    }
+  } catch (_) {}
+
+  event.waitUntil(
+    self.registration.showNotification(payload.title, {
+      body: payload.body,
+      icon: "/icons/icon-192.svg",
+      badge: "/icons/icon-192.svg",
+      tag: payload.tag,
+      data: { url: payload.url },
+      requireInteraction: true,
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const targetUrl = (event.notification.data && event.notification.data.url) || "/";
+  event.waitUntil(
+    clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clientList) => {
+        for (const client of clientList) {
+          if (client.url.includes(self.location.origin) && "focus" in client) {
+            client.navigate(targetUrl);
+            return client.focus();
+          }
+        }
+        if (clients.openWindow) {
+          return clients.openWindow(targetUrl);
+        }
+      })
+  );
+});
+
+// ── Fetch ─────────────────────────────────────────────────────────────────────
+
 self.addEventListener("fetch", (event) => {
   const { request } = event;
 

@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 from sqlalchemy.orm.attributes import flag_modified
 
+from app.api import sse as sse_broadcaster
 from app.api.auth import require_roles
 from app.api.response import success_response
 from app.db import get_db
@@ -124,7 +125,9 @@ async def _upsert_warehouse_inventory(
     )
     await db.flush()
 
-    return {
+    threshold = _item_threshold(item)
+    is_critical = inventory.quantity <= threshold
+    result_data = {
         "warehouse_id": warehouse.id,
         "warehouse_name": warehouse.name,
         "item_id": item.id,
@@ -132,9 +135,21 @@ async def _upsert_warehouse_inventory(
         "item_sku": item.sku,
         "item_unit": item.unit,
         "quantity": inventory.quantity,
-        "threshold": _item_threshold(item),
-        "is_critical": inventory.quantity <= _item_threshold(item),
+        "threshold": threshold,
+        "is_critical": is_critical,
     }
+
+    # GS-081: broadcast low-stock alert via SSE when quantity drops at/below threshold
+    if is_critical:
+        await sse_broadcaster.broadcast_low_stock_alert({
+            **result_data,
+            "message": (
+                f"Düşük stok uyarısı: {warehouse.name} deposunda "
+                f"{item.name} ({inventory.quantity} {item.unit}) — eşik: {threshold}"
+            ),
+        })
+
+    return result_data
 
 
 @router.get("/safe-zone/{zone_id}")

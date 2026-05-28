@@ -21,3 +21,5 @@ pytest>=8.0.0
 pytest-asyncio>=0.23.0
 pytest-postgresql>=6.0.0
 factory-boy>=3.3.0
+sentry-sdk[fastapi]>=1.40.0
+pywebpush>=2.0.0

@@ -176,7 +176,7 @@ interface Props {
 export default function AdminDashboard({ onNavigateToMap }: Props) {
   const { logout } = useAuth();
   const navigate = useNavigate();
-  const goHome = onNavigateToMap ?? (() => navigate("/"));
+  const goHome = onNavigateToMap ?? (() => navigate("/ops"));
 
   const [activeTab, setActiveTab] = useState<AdminTab>("warehouses");
 
@@ -314,7 +314,7 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
 
     const changedRows = inventoryRows.filter((row) => row.quantity !== row.originalQuantity);
     if (changedRows.length === 0) {
-      setSaveMsg("Degisiklik yok.");
+      setSaveMsg("Değişiklik yok.");
       return;
     }
 
@@ -332,9 +332,9 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
       );
       await loadWarehouseOverview();
       await selectWarehouse(selectedWarehouseId);
-      setSaveMsg("Stok guncellendi.");
+      setSaveMsg("Stok güncellendi.");
     } catch {
-      setSaveMsg("Kaydetme hatasi.");
+      setSaveMsg("Kaydetme hatası.");
     } finally {
       setSaveBusy(false);
     }
@@ -391,9 +391,9 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
         setInventoryRows(buildInventoryRows(nextItems, warehouseInventory));
       }
       await loadWarehouseOverview();
-      setItemMsg("Stok kalemi guncellendi.");
+      setItemMsg("Stok kalemi güncellendi.");
     } catch {
-      setItemMsg("Stok kalemi guncellenemedi.");
+      setItemMsg("Stok kalemi güncellenemedi.");
     } finally {
       setItemBusy(null);
     }
@@ -410,9 +410,9 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
         setInventoryRows(buildInventoryRows(nextItems, warehouseInventory));
       }
       await loadWarehouseOverview();
-      setItemMsg(isActive ? "Kalem tekrar aktif edildi." : "Kalem pasife alindi.");
+      setItemMsg(isActive ? "Kalem tekrar aktif edildi." : "Kalem pasife alındı.");
     } catch {
-      setItemMsg("Kalem durumu guncellenemedi.");
+      setItemMsg("Kalem durumu güncellenemedi.");
     } finally {
       setItemBusy(null);
     }
@@ -651,9 +651,9 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
         }}
       >
         <div>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>GeoSafe Admin Panel</h1>
+          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>GeoSafe Admin Konsolu</h1>
           <p style={{ margin: "4px 0 0", fontSize: 13, opacity: 0.88 }}>
-            Depo, stok ve operasyon gorunurlugu
+            Depo, stok ve operasyon görünürlüğü
           </p>
         </div>
         <div style={{ display: "flex", gap: 10 }}>
@@ -668,7 +668,7 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
               cursor: "pointer",
             }}
           >
-            Ana Sayfa
+            Operasyon Paneli
           </button>
           <button
             onClick={logout}
@@ -682,7 +682,7 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
               fontWeight: 600,
             }}
           >
-            Cikis
+            Çıkış
           </button>
         </div>
       </header>
@@ -693,8 +693,8 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
           <SummaryCard label="Aktif Depo" value={activeWarehouses} sub="active" />
           <SummaryCard label="Pasif Depo" value={inactiveWarehouses} sub="inactive" />
           <SummaryCard label="Riskli Depo" value={riskyWarehouses} sub="risky" />
-          <SummaryCard label="Toplanma Alani" value={safeZoneCount} />
-          <SummaryCard label="Kritik Stok Uyarisi" value={criticalStock.length} sub="kalem" warn />
+          <SummaryCard label="Toplanma Alanı" value={safeZoneCount} />
+          <SummaryCard label="Kritik Stok Uyarısı" value={criticalStock.length} sub="kalem" warn />
           <SummaryCard label="Kritik Depo" value={lowStockWarehouseCount} sub="depo" warn />
         </div>
 
@@ -711,21 +711,21 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
           }}
         >
           <TabBtn id="warehouses" label="Depolar ve Stok" />
-          <TabBtn id="safezones" label="Toplanma Alanlari" />
+          <TabBtn id="safezones" label="Toplanma Alanları" />
           <TabBtn id="emergency" label="Acil Bildirimler" />
-          <TabBtn id="volunteers" label="Gonulluler" />
-          <TabBtn id="shelters" label="Barinma Teklifleri" />
+          <TabBtn id="volunteers" label="Gönüllüler" />
+          <TabBtn id="shelters" label="Barınma Teklifleri" />
           <TabBtn id="announcements" label="Duyurular" />
         </div>
 
         {activeTab === "warehouses" && (
           loading ? (
-            <div style={{ textAlign: "center", padding: 60, color: "#666" }}>Yukleniyor...</div>
+            <div style={{ textAlign: "center", padding: 60, color: "#666" }}>Yükleniyor...</div>
           ) : (
             <div style={{ display: "grid", gap: 20 }}>
               <SectionCard title="Kritik Stok Paneli">
                 {criticalStock.length === 0 ? (
-                  <div style={{ color: "#666" }}>Kritik stok kaydi bulunmuyor.</div>
+                  <div style={{ color: "#666" }}>Kritik stok kaydı bulunmuyor.</div>
                 ) : (
                   <div style={{ overflowX: "auto" }}>
                     <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -734,8 +734,8 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
                           <th style={TH}>Depo</th>
                           <th style={TH}>Kalem</th>
                           <th style={TH}>Mevcut</th>
-                          <th style={TH}>Esik</th>
-                          <th style={TH}>Oneri</th>
+                          <th style={TH}>Eşik</th>
+                          <th style={TH}>Öneri</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -760,7 +760,7 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
               </SectionCard>
 
               <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1.1fr) minmax(360px, .9fr)", gap: 20 }}>
-                <SectionCard title="Stok Kalemi Yonetimi">
+                <SectionCard title="Stok Kalemi Yönetimi">
                   <div style={{ display: "grid", gap: 12 }}>
                     <div
                       style={{
@@ -778,7 +778,7 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
                       <input
                         value={newItem.name}
                         onChange={(event) => setNewItem((state) => ({ ...state, name: event.target.value }))}
-                        placeholder="Kalem adi"
+                        placeholder="Kalem adı"
                         style={{ padding: "8px 10px", borderRadius: 6, border: "1px solid #ccc" }}
                       />
                       <input
@@ -792,7 +792,7 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
                         onChange={(event) =>
                           setNewItem((state) => ({ ...state, low_stock_threshold: event.target.value }))
                         }
-                        placeholder="Kritik esik"
+                        placeholder="Kritik eşik"
                         style={{ padding: "8px 10px", borderRadius: 6, border: "1px solid #ccc" }}
                       />
                       <button
@@ -813,7 +813,7 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
                     <input
                       value={newItem.description}
                       onChange={(event) => setNewItem((state) => ({ ...state, description: event.target.value }))}
-                      placeholder="Aciklama"
+                      placeholder="Açıklama"
                       style={{ padding: "8px 10px", borderRadius: 6, border: "1px solid #ccc" }}
                     />
                     {itemMsg ? <div style={{ fontSize: 13, color: "#555" }}>{itemMsg}</div> : null}
@@ -824,9 +824,9 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
                             <th style={TH}>SKU</th>
                             <th style={TH}>Ad</th>
                             <th style={TH}>Birim</th>
-                            <th style={TH}>Esik</th>
+                            <th style={TH}>Eşik</th>
                             <th style={TH}>Durum</th>
-                            <th style={TH}>Islem</th>
+                            <th style={TH}>İşlem</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -858,7 +858,7 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
                                   style={{ width: "100%", padding: "6px 8px", borderRadius: 6, border: "1px solid #ccc" }}
                                 />
                                 <div style={{ color: "#777", fontSize: 12, marginTop: 4 }}>
-                                  {item.description || "Aciklama yok"}
+                                  {item.description || "Açıklama yok"}
                                 </div>
                               </td>
                               <td style={TD}>
@@ -954,7 +954,7 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
                   </div>
                 </SectionCard>
 
-                <SectionCard title="Depo Bazli Stok Guncelleme">
+                <SectionCard title="Depo Bazlı Stok Güncelleme">
                   <div style={{ display: "grid", gap: 12 }}>
                     <div style={{ display: "grid", gap: 8 }}>
                       {warehouses.map((warehouse) => {
@@ -985,7 +985,7 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
                             <div style={{ color: warehouseCriticalCount > 0 ? "#C62828" : "#666", fontSize: 12, marginTop: 4 }}>
                               {warehouseCriticalCount > 0
                                 ? `${warehouseCriticalCount} kritik kalem`
-                                : "Kritik kayit yok"}
+                                : "Kritik kayıt yok"}
                             </div>
                           </button>
                         );
@@ -993,15 +993,15 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
                     </div>
 
                     {selectedWarehouseId === null ? (
-                      <div style={{ color: "#666" }}>Guncellemek icin bir depo secin.</div>
+                      <div style={{ color: "#666" }}>Güncellemek için bir depo seçin.</div>
                     ) : inventoryLoading ? (
-                      <div style={{ color: "#666" }}>Depo stogu yukleniyor...</div>
+                      <div style={{ color: "#666" }}>Depo stoku yükleniyor...</div>
                     ) : (
                       <div style={{ display: "grid", gap: 12 }}>
                         <div>
                           <strong>{selectedWarehouse?.name}</strong>
                           <div style={{ color: "#666", fontSize: 12, marginTop: 4 }}>
-                            Tum aktif stok kalemleri listelenir. Sifir deger yeni kayit olusturabilir.
+                            Tüm aktif stok kalemleri listelenir. Sıfır değer yeni kayıt oluşturabilir.
                           </div>
                         </div>
                         <div style={{ maxHeight: 420, overflowY: "auto", paddingRight: 4 }}>
@@ -1070,7 +1070,7 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
                 </SectionCard>
               </div>
 
-              <SectionCard title="Stok Hareket Gecmisi">
+              <SectionCard title="Stok Hareket Geçmişi">
                 {movementHistory.length === 0 ? (
                   <div style={{ color: "#666" }}>Stok hareketi bulunmuyor.</div>
                 ) : (
@@ -1081,11 +1081,11 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
                           <th style={TH}>Tarih</th>
                           <th style={TH}>Depo</th>
                           <th style={TH}>Kalem</th>
-                          <th style={TH}>Degisim</th>
+                          <th style={TH}>Değişim</th>
                           <th style={TH}>Eski / Yeni</th>
                           <th style={TH}>Tip</th>
                           <th style={TH}>Not</th>
-                          <th style={TH}>Actor</th>
+                          <th style={TH}>İşlemi Yapan</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1122,14 +1122,14 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
 
         {activeTab === "safezones" && (
           safeZonesLoading ? (
-            <div style={{ textAlign: "center", padding: 60, color: "#666" }}>Yukleniyor...</div>
+            <div style={{ textAlign: "center", padding: 60, color: "#666" }}>Yükleniyor...</div>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: selectedZoneId ? "1fr 360px" : "1fr", gap: 20 }}>
-              <SectionCard title="Toplanma Alani Listesi">
+              <SectionCard title="Toplanma Alanı Listesi">
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr style={{ background: "#f5f5f5" }}>
-                      <th style={TH}>Isim</th>
+                      <th style={TH}>İsim</th>
                       <th style={TH}>Kapasite</th>
                       <th style={TH}>Durum</th>
                     </tr>
@@ -1145,7 +1145,7 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
                         }}
                       >
                         <td style={TD}>{zone.name}</td>
-                        <td style={TD}>{zone.capacity ?? "-"} kisi</td>
+                        <td style={TD}>{zone.capacity ?? "-"} kişi</td>
                         <td style={TD}>
                           <StatusBadge status={zone.status} />
                         </td>
@@ -1232,15 +1232,15 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
                     fontWeight: 600,
                   }}
                 >
-                  {clearingEmergencies ? "Temizleniyor..." : "Gecmisi Temizle"}
+                  {clearingEmergencies ? "Temizleniyor..." : "Geçmişi Temizle"}
                 </button>
               </div>
             }
           >
             {emergencyLoading ? (
-              <div style={{ color: "#666" }}>Yukleniyor...</div>
+              <div style={{ color: "#666" }}>Yükleniyor...</div>
             ) : emergencies.length === 0 ? (
-              <div style={{ color: "#666" }}>Kayit bulunamadi.</div>
+              <div style={{ color: "#666" }}>Kayıt bulunamadı.</div>
             ) : (
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -1303,35 +1303,35 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
 
         {activeTab === "volunteers" && (
           <SectionCard
-            title="Gonullu Basvurulari"
+            title="Gönüllü Başvuruları"
             action={
               <select
                 value={volunteerFilter}
                 onChange={(event) => setVolunteerFilter(event.target.value)}
                 style={{ padding: "6px 8px", borderRadius: 6, border: "1px solid #ccc" }}
               >
-                <option value="">Tumu</option>
-                <option value="pending">Pending</option>
-                <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
-                <option value="inactive">Inactive</option>
+                <option value="">Tümü</option>
+                <option value="pending">Bekliyor</option>
+                <option value="approved">Onaylandı</option>
+                <option value="rejected">Reddedildi</option>
+                <option value="inactive">Pasif</option>
               </select>
             }
           >
             {volunteerLoading ? (
-              <div style={{ color: "#666" }}>Yukleniyor...</div>
+              <div style={{ color: "#666" }}>Yükleniyor...</div>
             ) : volunteers.length === 0 ? (
-              <div style={{ color: "#666" }}>Kayit bulunamadi.</div>
+              <div style={{ color: "#666" }}>Kayıt bulunamadı.</div>
             ) : (
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr style={{ background: "#f5f5f5" }}>
                       <th style={TH}>Ad Soyad</th>
-                      <th style={TH}>Ilce / Mahalle</th>
+                      <th style={TH}>İlçe / Mahalle</th>
                       <th style={TH}>Beceriler</th>
-                      <th style={TH}>Musaitlik</th>
-                      <th style={TH}>Iletisim</th>
+                      <th style={TH}>Müsaitlik</th>
+                      <th style={TH}>İletişim</th>
                       <th style={TH}>Tarih</th>
                       <th style={TH}>Durum</th>
                     </tr>
@@ -1353,10 +1353,10 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
                             onChange={(event) => updateVolunteerStatus(volunteer.id, event.target.value)}
                             style={{ padding: "6px 8px", borderRadius: 6, border: "1px solid #ccc" }}
                           >
-                            <option value="pending">Pending</option>
-                            <option value="approved">Approved</option>
-                            <option value="rejected">Rejected</option>
-                            <option value="inactive">Inactive</option>
+                            <option value="pending">Bekliyor</option>
+                            <option value="approved">Onaylandı</option>
+                            <option value="rejected">Reddedildi</option>
+                            <option value="inactive">Pasif</option>
                           </select>
                         </td>
                       </tr>
@@ -1370,25 +1370,25 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
 
         {activeTab === "shelters" && (
           <SectionCard
-            title="Barinma Teklifleri"
+            title="Barınma Teklifleri"
             action={
               <select
                 value={shelterFilter}
                 onChange={(event) => setShelterFilter(event.target.value)}
                 style={{ padding: "6px 8px", borderRadius: 6, border: "1px solid #ccc" }}
               >
-                <option value="">Tumu</option>
-                <option value="pending">Pending</option>
-                <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
-                <option value="inactive">Inactive</option>
+                <option value="">Tümü</option>
+                <option value="pending">Bekliyor</option>
+                <option value="approved">Onaylandı</option>
+                <option value="rejected">Reddedildi</option>
+                <option value="inactive">Pasif</option>
               </select>
             }
           >
             {shelterLoading ? (
-              <div style={{ color: "#666" }}>Yukleniyor...</div>
+              <div style={{ color: "#666" }}>Yükleniyor...</div>
             ) : shelterOffers.length === 0 ? (
-              <div style={{ color: "#666" }}>Kayit bulunamadi.</div>
+              <div style={{ color: "#666" }}>Kayıt bulunamadı.</div>
             ) : (
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -1398,8 +1398,8 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
                       <th style={TH}>Konum</th>
                       <th style={TH}>Kapasite</th>
                       <th style={TH}>Tarih</th>
-                      <th style={TH}>Adres Detayi</th>
-                      <th style={TH}>Iletisim</th>
+                      <th style={TH}>Adres Detayı</th>
+                      <th style={TH}>İletişim</th>
                       <th style={TH}>Durum</th>
                     </tr>
                   </thead>
@@ -1422,10 +1422,10 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
                             onChange={(event) => updateShelterStatus(offer.id, event.target.value)}
                             style={{ padding: "6px 8px", borderRadius: 6, border: "1px solid #ccc" }}
                           >
-                            <option value="pending">Pending</option>
-                            <option value="approved">Approved</option>
-                            <option value="rejected">Rejected</option>
-                            <option value="inactive">Inactive</option>
+                            <option value="pending">Bekliyor</option>
+                            <option value="approved">Onaylandı</option>
+                            <option value="rejected">Reddedildi</option>
+                            <option value="inactive">Pasif</option>
                           </select>
                         </td>
                       </tr>

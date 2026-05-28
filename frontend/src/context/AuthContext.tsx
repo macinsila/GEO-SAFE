@@ -12,6 +12,7 @@ interface AuthCtx {
 const AuthContext = createContext<AuthCtx | null>(null);
 
 const TOKEN_KEY = "geosafe_token";
+const AUTH_EXPIRED_EVENT = "geosafe-auth-expired";
 
 const decodeBase64Url = (value: string): string => {
   const padded = value.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(value.length / 4) * 4, "=");
@@ -58,6 +59,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
     window.addEventListener("storage", handler);
     return () => window.removeEventListener("storage", handler);
+  }, []);
+
+  useEffect(() => {
+    const handler = () => {
+      setToken(null);
+      setRole(null);
+    };
+    window.addEventListener(AUTH_EXPIRED_EVENT, handler);
+    return () => window.removeEventListener(AUTH_EXPIRED_EVENT, handler);
   }, []);
 
   return (

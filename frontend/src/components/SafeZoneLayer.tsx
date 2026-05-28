@@ -118,11 +118,11 @@ export const SafeZoneLayer: React.FC = () => {
               <div>
                 <h3 style={{ margin: "0 0 6px 0" }}>{zone.name}</h3>
                 <p style={{ margin: "4px 0" }}>
-                  <strong>Status:</strong> {zone.status}
+                  <strong>Durum:</strong> {zone.status}
                 </p>
                 {zone.capacity !== undefined && zone.capacity !== null && (
                   <p style={{ margin: "4px 0" }}>
-                    <strong>Capacity:</strong> {zone.capacity} {zone.capacity_type}
+                    <strong>Kapasite:</strong> {zone.capacity} {zone.capacity_type}
                   </p>
                 )}
               </div>

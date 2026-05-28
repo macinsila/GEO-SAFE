@@ -133,6 +133,11 @@ docker-compose.override.yml
 local_config.py
 secrets.json
 
+# Geçici ve eski dosyalar — repoda kalmamalı
+.tmp_tree.py
+backend/geosafe.db
+frontend/legacy-public/
+
 # Compiled files
 *.o
 *.a

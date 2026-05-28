@@ -1,0 +1,112 @@
+{
+  "app": {
+    "name": "GeoSafe",
+    "tagline": "Akıllı Afet Lojistik Sistemi"
+  },
+  "nav": {
+    "map": "Harita",
+    "dashboard": "Kontrol Paneli",
+    "logistics": "Lojistik",
+    "earthquakes": "Depremler",
+    "announcements": "Duyurular",
+    "emergency": "Acil Bildirim",
+    "profile": "Profil",
+    "volunteer": "Gönüllü Ol",
+    "shelter": "Barınak Teklifi",
+    "logout": "Çıkış Yap",
+    "login": "Giriş Yap"
+  },
+  "map": {
+    "warehouses": "Depolar",
+    "safeZones": "Toplanma Alanları",
+    "routes": "Rotalar",
+    "findNearest": "En Yakın Depoyu Bul",
+    "myLocation": "Konumum",
+    "selectItem": "Malzeme Seçin",
+    "search": "Ara",
+    "distance": "Mesafe",
+    "eta": "Tahmini Süre",
+    "routeDirections": "Yol Tarifi"
+  },
+  "status": {
+    "active": "Aktif",
+    "inactive": "Pasif",
+    "risky": "Riskli",
+    "full": "Dolu"
+  },
+  "inventory": {
+    "item": "Malzeme",
+    "quantity": "Miktar",
+    "threshold": "Eşik",
+    "critical": "Kritik",
+    "lowStock": "Düşük Stok",
+    "update": "Güncelle",
+    "movements": "Hareketler"
+  },
+  "transfer": {
+    "title": "Transfer Talebi",
+    "from": "Kaynak Depo",
+    "to": "Hedef Depo",
+    "quantity": "Miktar",
+    "approve": "Onayla",
+    "reject": "Reddet",
+    "pending": "Beklemede",
+    "completed": "Tamamlandı",
+    "rejected": "Reddedildi"
+  },
+  "checkin": {
+    "title": "Güvendeyim",
+    "subtitle": "Konumunuzu ve durumunuzu bildirin",
+    "submit": "Bildir",
+    "success": "Güvenlik bildiriminiz alındı",
+    "note": "Not (isteğe bağlı)"
+  },
+  "emergency": {
+    "title": "Acil Durum Bildirimi",
+    "submit": "Bildir",
+    "status": "Durum",
+    "description": "Açıklama",
+    "category": "Kategori"
+  },
+  "announcement": {
+    "title": "Duyuru",
+    "all": "Tüm Duyurular",
+    "new": "Yeni Duyuru",
+    "publish": "Yayımla",
+    "draft": "Taslak"
+  },
+  "auth": {
+    "email": "E-posta",
+    "password": "Şifre",
+    "login": "Giriş Yap",
+    "register": "Kayıt Ol",
+    "name": "Ad Soyad",
+    "logout": "Çıkış Yap"
+  },
+  "profile": {
+    "title": "Profilim",
+    "blood": "Kan Grubu",
+    "chronic": "Kronik Hastalık",
+    "meds": "İlaçlar",
+    "allergy": "Alerji",
+    "phone": "Telefon",
+    "disability": "Engellilik Notları",
+    "emergencyContact": "Acil İletişim",
+    "save": "Kaydet",
+    "exportData": "Verilerimi İndir",
+    "deleteAccount": "Hesabımı Sil"
+  },
+  "common": {
+    "loading": "Yükleniyor…",
+    "error": "Hata oluştu",
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "delete": "Sil",
+    "edit": "Düzenle",
+    "close": "Kapat",
+    "search": "Ara",
+    "noData": "Veri yok",
+    "confirm": "Onayla",
+    "success": "Başarılı"
+  }
+}

@@ -2,17 +2,17 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 
 const RESOURCE_LIST = [
-  "112 Acil Cagri Merkezi",
-  "183 Sosyal Destek Hatti",
+  "112 Acil Çağrı Merkezi",
+  "183 Sosyal Destek Hattı",
   "Yerel belediye psikososyal destek ekipleri",
-  "Il/Ilce saglik mudurlugu duyurulari",
+  "İl/ilçe sağlık müdürlüğü duyuruları",
 ];
 
 const COPING_TIPS = [
-  "Kendinize ve sevdiklerinize guvende oldugunuzu hatirlatin.",
-  "Duygularinizi guvendiginiz kisilerle paylasin.",
-  "Dunyadan tamamen kopmamak icin resmi duyurulari takip edin.",
-  "Basit nefes egzersizleri ve kisa yurumeler gibi rahatlamalar deneyin.",
+  "Kendinize ve sevdiklerinize güvende olduğunuzu hatırlatın.",
+  "Duygularınızı güvendiğiniz kişilerle paylaşın.",
+  "Dünyadan tamamen kopmamak için resmî duyuruları takip edin.",
+  "Basit nefes egzersizleri ve kısa yürüyüşler gibi rahatlama yöntemlerini deneyin.",
 ];
 
 export default function PsychologicalSupportPage() {
@@ -29,18 +29,18 @@ export default function PsychologicalSupportPage() {
         </button>
 
         <div style={{ background: "#fff", borderRadius: 18, padding: "26px 28px", border: "1px solid #ccfbf1", boxShadow: "0 12px 30px rgba(15,118,110,.12)" }}>
-          <h1 style={{ margin: 0, fontSize: 22, color: "#0f766e" }}>Psikolojik Destek Kaynaklari</h1>
+          <h1 style={{ margin: 0, fontSize: 22, color: "#0f766e" }}>Psikolojik Destek Kaynakları</h1>
           <p style={{ marginTop: 8, color: "#475569", fontSize: 13 }}>
-            Bu sayfa tibbi veya psikolojik tedavi yerine gecmez. Acil risk durumunda 112 veya yetkili kurumlarla iletisime gecin.
+            Bu sayfa tıbbi veya psikolojik tedavi yerine geçmez. Acil risk durumunda 112 veya yetkili kurumlarla iletişime geçin.
           </p>
 
           <div style={{ marginTop: 18, padding: "16px 18px", background: "#fefce8", borderRadius: 12, border: "1px solid #fde68a", color: "#92400e", fontSize: 13, fontWeight: 600 }}>
-            Resmi ve yerel destek kaynaklarini takip edin. Bu bilgiler genel bilgilendirme amaclidir.
+            Resmî ve yerel destek kaynaklarını takip edin. Bu bilgiler genel bilgilendirme amaçlıdır.
           </div>
 
           <div style={{ marginTop: 20, display: "grid", gap: 16 }}>
             <div style={{ background: "#ecfeff", borderRadius: 12, padding: "16px 18px", border: "1px solid #a5f3fc" }}>
-              <h2 style={{ margin: 0, fontSize: 15, color: "#0e7490" }}>Yardim Kaynaklari</h2>
+              <h2 style={{ margin: 0, fontSize: 15, color: "#0e7490" }}>Yardım Kaynakları</h2>
               <ul style={{ margin: "10px 0 0", paddingLeft: 18, color: "#0f172a", fontSize: 13 }}>
                 {RESOURCE_LIST.map((item) => (
                   <li key={item} style={{ marginBottom: 6 }}>{item}</li>
@@ -49,7 +49,7 @@ export default function PsychologicalSupportPage() {
             </div>
 
             <div style={{ background: "#f0fdf4", borderRadius: 12, padding: "16px 18px", border: "1px solid #bbf7d0" }}>
-              <h2 style={{ margin: 0, fontSize: 15, color: "#166534" }}>Guvenli Bireysel Destek Ipuclari</h2>
+              <h2 style={{ margin: 0, fontSize: 15, color: "#166534" }}>Güvenli Bireysel Destek İpuçları</h2>
               <ul style={{ margin: "10px 0 0", paddingLeft: 18, color: "#0f172a", fontSize: 13 }}>
                 {COPING_TIPS.map((tip) => (
                   <li key={tip} style={{ marginBottom: 6 }}>{tip}</li>
@@ -60,7 +60,7 @@ export default function PsychologicalSupportPage() {
             <div style={{ background: "#fef2f2", borderRadius: 12, padding: "16px 18px", border: "1px solid #fecaca" }}>
               <h2 style={{ margin: 0, fontSize: 15, color: "#b91c1c" }}>Acil Risk Durumu</h2>
               <p style={{ margin: "8px 0 0", fontSize: 13, color: "#7f1d1d" }}>
-                Kendinize veya baskalarina zarar verme riski hissediyorsaniz 112 ile iletisime gecin veya en yakin resmi birime basvurun.
+                Kendinize veya başkalarına zarar verme riski hissediyorsanız 112 ile iletişime geçin veya en yakın resmî birime başvurun.
               </p>
             </div>
           </div>

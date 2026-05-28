@@ -206,7 +206,7 @@ The React frontend can be easily deployed to Vercel. To avoid Python backend bui
    - **Build Command:** `npm run build`
    - **Output Directory:** `build`
 3. Add Environment Variables:
-   - `REACT_APP_API_URL`: Your deployed backend URL (e.g., `https://geosafe-api.onrender.com`).
+   - `REACT_APP_API_BASE_URL`: Your deployed backend URL (e.g., `https://geosafe-api.onrender.com`). The app also accepts the legacy `REACT_APP_API_URL` name, but prefer `REACT_APP_API_BASE_URL`.
 
 ### Backend (Render / Railway)
 Vercel is Serverless and not ideal for a FastAPI + PostGIS heavy application. Use Render or Railway instead:

@@ -57,7 +57,7 @@ export function OfflineQueueProvider({ children }: { children: React.ReactNode }
 
   const syncNow = useCallback(async () => {
     if (!getNavigatorOnline()) {
-      setSyncMessage("Cevrimdisiyken bekleyen kayitlar gonderilemez.");
+      setSyncMessage("Çevrim dışıyken bekleyen kayıtlar gönderilemez.");
       return;
     }
 
@@ -71,13 +71,13 @@ export function OfflineQueueProvider({ children }: { children: React.ReactNode }
       const result = await syncOfflineQueue(store);
       refreshItems();
       if (result.synced > 0 && result.failed === 0) {
-        setSyncMessage("Bekleyen tum formlar basariyla gonderildi.");
+        setSyncMessage("Bekleyen tüm formlar başarıyla gönderildi.");
       } else if (result.synced > 0 && result.failed > 0) {
         setSyncMessage(
-          `${result.synced} kayit gonderildi, ${result.failed} kayit daha sonra tekrar denenecek.`
+          `${result.synced} kayıt gönderildi, ${result.failed} kayıt daha sonra tekrar denenecek.`
         );
       } else if (result.failed > 0) {
-        setSyncMessage("Bekleyen formlar gonderilemedi. Baglanti veya sunucu durumunu kontrol edin.");
+        setSyncMessage("Bekleyen formlar gönderilemedi. Bağlantı veya sunucu durumunu kontrol edin.");
       } else {
         setSyncMessage("Bekleyen form bulunmuyor.");
       }
@@ -89,14 +89,14 @@ export function OfflineQueueProvider({ children }: { children: React.ReactNode }
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
-      setSyncMessage("Internet baglantisi geri geldi. Bekleyen formlar gonderilebilir.");
+      setSyncMessage("İnternet bağlantısı geri geldi. Bekleyen formlar gönderilebilir.");
       if (listQueueItems(store).length > 0) {
         void syncNow();
       }
     };
     const handleOffline = () => {
       setIsOnline(false);
-      setSyncMessage("Su anda cevrimdisisiniz. Bazi formlar cihazinizda gecici olarak bekletilebilir.");
+      setSyncMessage("Şu anda çevrim dışısınız. Bazı formlar cihazınızda geçici olarak bekletilebilir.");
     };
 
     window.addEventListener("online", handleOnline);
@@ -121,11 +121,11 @@ export function OfflineQueueProvider({ children }: { children: React.ReactNode }
       refreshItems();
 
       if (result.kind === "queued") {
-        setSyncMessage("Form internet gelene kadar bu cihazda gecici olarak saklanacak.");
+        setSyncMessage("Form internet gelene kadar bu cihazda geçici olarak saklanacak.");
       }
 
       if (result.kind === "consent_required") {
-        setSyncMessage("Cevrimdisi kayit icin once acik onay vermelisiniz.");
+        setSyncMessage("Çevrim dışı kayıt için önce açık onay vermelisiniz.");
       }
 
       return result.kind;
@@ -137,7 +137,7 @@ export function OfflineQueueProvider({ children }: { children: React.ReactNode }
     (id: string) => {
       deleteOfflineItem(store, id);
       refreshItems();
-      setSyncMessage("Bekleyen kayit cihazdan silindi.");
+      setSyncMessage("Bekleyen kayıt cihazdan silindi.");
     },
     [refreshItems]
   );
@@ -198,8 +198,8 @@ export function OfflineStatusBanner() {
     >
       <span>
         {isOnline
-          ? syncMessage || "Internet baglantisi geri geldi. Bekleyen formlar gonderilebilir."
-          : "Su anda cevrimdisisiniz. Bazi formlar cihazinizda gecici olarak bekletilebilir."}
+          ? syncMessage || "İnternet bağlantısı geri geldi. Bekleyen formlar gönderilebilir."
+          : "Şu anda çevrim dışısınız. Bazı formlar cihazınızda geçici olarak bekletilebilir."}
       </span>
       {isOnline && hasPending && (
         <button
@@ -216,7 +216,7 @@ export function OfflineStatusBanner() {
             cursor: isSyncing ? "not-allowed" : "pointer",
           }}
         >
-          {isSyncing ? "Gonderiliyor..." : "Bekleyenleri Gonder"}
+          {isSyncing ? "Gönderiliyor..." : "Bekleyenleri Gönder"}
         </button>
       )}
     </div>
@@ -249,7 +249,7 @@ export function OfflineQueuePanel() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
         <div>
           <div style={{ fontSize: 14, fontWeight: 800, color: "#0f172a" }}>Bekleyen Formlar</div>
-          <div style={{ fontSize: 12, color: "#475569" }}>{items.length} kayit cihazda gecici olarak bekliyor.</div>
+          <div style={{ fontSize: 12, color: "#475569" }}>{items.length} kayıt cihazda geçici olarak bekliyor.</div>
         </div>
         <button
           onClick={() => void syncNow()}
@@ -265,7 +265,7 @@ export function OfflineQueuePanel() {
             cursor: !isOnline || isSyncing ? "not-allowed" : "pointer",
           }}
         >
-          {isSyncing ? "Sync..." : "Gonder"}
+          {isSyncing ? "Eşitleniyor..." : "Gönder"}
         </button>
       </div>
 
@@ -286,8 +286,8 @@ export function OfflineQueuePanel() {
                   {item.type === "emergency"
                     ? "Acil durum"
                     : item.type === "volunteer"
-                      ? "Gonullu"
-                      : "Barinma"}
+                      ? "Gönüllü"
+                      : "Barınma"}
                 </div>
                 <div style={{ fontSize: 12, color: "#475569", marginTop: 3 }}>
                   {maskQueueItemSummary(item)}
@@ -347,16 +347,15 @@ export function OfflineConsentNotice({
         fontSize: 13,
       }}
     >
-      <div style={{ fontWeight: 800, marginBottom: 8 }}>Cevrimdisi kayit onayi gerekir</div>
+      <div style={{ fontWeight: 800, marginBottom: 8 }}>Çevrim dışı kayıt onayı gerekir</div>
       <div>
-        Bu form internet gelene kadar bu cihazda gecici olarak saklanacaktir. Paylasimli cihaz
-        kullaniyorsaniz kaydetmeyin. Dilerseniz bekleyen kaydi daha sonra silebilirsiniz.
+        Bu form internet gelene kadar bu cihazda geçici olarak saklanacaktır. Paylaşımlı cihaz
+        kullanıyorsanız kaydetmeyin. Dilerseniz bekleyen kaydı daha sonra silebilirsiniz.
       </div>
       <label style={{ display: "flex", gap: 8, alignItems: "flex-start", marginTop: 10 }}>
         <input checked={checked} onChange={(event) => onChange(event.target.checked)} type="checkbox" />
-        <span>Bu bilgilerin internet gelene kadar bu cihazda gecici olarak saklanmasini kabul ediyorum.</span>
+        <span>Bu bilgilerin internet gelene kadar bu cihazda geçici olarak saklanmasını kabul ediyorum.</span>
       </label>
     </div>
   );
 }
-

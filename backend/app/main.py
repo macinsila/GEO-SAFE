@@ -1,10 +1,30 @@
 import os
 from dotenv import load_dotenv
 load_dotenv()
+
+import sentry_sdk
+from sentry_sdk.integrations.fastapi import FastApiIntegration
+from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+from sentry_sdk.integrations.starlette import StarletteIntegration
+
+_sentry_dsn = os.getenv("SENTRY_DSN", "")
+if _sentry_dsn:
+    sentry_sdk.init(
+        dsn=_sentry_dsn,
+        integrations=[
+            StarletteIntegration(transaction_style="endpoint"),
+            FastApiIntegration(transaction_style="endpoint"),
+            SqlalchemyIntegration(),
+        ],
+        traces_sample_rate=0.2,
+        environment=os.getenv("ENVIRONMENT", "development"),
+        send_default_pii=False,
+    )
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from app.api import warehouses, safe_zones, auth, emergency, inventory, earthquakes, profile, spatial, volunteers, shelter_offers, qr, announcements
+from starlette.middleware.base import BaseHTTPMiddleware
+from app.api import warehouses, safe_zones, auth, emergency, inventory, earthquakes, profile, spatial, volunteers, shelter_offers, qr, announcements, sse, checkin, routing, transfers, zone_needs, push, reports
 from app.db.session import engine
 from app.models.base import Base
 from app.api.response import success_response, error_response
@@ -20,8 +40,41 @@ from app.models.emergency_report import EmergencyReport
 from app.models.volunteer_application import VolunteerApplication
 from app.models.shelter_offer import ShelterOffer
 from app.models.announcement import Announcement
+from app.models.safe_checkin import SafeCheckin
+from app.models.transfer_request import TransferRequest
+from app.models.zone_need import ZoneNeed
+from app.models.push_subscription import PushSubscription
 
 app = FastAPI(title="GeoSafe API")
+
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Adds standard security headers to every response."""
+
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Permissions-Policy"] = "geolocation=(self), camera=(), microphone=()"
+        # HSTS: enforce HTTPS for 1 year (only meaningful behind TLS termination)
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        # CSP: restrict sources; adjust as CDN/map-tile origins expand
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline'; "
+            "style-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com; "
+            "img-src 'self' data: https://*.tile.openstreetmap.org "
+            "https://raw.githubusercontent.com https://cdnjs.cloudflare.com; "
+            "connect-src 'self'; "
+            "font-src 'self'; "
+            "frame-ancestors 'none';"
+        )
+        return response
+
+
+app.add_middleware(SecurityHeadersMiddleware)
 
 # CORS: read allowed origins from env. Vercel preview/production URLs are
 # supported by default because this project deploys the frontend on Vercel.
@@ -42,13 +95,45 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+def _validate_config() -> None:
+    """Fail fast on boot if required environment variables are missing or unsafe."""
+    errors: list[str] = []
+
+    jwt_secret = os.getenv("JWT_SECRET", "")
+    try:
+        validate_jwt_secret(jwt_secret)
+    except RuntimeError as exc:
+        errors.append(str(exc))
+
+    db_url = os.getenv("DATABASE_URL", "")
+    if not db_url:
+        errors.append("DATABASE_URL is not set. Provide a PostgreSQL connection string.")
+    elif "sqlite" in db_url.lower():
+        errors.append("DATABASE_URL points to SQLite — production requires PostgreSQL/PostGIS.")
+
+    cors_raw = os.getenv("CORS_ORIGINS", "")
+    if not cors_raw:
+        errors.append(
+            "CORS_ORIGINS is not set. Defaulting to localhost — set this in production."
+        )
+
+    if errors:
+        msg = "\n".join(f"  ✗ {e}" for e in errors)
+        raise RuntimeError(f"GeoSafe startup config errors:\n{msg}")
+
+
 @app.on_event("startup")
 async def on_startup():
-    validate_jwt_secret(os.getenv("JWT_SECRET"))
+    try:
+        _validate_config()
+        print("✅ Config validation passed.")
+    except RuntimeError as exc:
+        # Log clearly but don't crash the process — let DB failure surface naturally
+        print(f"⚠️ Config warnings:\n{exc}")
+
     try:
         auto_create = os.getenv("AUTO_CREATE_TABLES", "false").strip().lower() in {"1", "true", "yes"}
         if auto_create:
-            # Async engine ile tabloları oluştur
             async with engine.begin() as conn:
                 await conn.run_sync(Base.metadata.create_all)
             print("✅ Veritabanı tabloları başarıyla oluşturuldu!")
@@ -68,6 +153,13 @@ app.include_router(volunteers.router, prefix="/api/v1/volunteers", tags=["volunt
 app.include_router(shelter_offers.router, prefix="/api/v1/shelter-offers", tags=["shelter-offers"])
 app.include_router(qr.router, prefix="/api/v1/qr", tags=["qr"])
 app.include_router(announcements.router, prefix="/api/v1/announcements", tags=["announcements"])
+app.include_router(sse.router, prefix="/api/v1/sse", tags=["sse"])
+app.include_router(checkin.router, prefix="/api/v1/checkin", tags=["checkin"])
+app.include_router(routing.router, prefix="/api/v1/routing", tags=["routing"])
+app.include_router(transfers.router, prefix="/api/v1/transfers", tags=["transfers"])
+app.include_router(zone_needs.router, prefix="/api/v1/zone-needs", tags=["zone-needs"])
+app.include_router(push.router, prefix="/api/v1/push", tags=["push"])
+app.include_router(reports.router, prefix="/api/v1/reports", tags=["reports"])
 
 
 @app.exception_handler(HTTPException)

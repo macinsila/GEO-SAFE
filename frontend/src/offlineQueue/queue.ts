@@ -53,7 +53,9 @@ export interface SyncResult {
 const OFFLINE_QUEUE_STORAGE_KEY = "geosafe_offline_queue_v1";
 
 const API_BASE_URL =
-  (process.env.REACT_APP_API_BASE_URL as string | undefined) ?? "http://localhost:8011";
+  (process.env.REACT_APP_API_BASE_URL as string | undefined) ??
+  (process.env.REACT_APP_API_URL as string | undefined) ??
+  "http://localhost:8011";
 
 const publicClient = axios.create({ baseURL: API_BASE_URL });
 
@@ -208,13 +210,13 @@ export function maskQueueItemSummary(item: OfflineQueueItem) {
   if (item.type === "volunteer") {
     const payload = item.payload as VolunteerApplicationPayload;
     const location = [payload.district, payload.neighborhood].filter(Boolean).join(" / ");
-    return location ? `Gonullu basvurusu - ${location}` : "Gonullu basvurusu";
+    return location ? `Gönüllü başvurusu - ${location}` : "Gönüllü başvurusu";
   }
 
   const payload = item.payload as ShelterOfferPayload;
   const area = [payload.city, payload.district, payload.neighborhood].filter(Boolean).join(" / ");
   const capacity = payload.capacity ? `Kapasite: ${payload.capacity}` : "Kapasite bilgisi yok";
-  return area ? `Barinma teklifi - ${area} - ${capacity}` : `Barinma teklifi - ${capacity}`;
+  return area ? `Barınma teklifi - ${area} - ${capacity}` : `Barınma teklifi - ${capacity}`;
 }
 
 export async function submitWithOfflineSupport<T extends OfflineQueueItemType>({

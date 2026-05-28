@@ -23,7 +23,11 @@ import {
   WarehouseInventoryData,
 } from "../types";
 
-const configuredApiBaseUrl = (process.env.REACT_APP_API_BASE_URL as string | undefined)?.trim();
+const configuredApiBaseUrl = (
+  (process.env.REACT_APP_API_BASE_URL as string | undefined) ||
+  (process.env.REACT_APP_API_URL as string | undefined)
+)?.trim();
+const apiEnvName = process.env.REACT_APP_API_BASE_URL ? "REACT_APP_API_BASE_URL" : "REACT_APP_API_URL";
 const API_TIMEOUT_MS = 60000;
 
 const isLocalHostname = (hostname: string): boolean =>
@@ -49,7 +53,7 @@ const getApiConfig = (): { baseUrl: string; error: string | null } => {
     return {
       baseUrl: "",
       error:
-        "API adresi ayarlanmamis. Vercel ortam degiskenlerinde REACT_APP_API_BASE_URL Render backend URL'i olmali.",
+        "API adresi ayarlanmamış. Vercel ortam değişkenlerinde REACT_APP_API_BASE_URL Render backend URL'i olmalı. Eski REACT_APP_API_URL adı da desteklenir.",
     };
   }
 
@@ -67,10 +71,13 @@ const getApiConfig = (): { baseUrl: string; error: string | null } => {
 const { baseUrl: API_BASE_URL, error: API_CONFIG_ERROR } = getApiConfig();
 export const API_DIAGNOSTICS = {
   baseUrl: API_BASE_URL || "not-configured",
+  env: API_BASE_URL ? apiEnvName : "not-configured",
   build: "login-fix-2026-05-21-3",
 };
 
 const TOKEN_KEY = "geosafe_token";
+const AUTH_EXPIRED_EVENT = "geosafe-auth-expired";
+const AUTH_NOTICE_KEY = "geosafe_auth_notice";
 
 interface ApiEnvelope<T> {
   status?: string;
@@ -111,6 +118,24 @@ class GeoSafeAPI {
       }
       return config;
     });
+
+    this.client.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (axios.isAxiosError(error) && error.response?.status === 401) {
+          localStorage.removeItem(TOKEN_KEY);
+          sessionStorage.setItem(
+            AUTH_NOTICE_KEY,
+            "Oturum süreniz doldu. Güvenliğiniz için yeniden giriş yapmanız gerekiyor."
+          );
+          window.dispatchEvent(new Event(AUTH_EXPIRED_EVENT));
+          if (window.location.pathname !== "/login") {
+            window.location.assign("/login");
+          }
+        }
+        return Promise.reject(error);
+      }
+    );
   }
 
   private unwrap<T>(payload: T | ApiEnvelope<T>): T {
@@ -125,7 +150,7 @@ class GeoSafeAPI {
     const form = new URLSearchParams();
     form.append("username", email);
     form.append("password", password);
-    const res = await this.client.post<ApiEnvelope<{ access_token: string }>>(
+    const res = await this.publicClient.post<ApiEnvelope<{ access_token: string }>>(
       "/api/v1/auth/token",
       form,
       { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
@@ -134,7 +159,7 @@ class GeoSafeAPI {
   }
 
   async register(name: string, email: string, password: string): Promise<void> {
-    await this.client.post("/api/v1/auth/register", { name, email, password });
+    await this.publicClient.post("/api/v1/auth/register", { name, email, password });
   }
 
   // ── Profile ───────────────────────────────────────────────────────────

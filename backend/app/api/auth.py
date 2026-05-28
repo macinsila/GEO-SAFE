@@ -1,16 +1,19 @@
 import os
+import secrets
 from datetime import datetime, timedelta
-from fastapi import APIRouter, HTTPException, Depends, status
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.response import success_response
+from app.db import get_db
 from app.models.user import User
 from app.schemas import UserCreate
-from app.db import get_db
-from app.api.response import success_response
 
 # --- Ayarlar ---
 ALGORITHM = "HS256"
@@ -24,7 +27,8 @@ WEAK_JWT_SECRETS = {
     "replace-with-long-random-secret",
 }
 MIN_JWT_SECRET_LENGTH = 32
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 1 gün
+ACCESS_TOKEN_EXPIRE_MINUTES = 60  # 1 saat (kısa ömürlü)
+REFRESH_TOKEN_EXPIRE_DAYS = 30  # 30 gün
 
 # --- Yardımcı araçlar ---
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -42,9 +46,14 @@ class UserResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+
+class RefreshRequest(BaseModel):
+    refresh_token: str
 
 
 # --- Yardımcı fonksiyonlar ---
@@ -78,11 +87,22 @@ def _get_jwt_secret() -> str:
         ) from exc
 
 
-def create_token(data: dict) -> str:
+def create_access_token(data: dict) -> str:
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, _get_jwt_secret(), algorithm=ALGORITHM)
+
+
+# Keep legacy alias used by tests / other callers
+create_token = create_access_token
+
+
+def _generate_refresh_token() -> tuple[str, datetime]:
+    """Return a (token, expires_at) pair for a new refresh token."""
+    token = secrets.token_urlsafe(64)
+    expires_at = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    return token, expires_at
 
 async def get_current_user(
     token: str = Depends(oauth2_scheme),
@@ -142,15 +162,97 @@ async def register(payload: UserCreate, db: AsyncSession = Depends(get_db)):
 @router.post("/token")
 async def login(
     form: OAuth2PasswordRequestForm = Depends(),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(select(User).where(User.email == form.username))
     user = result.scalars().first()
     if not user or not verify_password(form.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Email veya şifre hatalı")
 
-    token = create_token({"sub": user.email, "role": user.role})
-    return success_response(data={"access_token": token, "token_type": "bearer"}, message="Login successful")
+    access_token = create_access_token({"sub": user.email, "role": user.role})
+    refresh_token, refresh_expires = _generate_refresh_token()
+
+    user.refresh_token = refresh_token
+    user.refresh_token_expires_at = refresh_expires
+    await db.commit()
+
+    return success_response(
+        data={
+            "access_token": access_token,
+            "token_type": "bearer",
+            "refresh_token": refresh_token,
+            "refresh_token_expires_at": refresh_expires.isoformat(),
+            "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        },
+        message="Login successful",
+    )
+
+
+@router.post("/refresh")
+async def refresh_access_token(
+    body: RefreshRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """Exchange a valid refresh token for a new access token + rotated refresh token."""
+    result = await db.execute(
+        select(User).where(User.refresh_token == body.refresh_token)
+    )
+    user = result.scalars().first()
+
+    if not user or not user.refresh_token_expires_at:
+        raise HTTPException(status_code=401, detail="Geçersiz refresh token")
+
+    if datetime.utcnow() > user.refresh_token_expires_at:
+        # Expired — clear it and force re-login
+        user.refresh_token = None
+        user.refresh_token_expires_at = None
+        await db.commit()
+        raise HTTPException(status_code=401, detail="Refresh token süresi dolmuş, lütfen tekrar giriş yapın")
+
+    # Rotate: issue new pair
+    access_token = create_access_token({"sub": user.email, "role": user.role})
+    new_refresh_token, refresh_expires = _generate_refresh_token()
+
+    user.refresh_token = new_refresh_token
+    user.refresh_token_expires_at = refresh_expires
+    await db.commit()
+
+    return success_response(
+        data={
+            "access_token": access_token,
+            "token_type": "bearer",
+            "refresh_token": new_refresh_token,
+            "refresh_token_expires_at": refresh_expires.isoformat(),
+            "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        },
+        message="Token yenilendi",
+    )
+
+
+@router.post("/logout")
+async def logout(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Invalidate the current refresh token (server-side logout)."""
+    result = await db.execute(select(User).where(User.id == current_user.id))
+    user = result.scalars().first()
+    if user:
+        user.refresh_token = None
+        user.refresh_token_expires_at = None
+        await db.commit()
+    return success_response(data={}, message="Oturum kapatıldı")
+
+
+async def get_optional_current_user(
+    token: str = Depends(oauth2_scheme),
+    db: AsyncSession = Depends(get_db),
+) -> User | None:
+    """Like get_current_user but returns None instead of raising 401."""
+    try:
+        return await get_current_user(token=token, db=db)
+    except HTTPException:
+        return None
 
 
 @router.get("/me")
