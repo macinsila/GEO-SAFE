@@ -1,7 +1,7 @@
 # GeoSafe — Proje Durumu
 
-**Son güncelleme:** 2026-05-28
-**Aktif sprint:** 4 sprint tamamlandı (84 puan / 253 backlog puanı — %33)
+**Son güncelleme:** 2026-05-29
+**Aktif sprint:** Sprint 6 planlandı — Sprint 1–5 tamamlandı (105 / 355 backlog puanı — %30)
 
 ---
 
@@ -50,6 +50,19 @@
 | GS-052 | Depo-arası transfer | ✅ Migration 015, `POST /api/v1/transfers` + `/approve` + `/reject`; stok kontrolü + InventoryMovement log |
 | GS-053 | Alan ihtiyaç bildirimi | ✅ Migration 016, `POST /api/v1/zone-needs`, `/zone/{id}`, `/close` |
 | GS-081 | Düşük stok alarmı | ✅ SSE üzerinden `broadcast_low_stock_alert()` — envanter her güncellendiğinde eşik kontrolü |
+
+---
+
+## Sprint 5 — Güvenlik Derinleştirme & Mimari Temel ✅
+
+| ID | Konu | Durum |
+|----|------|-------|
+| GS-095 | Transport soyutlama (CommsChannel interface) | ✅ `app/comms/` — `CommsChannel` ABC + `SSEChannel` + `PushChannel`; Sprint 8 chat için zemin |
+| GS-011 | Şifre sıfırlama + e-posta doğrulama | ✅ Migration 020; `POST /auth/forgot-password`, `/reset-password`, `/verify-email`, `/resend-verification`; SMTP `app/core/email.py` |
+| GS-013 | Granüler RBAC (citizen/volunteer/operator/admin) | ✅ Migration 018; User.role varsayılanı `citizen`; `PATCH /auth/users/{id}/role` (admin); `viewer` → `citizen` otomigrasyon |
+| GS-014 | Audit log | ✅ Migration 019; `audit_logs` tablosu; `app/core/audit.py`; warehouse create/update/delete + transfer approve/reject kaydı |
+| GS-006 | Yapılandırılmış JSON loglama + request ID | ✅ `app/core/logging_config.py` — `JSONFormatter` + `RequestIDMiddleware`; her response'a `X-Request-ID` header'ı |
+| GS-015 | pip-audit + gitleaks CI | ✅ `ci.yml` — pip-audit adımı backend job'a eklendi; `secrets-scan` job (gitleaks-action@v2) |
 
 ---
 
@@ -106,6 +119,9 @@
 | 015 | `transfer_requests` tablosu |
 | 016 | `zone_needs` tablosu |
 | 017 | `push_subscriptions` tablosu |
+| 018 | `users.role` varsayılanı `citizen` olarak güncellendi; `viewer` → `citizen` otomigrasyon |
+| 019 | `audit_logs` tablosu |
+| 020 | `users` tablosuna e-posta doğrulama + şifre sıfırlama kolonları |
 
 ---
 
@@ -132,6 +148,13 @@ VAPID_PUBLIC_KEY=     # Web Push VAPID public key
 VAPID_PRIVATE_KEY=    # Web Push VAPID private key
 VAPID_SUBJECT=        # mailto:admin@domain.com
 ENVIRONMENT=          # production | development (Sentry için)
+LOG_LEVEL=            # INFO (varsayılan) | DEBUG | WARNING
+SMTP_HOST=            # SMTP sunucusu (opsiyonel; yoksa e-posta devre dışı)
+SMTP_PORT=            # 587 (varsayılan)
+SMTP_USER=            # SMTP kullanıcı adı / gönderen
+SMTP_PASSWORD=        # SMTP şifre
+SMTP_FROM=            # Gönderen adres (boşsa SMTP_USER kullanılır)
+APP_BASE_URL=         # Frontend URL (e-posta linklerinde; varsayılan http://localhost:3000)
 ```
 
 ### Frontend (.env)

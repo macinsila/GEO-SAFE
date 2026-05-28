@@ -21,6 +21,7 @@ from app.models.warehouse_inventory import WarehouseInventory
 from app.schemas import WarehouseCreate
 from app.api.auth import require_roles
 from app.api.response import success_response
+from app.core.audit import log_audit
 from app.models.user import User
 
 DEFAULT_LOW_STOCK_THRESHOLD = 10
@@ -143,6 +144,7 @@ async def create_warehouse(
     db.add(warehouse)
     await db.flush()
     await db.refresh(warehouse)
+    await log_audit(db, "create", "warehouse", warehouse.id, new_value={"name": payload.name, "status": payload.status}, actor=current_user)
     await db.commit()
     return success_response(data=_serialize_warehouse(warehouse, include_private=True), message="Warehouse created")
 
@@ -176,6 +178,7 @@ async def update_warehouse(
 
     await db.flush()
     await db.refresh(warehouse)
+    await log_audit(db, "update", "warehouse", warehouse_id, new_value={"name": payload.name, "status": payload.status}, actor=current_user)
     await db.commit()
     return success_response(data=_serialize_warehouse(warehouse, include_private=True), message="Warehouse updated")
 
@@ -193,6 +196,7 @@ async def delete_warehouse(
     if not warehouse:
         raise HTTPException(status_code=404, detail="Warehouse bulunamadı")
 
+    await log_audit(db, "delete", "warehouse", warehouse_id, old_value={"name": warehouse.name}, actor=current_user)
     await db.delete(warehouse)
     await db.commit()
     return success_response(data={"id": warehouse_id}, message="Warehouse deleted")

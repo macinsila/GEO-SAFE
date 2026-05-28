@@ -17,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth import get_current_user, require_roles
 from app.api.response import success_response
+from app.core.audit import log_audit
 from app.db import get_db
 from app.models.inventory_movement import InventoryMovement
 from app.models.transfer_request import TransferRequest
@@ -176,6 +177,7 @@ async def approve_transfer(
 
     transfer.status = "completed"
     transfer.approved_by = current_user.id
+    await log_audit(db, "approve", "transfer", transfer_id, new_value={"status": "completed"}, actor=current_user)
     await db.commit()
     return success_response(
         data={"transfer_id": transfer_id, "status": "completed"},
@@ -202,6 +204,7 @@ async def reject_transfer(
 
     transfer.status = "rejected"
     transfer.approved_by = current_user.id
+    await log_audit(db, "reject", "transfer", transfer_id, new_value={"status": "rejected"}, actor=current_user)
     await db.commit()
     return success_response(
         data={"transfer_id": transfer_id, "status": "rejected"},
