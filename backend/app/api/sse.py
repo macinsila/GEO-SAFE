@@ -34,7 +34,7 @@ def _unregister(q: asyncio.Queue) -> None:
 
 async def _broadcast(event_type: str, data: dict) -> None:
     """Internal: push a typed event to all connected SSE clients."""
-    payload = json.dumps({"type": event_type, "data": data})
+    payload = json.dumps({"type": event_type, "data": data}, default=str)
     dead: list[asyncio.Queue] = []
     for q in list(_clients):
         try:
