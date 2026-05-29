@@ -1,7 +1,7 @@
 # GeoSafe — Proje Durumu
 
 **Son güncelleme:** 2026-05-29
-**Aktif sprint:** Sprint 6 planlandı — Sprint 1–5 tamamlandı (105 / 355 backlog puanı — %30)
+**Aktif sprint:** Sprint 6 devam ediyor — GS-100 ✅ + GS-101 ✅ (8/21 puan) · Sprint 1–5 tamamlandı (113 / 355 backlog puanı — %32)
 
 ---
 
@@ -11,7 +11,7 @@
 |--------|-------|
 | Backend | FastAPI + SQLAlchemy 2.0 (async) + PostGIS/GeoAlchemy2 |
 | DB | PostgreSQL + PostGIS (Supabase production) |
-| Migrations | Alembic (001 → 017 uygulandı) |
+| Migrations | Alembic (001 → 022 uygulandı) |
 | Frontend | React 18 + TypeScript + Vite (react-scripts) |
 | Harita | Leaflet.js + react-leaflet v4 |
 | Deploy | Render (backend) + Vercel (frontend) |
