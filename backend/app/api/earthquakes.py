@@ -4,13 +4,15 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 import httpx
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.auth import get_current_user
+from app.api import push
+from app.api.auth import get_current_user, require_roles
 from app.api.response import success_response
+from app.core.eq_notify import dispatch_earthquake_notifications
 from app.db import get_db
 from app.models.earthquake_notification_pref import EarthquakeNotificationPref
 from app.models.user import User
@@ -224,3 +226,24 @@ async def upsert_preferences(
         data=EarthquakePreferenceResponse.model_validate(pref).model_dump(),
         message="Deprem bildirim tercihleri kaydedildi",
     )
+
+
+# ── Eşleştirme & sevkiyat (GS-101) ───────────────────────────────────────────
+
+@router.post("/dispatch-notifications")
+async def dispatch_notifications(
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_roles("admin")),
+):
+    """Bir tarama turu: güncel depremleri kullanıcı tercihleriyle eşleştirip
+    eşleşen kullanıcılara Web Push gönderir. Harici zamanlayıcı/admin tetikler."""
+    if not push._vapid_configured():
+        raise HTTPException(
+            status_code=503,
+            detail="VAPID anahtarları yapılandırılmamış (VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT)",
+        )
+
+    feed = await _fetch_fresh()
+    earthquakes = feed.get("result", [])
+    summary = await dispatch_earthquake_notifications(db, earthquakes)
+    return success_response(data=summary, message="Deprem bildirim taraması tamamlandı")

@@ -109,6 +109,7 @@
 | GET | /api/v1/reports/checkins.csv | Check-in geçmişi CSV (admin) |
 | GET | /api/v1/earthquakes/preferences | Deprem bildirim tercihim (auth) |
 | PUT | /api/v1/earthquakes/preferences | Deprem bildirim tercihi upsert (auth) |
+| POST | /api/v1/earthquakes/dispatch-notifications | Deprem→kullanıcı eşleştirme + Web Push taraması (admin) |
 
 ---
 
@@ -125,6 +126,7 @@
 | 019 | `audit_logs` tablosu |
 | 020 | `users` tablosuna e-posta doğrulama + şifre sıfırlama kolonları |
 | 021 | `earthquake_notification_prefs` tablosu (GS-100) |
+| 022 | `earthquake_notifications_sent` tablosu — bildirim dedup (GS-101) |
 
 ---
 
@@ -188,7 +190,7 @@ GS-130+131+132 (S9) ──► GS-137 (S9)   — spike'lar ADR'dan önce bitmeli
 | ID | Konu | Pri | Puan | Durum |
 |----|------|-----|-----:|-------|
 | GS-100 | Deprem bildirim tercihleri (mag, mesafe, derinlik kuralları) | Must | 5 | ✅ Migration 021; `GET/PUT /earthquakes/preferences`; `core/eq_matching.py` saf yüklem; feed'e lat/lon eklendi |
-| GS-101 | Kullanıcı bazlı kural & eşleştirme motoru | Should | 3 | ⏳ |
+| GS-101 | Kullanıcı bazlı kural & eşleştirme motoru | Should | 3 | ✅ Migration 022; `core/eq_notify.py` (find_matches + dispatch + dedup); `POST /earthquakes/dispatch-notifications` (admin, Web Push) |
 | GS-003 | Frontend kritik akış testleri (≥%60 kapsam) | Should | 8 | ⏳ |
 | GS-017 | Halkın formlarına abuse koruması (rate-limit + bot mitigasyon) | Should | 3 | ⏳ |
 | GS-007 | `/ready` + `/metrics` endpoint | Could | 2 | ⏳ |
