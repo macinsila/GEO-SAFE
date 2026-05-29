@@ -138,6 +138,43 @@ async def unsubscribe(
     return success_response(data={"unsubscribed": True}, message="Push aboneliği iptal edildi")
 
 
+async def _send_push_to_all_subscriptions(
+    db: AsyncSession,
+    title: str,
+    body: str,
+    url: str = "/",
+    tag: str = "geosafe-alert",
+) -> dict:
+    """Broadcast a push notification to all stored subscriptions."""
+    result = await db.execute(select(PushSubscription))
+    subs = result.scalars().all()
+
+    if not subs:
+        return {"sent": 0, "failed": 0, "removed_stale": 0}
+
+    message = {"title": title, "body": body, "url": url, "tag": tag}
+    sent, failed = 0, 0
+    dead_endpoints: list[str] = []
+
+    for sub in subs:
+        ok = await _send_one(sub, message)
+        if ok:
+            sent += 1
+        else:
+            failed += 1
+            dead_endpoints.append(sub.endpoint)
+
+    for ep in dead_endpoints:
+        r = await db.execute(select(PushSubscription).where(PushSubscription.endpoint == ep))
+        dead_sub = r.scalar_one_or_none()
+        if dead_sub:
+            await db.delete(dead_sub)
+    if dead_endpoints:
+        await db.commit()
+
+    return {"sent": sent, "failed": failed, "removed_stale": len(dead_endpoints)}
+
+
 @router.post("/send")
 async def send_push(
     payload: PushSendPayload,
@@ -150,40 +187,14 @@ async def send_push(
             detail="VAPID anahtarları yapılandırılmamış (VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT)",
         )
 
-    result = await db.execute(select(PushSubscription))
-    subs = result.scalars().all()
-
-    if not subs:
-        return success_response(data={"sent": 0, "failed": 0}, message="Kayıtlı push abonesi yok")
-
-    message = {
-        "title": payload.title,
-        "body": payload.body,
-        "url": payload.url,
-        "tag": payload.tag,
-    }
-
-    sent, failed = 0, 0
-    dead_endpoints: list[str] = []
-
-    for sub in subs:
-        ok = await _send_one(sub, message)
-        if ok:
-            sent += 1
-        else:
-            failed += 1
-            dead_endpoints.append(sub.endpoint)
-
-    # Clean up dead subscriptions (410 Gone — device unregistered)
-    for ep in dead_endpoints:
-        r = await db.execute(select(PushSubscription).where(PushSubscription.endpoint == ep))
-        dead_sub = r.scalar_one_or_none()
-        if dead_sub:
-            await db.delete(dead_sub)
-    if dead_endpoints:
-        await db.commit()
-
+    stats = await _send_push_to_all_subscriptions(
+        db=db,
+        title=payload.title,
+        body=payload.body,
+        url=payload.url or "/",
+        tag=payload.tag or "geosafe-alert",
+    )
     return success_response(
-        data={"sent": sent, "failed": failed, "removed_stale": len(dead_endpoints)},
-        message=f"Push bildirimi gönderildi: {sent} başarılı, {failed} başarısız",
+        data=stats,
+        message=f"Push bildirimi gönderildi: {stats['sent']} başarılı, {stats['failed']} başarısız",
     )

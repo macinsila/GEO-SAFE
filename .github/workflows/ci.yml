@@ -47,10 +47,13 @@ jobs:
           cache-dependency-path: backend/requirements.txt
 
       - name: Install dependencies
-        run: pip install -r requirements.txt ruff
+        run: pip install -r requirements.txt ruff pip-audit
 
       - name: Lint (ruff)
         run: ruff check app/ tests/
+
+      - name: Dependency vulnerability scan (pip-audit)
+        run: pip-audit --requirement requirements.txt --ignore-vuln PYSEC-2022-42974 || true
 
       - name: Run migrations
         run: |
@@ -61,6 +64,20 @@ jobs:
         run: |
           export PYTHONPATH=$PYTHONPATH:$(pwd)
           pytest tests/ -v --tb=short
+
+  # ── Secret scanning (gitleaks) ───────────────────────────────────────────────
+  secrets-scan:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # ── Frontend: lint + tests + build ──────────────────────────────────────────
   frontend:

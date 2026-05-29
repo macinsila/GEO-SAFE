@@ -2,6 +2,9 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
+from app.core.logging_config import configure_logging, RequestIDMiddleware
+configure_logging(os.getenv("LOG_LEVEL", "INFO"))
+
 import sentry_sdk
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
@@ -44,6 +47,7 @@ from app.models.safe_checkin import SafeCheckin
 from app.models.transfer_request import TransferRequest
 from app.models.zone_need import ZoneNeed
 from app.models.push_subscription import PushSubscription
+from app.models.audit_log import AuditLog
 
 app = FastAPI(title="GeoSafe API")
 
@@ -75,6 +79,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 
 app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RequestIDMiddleware)
 
 # CORS: read allowed origins from env. Vercel preview/production URLs are
 # supported by default because this project deploys the frontend on Vercel.
