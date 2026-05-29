@@ -1,7 +1,7 @@
 # GeoSafe — Proje Durumu
 
-**Son güncelleme:** 2026-05-28
-**Aktif sprint:** 4 sprint tamamlandı (84 puan / 253 backlog puanı — %33)
+**Son güncelleme:** 2026-05-29
+**Aktif sprint:** Sprint 6 devam ediyor — GS-100 ✅ + GS-101 ✅ (8/21 puan) · Sprint 1–5 tamamlandı (113 / 355 backlog puanı — %32)
 
 ---
 
@@ -11,7 +11,7 @@
 |--------|-------|
 | Backend | FastAPI + SQLAlchemy 2.0 (async) + PostGIS/GeoAlchemy2 |
 | DB | PostgreSQL + PostGIS (Supabase production) |
-| Migrations | Alembic (001 → 017 uygulandı) |
+| Migrations | Alembic (001 → 022 uygulandı) |
 | Frontend | React 18 + TypeScript + Vite (react-scripts) |
 | Harita | Leaflet.js + react-leaflet v4 |
 | Deploy | Render (backend) + Vercel (frontend) |
@@ -50,6 +50,19 @@
 | GS-052 | Depo-arası transfer | ✅ Migration 015, `POST /api/v1/transfers` + `/approve` + `/reject`; stok kontrolü + InventoryMovement log |
 | GS-053 | Alan ihtiyaç bildirimi | ✅ Migration 016, `POST /api/v1/zone-needs`, `/zone/{id}`, `/close` |
 | GS-081 | Düşük stok alarmı | ✅ SSE üzerinden `broadcast_low_stock_alert()` — envanter her güncellendiğinde eşik kontrolü |
+
+---
+
+## Sprint 5 — Güvenlik Derinleştirme & Mimari Temel ✅
+
+| ID | Konu | Durum |
+|----|------|-------|
+| GS-095 | Transport soyutlama (CommsChannel interface) | ✅ `app/comms/` — `CommsChannel` ABC + `SSEChannel` + `PushChannel`; Sprint 8 chat için zemin |
+| GS-011 | Şifre sıfırlama + e-posta doğrulama | ✅ Migration 020; `POST /auth/forgot-password`, `/reset-password`, `/verify-email`, `/resend-verification`; SMTP `app/core/email.py` |
+| GS-013 | Granüler RBAC (citizen/volunteer/operator/admin) | ✅ Migration 018; User.role varsayılanı `citizen`; `PATCH /auth/users/{id}/role` (admin); `viewer` → `citizen` otomigrasyon |
+| GS-014 | Audit log | ✅ Migration 019; `audit_logs` tablosu; `app/core/audit.py`; warehouse create/update/delete + transfer approve/reject kaydı |
+| GS-006 | Yapılandırılmış JSON loglama + request ID | ✅ `app/core/logging_config.py` — `JSONFormatter` + `RequestIDMiddleware`; her response'a `X-Request-ID` header'ı |
+| GS-015 | pip-audit + gitleaks CI | ✅ `ci.yml` — pip-audit adımı backend job'a eklendi; `secrets-scan` job (gitleaks-action@v2) |
 
 ---
 
@@ -94,6 +107,9 @@
 | GET | /api/v1/reports/inventory.pdf | Envanter PDF raporu (admin) |
 | GET | /api/v1/reports/movements.csv | Hareket geçmişi CSV (admin) |
 | GET | /api/v1/reports/checkins.csv | Check-in geçmişi CSV (admin) |
+| GET | /api/v1/earthquakes/preferences | Deprem bildirim tercihim (auth) |
+| PUT | /api/v1/earthquakes/preferences | Deprem bildirim tercihi upsert (auth) |
+| POST | /api/v1/earthquakes/dispatch-notifications | Deprem→kullanıcı eşleştirme + Web Push taraması (admin) |
 
 ---
 
@@ -106,6 +122,11 @@
 | 015 | `transfer_requests` tablosu |
 | 016 | `zone_needs` tablosu |
 | 017 | `push_subscriptions` tablosu |
+| 018 | `users.role` varsayılanı `citizen` olarak güncellendi; `viewer` → `citizen` otomigrasyon |
+| 019 | `audit_logs` tablosu |
+| 020 | `users` tablosuna e-posta doğrulama + şifre sıfırlama kolonları |
+| 021 | `earthquake_notification_prefs` tablosu (GS-100) |
+| 022 | `earthquake_notifications_sent` tablosu — bildirim dedup (GS-101) |
 
 ---
 
@@ -132,6 +153,13 @@ VAPID_PUBLIC_KEY=     # Web Push VAPID public key
 VAPID_PRIVATE_KEY=    # Web Push VAPID private key
 VAPID_SUBJECT=        # mailto:admin@domain.com
 ENVIRONMENT=          # production | development (Sentry için)
+LOG_LEVEL=            # INFO (varsayılan) | DEBUG | WARNING
+SMTP_HOST=            # SMTP sunucusu (opsiyonel; yoksa e-posta devre dışı)
+SMTP_PORT=            # 587 (varsayılan)
+SMTP_USER=            # SMTP kullanıcı adı / gönderen
+SMTP_PASSWORD=        # SMTP şifre
+SMTP_FROM=            # Gönderen adres (boşsa SMTP_USER kullanılır)
+APP_BASE_URL=         # Frontend URL (e-posta linklerinde; varsayılan http://localhost:3000)
 ```
 
 ### Frontend (.env)
@@ -139,6 +167,106 @@ ENVIRONMENT=          # production | development (Sentry için)
 REACT_APP_SENTRY_DSN=    # Sentry project DSN (opsiyonel)
 REACT_APP_API_URL=       # Backend URL (default: http://localhost:8000)
 ```
+
+---
+
+## Planlanan Sprintler (S6–S9)
+
+### Bağımlılık Zinciri
+
+```
+GS-095 ✅ (S5) ──► GS-110 (S8)   — transport soyutlama hazır, chat paneli açılabilir
+GS-003 (S6) ──► GS-004 (S7)   — frontend testler E2E için zorunlu
+GS-021 ✅ + GS-060 ✅ ──► GS-100 (S6)   — deprem bildirimleri hemen başlayabilir
+GS-130+131+132 (S9) ──► GS-137 (S9)   — spike'lar ADR'dan önce bitmeli
+```
+
+---
+
+## Sprint 6 — Akıllı Deprem Bildirimleri & Kalite ⏳ (Aktif)
+
+**Hedef:** Must deprem bildirim sistemi (GS-021 ✅ + GS-060 ✅ bağımlılıkları karşılandı) + frontend test altyapısı.
+
+| ID | Konu | Pri | Puan | Durum |
+|----|------|-----|-----:|-------|
+| GS-100 | Deprem bildirim tercihleri (mag, mesafe, derinlik kuralları) | Must | 5 | ✅ Migration 021; `GET/PUT /earthquakes/preferences`; `core/eq_matching.py` saf yüklem; feed'e lat/lon eklendi |
+| GS-101 | Kullanıcı bazlı kural & eşleştirme motoru | Should | 3 | ✅ Migration 022; `core/eq_notify.py` (find_matches + dispatch + dedup); `POST /earthquakes/dispatch-notifications` (admin, Web Push) |
+| GS-003 | Frontend kritik akış testleri (≥%60 kapsam) | Should | 8 | ⏳ |
+| GS-017 | Halkın formlarına abuse koruması (rate-limit + bot mitigasyon) | Should | 3 | ⏳ |
+| GS-007 | `/ready` + `/metrics` endpoint | Could | 2 | ⏳ |
+
+**Toplam:** 21 puan | **GS-003 biter → GS-004 açılır**
+
+---
+
+## Sprint 7 — Gönüllü, Hasar Bildirimi & E2E ⏳
+
+**Hedef:** En değerli kalan koordinasyon özellikleri + GS-003 üstüne E2E test suite.
+
+| ID | Konu | Pri | Puan | Durum |
+|----|------|-----|-----:|-------|
+| GS-050 | Gönüllü görev panosu & atama (open→in-progress→done) | Should | 8 | ⏳ |
+| GS-042 | Fotoğraflı + konumlu hasar bildirimi (obje depolama) | Should | 5 | ⏳ |
+| GS-004 | E2E smoke testler — Playwright, headless CI | Should | 8 | ⏳ |
+
+**Toplam:** 21 puan | **Bağımlılık:** GS-004 → GS-003 (S6)
+
+---
+
+## Sprint 8 — Sohbet, Admin Analitik & Batarya ⏳
+
+**Hedef:** GS-095 ✅ hazır → chat paneli; admin KPI kartları; batarya optimizasyonu.
+
+| ID | Konu | Pri | Puan | Durum |
+|----|------|-----|-----:|-------|
+| GS-110 | Online sohbet paneli (CommsChannel soyutlaması üstünde) | Should | 8 | ⏳ |
+| GS-080 | KPI dashboard — depo, acil, gönüllü, yanıt süresi kartları | Should | 5 | ⏳ |
+| GS-120 | Polling → Push geçişi (batarya tasarrufu) | Should | 3 | ⏳ |
+| GS-121 | Düşük güç acil modu (OLED tema, animasyonsuz, kısıtlı güncelleme) | Should | 5 | ⏳ |
+
+**Toplam:** 21 puan | **Bağımlılıklar:** GS-110 → GS-095 ✅ (S5) · GS-120 → GS-020 ✅ + GS-021 ✅
+
+---
+
+## Sprint 9 — Off-Grid Araştırma & Mimari ADR ⏳
+
+**Hedef:** Epic N spike'larını tamamla (Hafta 1); GS-137 ADR ile sentezle (Hafta 2).
+
+| ID | Konu | Pri | Puan | Durum |
+|----|------|-----|-----:|-------|
+| GS-130 | Native mobil kabuk spike — Capacitor vs React Native değerlendirmesi | Should | 5 | ⏳ |
+| GS-131 | BLE P2P mesh mesajlaşma spike | Should | 8 | ⏳ |
+| GS-132 | BLE kurtarma işareti spike | Should | 5 | ⏳ |
+| GS-137 | Off-grid mimari karar kaydı (ADR) — spike sonuçlarını sentezler | Must | 3 | ⏳ |
+
+**Toplam:** 21 puan | **Bağımlılık:** GS-137 → GS-130+131+132 aynı sprint içinde (Hafta 2)
+
+---
+
+## Sprint Burn-Up (S1–S9)
+
+| Sprint | Tema | Puan | Kümülatif | Toplam % |
+|--------|------|-----:|----------:|---------:|
+| S1–S4 ✅ | Foundation → Hardening | 84 | 84 | %24 |
+| S5 ✅ | Güvenlik & Mimari Temel | 21 | 105 | %30 |
+| S6 ⏳ | Deprem Bildirimleri & Kalite | 21 | 126 | %35 |
+| S7 ⏳ | Gönüllü, Hasar & E2E | 21 | 147 | %41 |
+| S8 ⏳ | Sohbet, Analitik & Batarya | 21 | 168 | %47 |
+| S9 ⏳ | Off-Grid Araştırma & ADR | 21 | 189 | %53 |
+
+---
+
+## Bu Döngüde Kasıtlı Ertelenenler
+
+Gelecek döngüye park edildi (ADR/spike sonuçları bekleniyor veya öncelik düşük):
+
+- **GS-070** WCAG denetimi · **GS-072** Arapça RTL · **GS-073** Yüksek kontrast modu
+- **GS-022** Canlı envanter dashboard · **GS-023** Coğrafi alan alarmları · **GS-024** SMS fallback (op→kullanıcı)
+- **GS-033** Offline harita tile cache
+- **GS-041** Kayıp kişi panosu · **GS-054** Bağış eşleştirme — moderasyon tasarımı gerekli
+- **GS-051** Beceri eşleştirme · **GS-061** Toplu GeoJSON/CSV import
+- **GS-133** LoRa spike · **GS-134** GSM/SMS cihaz fallback · **GS-135/136** Uydu & Wi-Fi Direct spike
+- **GS-138** Offline mesh sohbet MVP *(Won't — GS-137 ADR'ı bekliyor)*
 
 ---
 
@@ -151,3 +279,5 @@ REACT_APP_API_URL=       # Backend URL (default: http://localhost:8000)
 - **i18n:** Kullanıcının tarayıcı dili TR ise Türkçe, aksi hâlde İngilizce başlar. Tercih localStorage'a kaydedilir.
 - **Marker clustering:** `@changey/react-leaflet-markercluster` — react-leaflet v4 uyumlu. CSS import'u `WarehouseLayer.tsx` içinde yapılıyor.
 - **Access token süresi:** Güncellendi — 24 saat → 1 saat. Refresh token 30 gün geçerli, her kullanımda rotate edilir.
+- **Comms soyutlaması (GS-095):** `app/comms/` — `CommsChannel` ABC + `SSEChannel` + `PushChannel`. Sprint 8'de chat (GS-110) ve polling→push (GS-120) bu soyutlama üstüne kurulacak.
+- **SSE broadcast serileştirme:** `sse.py` `_broadcast` artık `json.dumps(..., default=str)` kullanır; duyuru `published_at` gibi datetime alanları yayında stringe çevrilir.
