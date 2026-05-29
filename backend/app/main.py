@@ -48,6 +48,7 @@ from app.models.transfer_request import TransferRequest
 from app.models.zone_need import ZoneNeed
 from app.models.push_subscription import PushSubscription
 from app.models.audit_log import AuditLog
+from app.models.earthquake_notification_pref import EarthquakeNotificationPref
 
 app = FastAPI(title="GeoSafe API")
 

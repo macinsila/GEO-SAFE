@@ -107,6 +107,8 @@
 | GET | /api/v1/reports/inventory.pdf | Envanter PDF raporu (admin) |
 | GET | /api/v1/reports/movements.csv | Hareket geçmişi CSV (admin) |
 | GET | /api/v1/reports/checkins.csv | Check-in geçmişi CSV (admin) |
+| GET | /api/v1/earthquakes/preferences | Deprem bildirim tercihim (auth) |
+| PUT | /api/v1/earthquakes/preferences | Deprem bildirim tercihi upsert (auth) |
 
 ---
 
@@ -122,6 +124,7 @@
 | 018 | `users.role` varsayılanı `citizen` olarak güncellendi; `viewer` → `citizen` otomigrasyon |
 | 019 | `audit_logs` tablosu |
 | 020 | `users` tablosuna e-posta doğrulama + şifre sıfırlama kolonları |
+| 021 | `earthquake_notification_prefs` tablosu (GS-100) |
 
 ---
 
@@ -184,7 +187,7 @@ GS-130+131+132 (S9) ──► GS-137 (S9)   — spike'lar ADR'dan önce bitmeli
 
 | ID | Konu | Pri | Puan | Durum |
 |----|------|-----|-----:|-------|
-| GS-100 | Deprem bildirim tercihleri (mag, mesafe, derinlik kuralları) | Must | 5 | ⏳ |
+| GS-100 | Deprem bildirim tercihleri (mag, mesafe, derinlik kuralları) | Must | 5 | ✅ Migration 021; `GET/PUT /earthquakes/preferences`; `core/eq_matching.py` saf yüklem; feed'e lat/lon eklendi |
 | GS-101 | Kullanıcı bazlı kural & eşleştirme motoru | Should | 3 | ⏳ |
 | GS-003 | Frontend kritik akış testleri (≥%60 kapsam) | Should | 8 | ⏳ |
 | GS-017 | Halkın formlarına abuse koruması (rate-limit + bot mitigasyon) | Should | 3 | ⏳ |
