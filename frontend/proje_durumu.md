@@ -165,6 +165,106 @@ REACT_APP_API_URL=       # Backend URL (default: http://localhost:8000)
 
 ---
 
+## Planlanan Sprintler (S6–S9)
+
+### Bağımlılık Zinciri
+
+```
+GS-095 ✅ (S5) ──► GS-110 (S8)   — transport soyutlama hazır, chat paneli açılabilir
+GS-003 (S6) ──► GS-004 (S7)   — frontend testler E2E için zorunlu
+GS-021 ✅ + GS-060 ✅ ──► GS-100 (S6)   — deprem bildirimleri hemen başlayabilir
+GS-130+131+132 (S9) ──► GS-137 (S9)   — spike'lar ADR'dan önce bitmeli
+```
+
+---
+
+## Sprint 6 — Akıllı Deprem Bildirimleri & Kalite ⏳ (Aktif)
+
+**Hedef:** Must deprem bildirim sistemi (GS-021 ✅ + GS-060 ✅ bağımlılıkları karşılandı) + frontend test altyapısı.
+
+| ID | Konu | Pri | Puan | Durum |
+|----|------|-----|-----:|-------|
+| GS-100 | Deprem bildirim tercihleri (mag, mesafe, derinlik kuralları) | Must | 5 | ⏳ |
+| GS-101 | Kullanıcı bazlı kural & eşleştirme motoru | Should | 3 | ⏳ |
+| GS-003 | Frontend kritik akış testleri (≥%60 kapsam) | Should | 8 | ⏳ |
+| GS-017 | Halkın formlarına abuse koruması (rate-limit + bot mitigasyon) | Should | 3 | ⏳ |
+| GS-007 | `/ready` + `/metrics` endpoint | Could | 2 | ⏳ |
+
+**Toplam:** 21 puan | **GS-003 biter → GS-004 açılır**
+
+---
+
+## Sprint 7 — Gönüllü, Hasar Bildirimi & E2E ⏳
+
+**Hedef:** En değerli kalan koordinasyon özellikleri + GS-003 üstüne E2E test suite.
+
+| ID | Konu | Pri | Puan | Durum |
+|----|------|-----|-----:|-------|
+| GS-050 | Gönüllü görev panosu & atama (open→in-progress→done) | Should | 8 | ⏳ |
+| GS-042 | Fotoğraflı + konumlu hasar bildirimi (obje depolama) | Should | 5 | ⏳ |
+| GS-004 | E2E smoke testler — Playwright, headless CI | Should | 8 | ⏳ |
+
+**Toplam:** 21 puan | **Bağımlılık:** GS-004 → GS-003 (S6)
+
+---
+
+## Sprint 8 — Sohbet, Admin Analitik & Batarya ⏳
+
+**Hedef:** GS-095 ✅ hazır → chat paneli; admin KPI kartları; batarya optimizasyonu.
+
+| ID | Konu | Pri | Puan | Durum |
+|----|------|-----|-----:|-------|
+| GS-110 | Online sohbet paneli (CommsChannel soyutlaması üstünde) | Should | 8 | ⏳ |
+| GS-080 | KPI dashboard — depo, acil, gönüllü, yanıt süresi kartları | Should | 5 | ⏳ |
+| GS-120 | Polling → Push geçişi (batarya tasarrufu) | Should | 3 | ⏳ |
+| GS-121 | Düşük güç acil modu (OLED tema, animasyonsuz, kısıtlı güncelleme) | Should | 5 | ⏳ |
+
+**Toplam:** 21 puan | **Bağımlılıklar:** GS-110 → GS-095 ✅ (S5) · GS-120 → GS-020 ✅ + GS-021 ✅
+
+---
+
+## Sprint 9 — Off-Grid Araştırma & Mimari ADR ⏳
+
+**Hedef:** Epic N spike'larını tamamla (Hafta 1); GS-137 ADR ile sentezle (Hafta 2).
+
+| ID | Konu | Pri | Puan | Durum |
+|----|------|-----|-----:|-------|
+| GS-130 | Native mobil kabuk spike — Capacitor vs React Native değerlendirmesi | Should | 5 | ⏳ |
+| GS-131 | BLE P2P mesh mesajlaşma spike | Should | 8 | ⏳ |
+| GS-132 | BLE kurtarma işareti spike | Should | 5 | ⏳ |
+| GS-137 | Off-grid mimari karar kaydı (ADR) — spike sonuçlarını sentezler | Must | 3 | ⏳ |
+
+**Toplam:** 21 puan | **Bağımlılık:** GS-137 → GS-130+131+132 aynı sprint içinde (Hafta 2)
+
+---
+
+## Sprint Burn-Up (S1–S9)
+
+| Sprint | Tema | Puan | Kümülatif | Toplam % |
+|--------|------|-----:|----------:|---------:|
+| S1–S4 ✅ | Foundation → Hardening | 84 | 84 | %24 |
+| S5 ✅ | Güvenlik & Mimari Temel | 21 | 105 | %30 |
+| S6 ⏳ | Deprem Bildirimleri & Kalite | 21 | 126 | %35 |
+| S7 ⏳ | Gönüllü, Hasar & E2E | 21 | 147 | %41 |
+| S8 ⏳ | Sohbet, Analitik & Batarya | 21 | 168 | %47 |
+| S9 ⏳ | Off-Grid Araştırma & ADR | 21 | 189 | %53 |
+
+---
+
+## Bu Döngüde Kasıtlı Ertelenenler
+
+Gelecek döngüye park edildi (ADR/spike sonuçları bekleniyor veya öncelik düşük):
+
+- **GS-070** WCAG denetimi · **GS-072** Arapça RTL · **GS-073** Yüksek kontrast modu
+- **GS-022** Canlı envanter dashboard · **GS-023** Coğrafi alan alarmları · **GS-024** SMS fallback (op→kullanıcı)
+- **GS-033** Offline harita tile cache
+- **GS-041** Kayıp kişi panosu · **GS-054** Bağış eşleştirme — moderasyon tasarımı gerekli
+- **GS-051** Beceri eşleştirme · **GS-061** Toplu GeoJSON/CSV import
+- **GS-133** LoRa spike · **GS-134** GSM/SMS cihaz fallback · **GS-135/136** Uydu & Wi-Fi Direct spike
+- **GS-138** Offline mesh sohbet MVP *(Won't — GS-137 ADR'ı bekliyor)*
+
+---
+
 ## Önemli Notlar
 
 - **SSE proxy:** Render arkasında SSE bağlantıları için `X-Accel-Buffering: no` header'ı eklenmiştir. Vercel üzerinde çalışmaz — fallback olarak polling kullanılabilir.
@@ -174,3 +274,5 @@ REACT_APP_API_URL=       # Backend URL (default: http://localhost:8000)
 - **i18n:** Kullanıcının tarayıcı dili TR ise Türkçe, aksi hâlde İngilizce başlar. Tercih localStorage'a kaydedilir.
 - **Marker clustering:** `@changey/react-leaflet-markercluster` — react-leaflet v4 uyumlu. CSS import'u `WarehouseLayer.tsx` içinde yapılıyor.
 - **Access token süresi:** Güncellendi — 24 saat → 1 saat. Refresh token 30 gün geçerli, her kullanımda rotate edilir.
+- **Comms soyutlaması (GS-095):** `app/comms/` — `CommsChannel` ABC + `SSEChannel` + `PushChannel`. Sprint 8'de chat (GS-110) ve polling→push (GS-120) bu soyutlama üstüne kurulacak.
+- **SSE broadcast serileştirme:** `sse.py` `_broadcast` artık `json.dumps(..., default=str)` kullanır; duyuru `published_at` gibi datetime alanları yayında stringe çevrilir.
