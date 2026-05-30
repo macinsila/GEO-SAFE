@@ -4,11 +4,14 @@ import {
   AnnouncementAdmin,
   AnnouncementCreate,
   AnnouncementUpdate,
+  ChatMessage,
+  ChatMessageCreate,
   CriticalStockRecord,
   EmergencyAdminRecord,
   EmergencyPayload,
   InventoryItemAdmin,
   InventoryMovementAdminRecord,
+  KPISummary,
   NearestDepotResult,
   ReliefItemName,
   SafeZone,
@@ -532,6 +535,29 @@ class GeoSafeAPI {
     const res = await this.client.patch<ApiEnvelope<VolunteerTask>>(
       `/api/v1/volunteer-tasks/${taskId}/complete`
     );
+    return this.unwrap(res.data);
+  }
+
+  // ── Chat (GS-110) ────────────────────────────────────────────────────
+  async fetchChatHistory(room = "ops", limit = 50): Promise<ChatMessage[]> {
+    const res = await this.client.get<ApiEnvelope<ChatMessage[]>>(
+      "/api/v1/chat/messages",
+      { params: { room, limit } }
+    );
+    return this.unwrap(res.data);
+  }
+
+  async sendChatMessage(payload: ChatMessageCreate): Promise<ChatMessage> {
+    const res = await this.client.post<ApiEnvelope<ChatMessage>>(
+      "/api/v1/chat/messages",
+      payload
+    );
+    return this.unwrap(res.data);
+  }
+
+  // ── KPI (GS-080) ─────────────────────────────────────────────────────
+  async fetchKPISummary(): Promise<KPISummary> {
+    const res = await this.client.get<ApiEnvelope<KPISummary>>("/api/v1/kpi/summary");
     return this.unwrap(res.data);
   }
 

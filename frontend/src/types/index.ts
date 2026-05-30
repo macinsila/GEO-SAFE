@@ -314,3 +314,30 @@ export interface VolunteerTaskCreate {
   urgency: TaskUrgency;
 }
 
+// ── GS-110: Chat ──────────────────────────────────────────────────────────────
+
+export interface ChatMessage {
+  id: number;
+  user_id: number | null;
+  user_name: string;
+  room: string;
+  body: string;
+  created_at: string;
+}
+
+export interface ChatMessageCreate {
+  body: string;
+  room?: string;
+}
+
+// ── GS-080: KPI ───────────────────────────────────────────────────────────────
+
+export interface KPISummary {
+  emergencies: { total: number; new: number; resolved: number };
+  tasks: { total: number; open: number; done: number };
+  warehouses: { total: number; active: number };
+  safe_zones: { total: number; active: number; total_capacity: number };
+  critical_stock_count: number;
+  volunteer_applications_pending: number;
+}
+

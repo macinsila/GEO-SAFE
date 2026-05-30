@@ -55,6 +55,11 @@ async def broadcast_low_stock_alert(alert: dict) -> None:
     await _broadcast("low_stock_alert", alert)
 
 
+async def broadcast_chat_message(message: dict) -> None:
+    """Push a chat message to all connected SSE clients (GS-110)."""
+    await _broadcast("chat_message", message)
+
+
 async def _event_stream(q: asyncio.Queue) -> AsyncGenerator[str, None]:
     """Yield SSE-formatted strings; sends a heartbeat comment every 25 s."""
     try:

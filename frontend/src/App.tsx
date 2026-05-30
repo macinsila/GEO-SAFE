@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { PowerModeProvider } from "./context/PowerModeContext";
 import {
   OfflineQueuePanel,
   OfflineQueueProvider,
@@ -97,11 +98,13 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <OfflineQueueProvider>
-          <OfflineStatusBanner />
-          <AppRoutes />
-          <OfflineQueuePanel />
-        </OfflineQueueProvider>
+        <PowerModeProvider>
+          <OfflineQueueProvider>
+            <OfflineStatusBanner />
+            <AppRoutes />
+            <OfflineQueuePanel />
+          </OfflineQueueProvider>
+        </PowerModeProvider>
       </AuthProvider>
     </BrowserRouter>
   );

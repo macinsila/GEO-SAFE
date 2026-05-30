@@ -1,7 +1,7 @@
 # GeoSafe — Proje Durumu
 
 **Son güncelleme:** 2026-05-31
-**Aktif sprint:** Sprint 7 TAMAMLANDI ✅ — GS-050 ✅ + GS-042 ✅ + GS-004 ✅ (21/21 puan) · Sprint 1–7 tamamlandı (155 / 355 backlog puanı — %44)
+**Aktif sprint:** Sprint 8 TAMAMLANDI ✅ — GS-110 ✅ + GS-080 ✅ + GS-120 ✅ + GS-121 ✅ (21/21 puan) · Sprint 1–8 tamamlandı (168 / 355 backlog puanı — %47)
 
 ---
 
@@ -213,16 +213,16 @@ GS-130+131+132 (S9) ──► GS-137 (S9)   — spike'lar ADR'dan önce bitmeli
 
 ---
 
-## Sprint 8 — Sohbet, Admin Analitik & Batarya ⏳
+## Sprint 8 — Sohbet, Admin Analitik & Batarya ✅
 
 **Hedef:** GS-095 ✅ hazır → chat paneli; admin KPI kartları; batarya optimizasyonu.
 
 | ID | Konu | Pri | Puan | Durum |
 |----|------|-----|-----:|-------|
-| GS-110 | Online sohbet paneli (CommsChannel soyutlaması üstünde) | Should | 8 | ⏳ |
-| GS-080 | KPI dashboard — depo, acil, gönüllü, yanıt süresi kartları | Should | 5 | ⏳ |
-| GS-120 | Polling → Push geçişi (batarya tasarrufu) | Should | 3 | ⏳ |
-| GS-121 | Düşük güç acil modu (OLED tema, animasyonsuz, kısıtlı güncelleme) | Should | 5 | ⏳ |
+| GS-110 | Online sohbet paneli (CommsChannel soyutlaması üstünde) | Should | 8 | ✅ Migration 025 (`chat_messages`); `POST/GET /api/v1/chat/messages`; `broadcast_chat_message()` via SSE; `ChatPanel.tsx` (history + live SSE + dedup); `test_chat.py` (10 tests) |
+| GS-080 | KPI dashboard — depo, acil, gönüllü, yanıt süresi kartları | Should | 5 | ✅ `GET /api/v1/kpi/summary` (emergencies/tasks/warehouses/safe_zones/critical_stock/volunteer_applications); `KPISummary` type; 5 KPI kartı `DashboardPage`'e eklendi; `test_kpi.py` (4 tests) |
+| GS-120 | Polling → Push geçişi (batarya tasarrufu) | Should | 3 | ✅ `useSSEStream` hook (EventSource + 5s auto-reconnect); DashboardPage polling kaldırıldı → SSE event'e tepki; `announcement` + `low_stock_alert` → KPI yenile |
+| GS-121 | Düşük güç acil modu (OLED tema, animasyonsuz, kısıtlı güncelleme) | Should | 5 | ✅ `PowerModeContext` (`data-low-power` HTML attr + localStorage); `:root[data-low-power="true"]` OLED-siyah CSS; `animation: none !important`; ⚡ topbar toggle |
 
 **Toplam:** 21 puan | **Bağımlılıklar:** GS-110 → GS-095 ✅ (S5) · GS-120 → GS-020 ✅ + GS-021 ✅
 
@@ -251,7 +251,7 @@ GS-130+131+132 (S9) ──► GS-137 (S9)   — spike'lar ADR'dan önce bitmeli
 | S5 ✅ | Güvenlik & Mimari Temel | 21 | 105 | %30 |
 | S6 ✅ | Deprem Bildirimleri & Kalite | 21 | 126 | %35 |
 | S7 ✅ | Gönüllü, Hasar & E2E | 21 | 147 | %41 |
-| S8 ⏳ | Sohbet, Analitik & Batarya | 21 | 168 | %47 |
+| S8 ✅ | Sohbet, Analitik & Batarya | 21 | 168 | %47 |
 | S9 ⏳ | Off-Grid Araştırma & ADR | 21 | 189 | %53 |
 
 ---

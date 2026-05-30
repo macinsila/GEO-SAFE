@@ -1,9 +1,11 @@
 import React, { FormEvent, useEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { usePowerMode } from "../../context/PowerModeContext";
 import { geoSafeAPI } from "../../services";
 import { EmergencyPayload } from "../../types";
 import { ResourceBadge } from "./opsUi";
+import ChatPanel from "./ChatPanel";
 
 interface Profile {
   name?: string;
@@ -72,8 +74,10 @@ function NavItem({ item }: { item: OperationNavItem }) {
 export default function OperationsLayout() {
   const { role, logout } = useAuth();
   const navigate = useNavigate();
+  const { lowPower, toggle: togglePower } = usePowerMode();
   const profileRef = useRef<HTMLDivElement>(null);
   const isAdmin = role === "admin";
+  const [chatOpen, setChatOpen] = useState(false);
 
   const [profile, setProfile] = useState<Profile>({});
   const [profileOpen, setProfileOpen] = useState(false);
@@ -363,6 +367,24 @@ export default function OperationsLayout() {
               ) : null}
             </div>
 
+            <button
+              className={`ops-button secondary${chatOpen ? " active" : ""}`}
+              onClick={() => setChatOpen((o) => !o)}
+              type="button"
+              aria-pressed={chatOpen}
+              title="Ops sohbet kanalını aç/kapat"
+            >
+              Sohbet
+            </button>
+            <button
+              className={`ops-button secondary${lowPower ? " active" : ""}`}
+              onClick={togglePower}
+              type="button"
+              aria-pressed={lowPower}
+              title={lowPower ? "Normal moda dön" : "Düşük güç modunu etkinleştir"}
+            >
+              {lowPower ? "⚡ Düşük Güç" : "⚡"}
+            </button>
             <button className="ops-button danger" onClick={() => navigate("/emergency")} type="button">
               Acil Durum
             </button>
@@ -385,6 +407,8 @@ export default function OperationsLayout() {
       >
         SOS
       </button>
+
+      <ChatPanel open={chatOpen} onClose={() => setChatOpen(false)} />
 
       {sosOpen ? (
         <div className="sos-panel" role="dialog" aria-label="Acil durum eylem paneli">
