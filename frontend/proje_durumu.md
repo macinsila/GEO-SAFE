@@ -1,7 +1,7 @@
 # GeoSafe — Proje Durumu
 
 **Son güncelleme:** 2026-05-31
-**Aktif sprint:** Sprint 6 TAMAMLANDI ✅ — GS-100 ✅ + GS-101 ✅ + GS-003 ✅ + GS-017 ✅ + GS-007 ✅ (21/21 puan) · Sprint 1–6 tamamlandı (134 / 355 backlog puanı — %38)
+**Aktif sprint:** Sprint 7 TAMAMLANDI ✅ — GS-050 ✅ + GS-042 ✅ + GS-004 ✅ (21/21 puan) · Sprint 1–7 tamamlandı (155 / 355 backlog puanı — %44)
 
 ---
 
@@ -199,7 +199,7 @@ GS-130+131+132 (S9) ──► GS-137 (S9)   — spike'lar ADR'dan önce bitmeli
 
 ---
 
-## Sprint 7 — Gönüllü, Hasar Bildirimi & E2E ⏳
+## Sprint 7 — Gönüllü, Hasar Bildirimi & E2E ✅
 
 **Hedef:** En değerli kalan koordinasyon özellikleri + GS-003 üstüne E2E test suite.
 
@@ -207,7 +207,7 @@ GS-130+131+132 (S9) ──► GS-137 (S9)   — spike'lar ADR'dan önce bitmeli
 |----|------|-----|-----:|-------|
 | GS-050 | Gönüllü görev panosu & atama (open→in-progress→done) | Should | 8 | ✅ Migration 023; `VolunteerTask` model; 8 endpoints (`/volunteer-tasks`); `TasksPage` at `/ops/tasks` (tabs: open/my/all, claim/complete/cancel, coordinator create form); 20 backend tests |
 | GS-042 | Fotoğraflı + konumlu hasar bildirimi (obje depolama) | Should | 5 | ✅ Migration 024 (`image_url`); `storage.py` (Supabase REST, httpx, env-gated); `POST /emergency/{id}/image` (10MB, JPEG/PNG/WebP, 503 if unconfigured); EmergencyPage photo input + preview; `test_emergency_image.py` (8 tests) |
-| GS-004 | E2E smoke testler — Playwright, headless CI | Should | 8 | ⏳ |
+| GS-004 | E2E smoke testler — Playwright, headless CI | Should | 8 | ✅ `e2e/` dizini; Playwright 1.44; `globalSetup` (token→storageState); `seed.py` (admin+operator+depo+stok); 3 smoke test: acil form, harita sayfası, envanter güncelleme; CI `e2e` job (needs: backend+frontend) |
 
 **Toplam:** 21 puan | **Bağımlılık:** GS-004 → GS-003 (S6)
 
@@ -249,8 +249,8 @@ GS-130+131+132 (S9) ──► GS-137 (S9)   — spike'lar ADR'dan önce bitmeli
 |--------|------|-----:|----------:|---------:|
 | S1–S4 ✅ | Foundation → Hardening | 84 | 84 | %24 |
 | S5 ✅ | Güvenlik & Mimari Temel | 21 | 105 | %30 |
-| S6 ⏳ | Deprem Bildirimleri & Kalite | 21 | 126 | %35 |
-| S7 ⏳ | Gönüllü, Hasar & E2E | 21 | 147 | %41 |
+| S6 ✅ | Deprem Bildirimleri & Kalite | 21 | 126 | %35 |
+| S7 ✅ | Gönüllü, Hasar & E2E | 21 | 147 | %41 |
 | S8 ⏳ | Sohbet, Analitik & Batarya | 21 | 168 | %47 |
 | S9 ⏳ | Off-Grid Araştırma & ADR | 21 | 189 | %53 |
 
