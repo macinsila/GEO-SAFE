@@ -1,7 +1,7 @@
 # GeoSafe — Proje Durumu
 
 **Son güncelleme:** 2026-05-31
-**Aktif sprint:** Sprint 9 TAMAMLANDI ✅ — GS-130 ✅ + GS-131 ✅ + GS-132 ✅ + GS-137 ✅ (21/21 puan) · Sprint 1–9 tamamlandı (189 / 355 backlog puanı — %53)
+**Aktif sprint:** Sprint 10 TAMAMLANDI ✅ — GS-070 ✅ + GS-022 ✅ + GS-061 ✅ + GS-073 ✅ (21/21 puan) · Sprint 1–10 tamamlandı (210 / 355 backlog puanı — %59)
 
 ---
 
@@ -108,6 +108,8 @@
 | GET | /api/v1/reports/movements.csv | Hareket geçmişi CSV (admin) |
 | GET | /api/v1/reports/checkins.csv | Check-in geçmişi CSV (admin) |
 | GET | /api/v1/earthquakes/preferences | Deprem bildirim tercihim (auth) |
+| POST | /api/v1/admin/import/warehouses | Depo toplu içe aktarma (admin, JSON dizi, ?dry_run) |
+| POST | /api/v1/admin/import/safe-zones | Toplanma alanı toplu içe aktarma (admin, JSON dizi, ?dry_run) |
 | PUT | /api/v1/earthquakes/preferences | Deprem bildirim tercihi upsert (auth) |
 | POST | /api/v1/earthquakes/dispatch-notifications | Deprem→kullanıcı eşleştirme + Web Push taraması (admin) |
 
@@ -253,6 +255,22 @@ GS-130+131+132 (S9) ──► GS-137 (S9)   — spike'lar ADR'dan önce bitmeli
 | S7 ✅ | Gönüllü, Hasar & E2E | 21 | 147 | %41 |
 | S8 ✅ | Sohbet, Analitik & Batarya | 21 | 168 | %47 |
 | S9 ✅ | Off-Grid Araştırma & ADR | 21 | 189 | %53 |
+| S10 ✅ | Erişilebilirlik, Canlı Stok & Veri Entegrasyonu | 21 | 210 | %59 |
+
+---
+
+## Sprint 10 — Erişilebilirlik, Canlı Stok & Veri Entegrasyonu ✅
+
+**Hedef:** WCAG 2.1 AA temel uyum; SSE canlı envanter; toplu veri içe aktarma; yüksek kontrast modu.
+
+| ID | Konu | Pri | Puan | Durum |
+|----|------|-----|-----:|-------|
+| GS-070 | WCAG 2.1 AA denetimi ve düzeltmeleri | Should | 8 | ✅ `:focus-visible` standart outline (3px #0057b8); "Ana içeriğe geç" skip link; `ops-main` `id` + `tabIndex=-1`; `aria-label` icon-only düğmeler + SOS; `aria-pressed` toggle düğmeler; `SectionHeader.title: ReactNode`; `aria-live` bölgesi stok güncellemeleri için |
+| GS-022 | Operasyon panosunda canlı envanter | Could | 5 | ✅ `broadcast_inventory_update()` SSE eklendi; `inventory.py`'de her güncellemede tetikleniyor; `LogisticsPage` `useSSEStream` ile abone — `inventory_update` olayında satır güncelleme + 8s yeşil highlight + "az önce güncellendi" etiketi; `aria-live polite` bölgesi |
+| GS-061 | Depo & toplanma alanı toplu içe aktarma | Should | 5 | ✅ `backend/app/api/admin_import.py` — `POST /api/v1/admin/import/warehouses` + `/safe-zones`; JSON dizi; `?dry_run=true`; isme göre idempotent upsert; max 500 satır; `ImportReport` {created,updated,skipped,errors}; AdminDashboard "Toplu İçe Aktar" sekmesi; `test_admin_import.py` (12 test) |
+| GS-073 | Yüksek kontrast / büyük yazı acil durum modu | Could | 3 | ✅ `PowerModeContext` genişletildi (`highContrast` + `toggleHighContrast`); `data-high-contrast="true"` HTML attr; CSS: siyah metin/beyaz arkaplan, 110% yazı boyutu, kalın kenarlıklar, sarı halo focus ring; `◑` topbar toggle düğmesi |
+
+**Toplam:** 21 puan
 
 ---
 
@@ -260,13 +278,12 @@ GS-130+131+132 (S9) ──► GS-137 (S9)   — spike'lar ADR'dan önce bitmeli
 
 Gelecek döngüye park edildi (ADR/spike sonuçları bekleniyor veya öncelik düşük):
 
-- **GS-070** WCAG denetimi · **GS-072** Arapça RTL · **GS-073** Yüksek kontrast modu
-- **GS-022** Canlı envanter dashboard · **GS-023** Coğrafi alan alarmları · **GS-024** SMS fallback (op→kullanıcı)
+- **GS-072** Arapça RTL · **GS-023** Coğrafi alan alarmları · **GS-024** SMS fallback (op→kullanıcı)
 - **GS-033** Offline harita tile cache
 - **GS-041** Kayıp kişi panosu · **GS-054** Bağış eşleştirme — moderasyon tasarımı gerekli
-- **GS-051** Beceri eşleştirme · **GS-061** Toplu GeoJSON/CSV import
+- **GS-051** Beceri eşleştirme
 - **GS-133** LoRa spike · **GS-134** GSM/SMS cihaz fallback · **GS-135/136** Uydu & Wi-Fi Direct spike
-- **GS-138** Offline mesh sohbet MVP *(Won't — GS-137 ADR'ı bekliyor)*
+- **GS-138** Offline mesh sohbet MVP *(Won't — beacon pilot sonrasına bırakıldı, ADR-001)*
 
 ---
 

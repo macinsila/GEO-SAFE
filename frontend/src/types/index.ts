@@ -330,6 +330,39 @@ export interface ChatMessageCreate {
   room?: string;
 }
 
+// ── GS-061: Bulk import ───────────────────────────────────────────────────────
+
+export interface WarehouseImportRow {
+  name: string;
+  address?: string;
+  lat?: number;
+  lon?: number;
+  capacity?: number;
+  status?: "active" | "inactive" | "maintenance";
+}
+
+export interface SafeZoneImportRow {
+  name: string;
+  capacity?: number;
+  capacity_type?: string;
+  status?: "active" | "inactive" | "closed";
+  lat?: number;
+  lon?: number;
+}
+
+export interface ImportError {
+  row: number;
+  name: string;
+  reason: string;
+}
+
+export interface ImportReport {
+  created: number;
+  updated: number;
+  skipped: number;
+  errors: ImportError[];
+}
+
 // ── GS-080: KPI ───────────────────────────────────────────────────────────────
 
 export interface KPISummary {

@@ -9,12 +9,14 @@ import {
   CriticalStockRecord,
   EmergencyAdminRecord,
   EmergencyPayload,
+  ImportReport,
   InventoryItemAdmin,
   InventoryMovementAdminRecord,
   KPISummary,
   NearestDepotResult,
   ReliefItemName,
   SafeZone,
+  SafeZoneImportRow,
   ShelterOfferAdmin,
   ShelterOfferPayload,
   ShelterOfferPublic,
@@ -24,6 +26,7 @@ import {
   VolunteerTask,
   VolunteerTaskCreate,
   Warehouse,
+  WarehouseImportRow,
   WarehouseInventoryAdminRow,
   WarehouseInventoryData,
 } from "../types";
@@ -558,6 +561,23 @@ class GeoSafeAPI {
   // ── KPI (GS-080) ─────────────────────────────────────────────────────
   async fetchKPISummary(): Promise<KPISummary> {
     const res = await this.client.get<ApiEnvelope<KPISummary>>("/api/v1/kpi/summary");
+    return this.unwrap(res.data);
+  }
+
+  // ── GS-061: Bulk import ────────────────────────────────────────────────
+  async importWarehouses(rows: WarehouseImportRow[], dryRun = false): Promise<ImportReport> {
+    const res = await this.client.post<ApiEnvelope<ImportReport>>(
+      `/api/v1/admin/import/warehouses${dryRun ? "?dry_run=true" : ""}`,
+      rows
+    );
+    return this.unwrap(res.data);
+  }
+
+  async importSafeZones(rows: SafeZoneImportRow[], dryRun = false): Promise<ImportReport> {
+    const res = await this.client.post<ApiEnvelope<ImportReport>>(
+      `/api/v1/admin/import/safe-zones${dryRun ? "?dry_run=true" : ""}`,
+      rows
+    );
     return this.unwrap(res.data);
   }
 

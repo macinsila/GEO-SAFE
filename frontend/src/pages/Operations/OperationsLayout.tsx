@@ -74,7 +74,7 @@ function NavItem({ item }: { item: OperationNavItem }) {
 export default function OperationsLayout() {
   const { role, logout } = useAuth();
   const navigate = useNavigate();
-  const { lowPower, toggle: togglePower } = usePowerMode();
+  const { lowPower, toggle: togglePower, highContrast, toggleHighContrast } = usePowerMode();
   const profileRef = useRef<HTMLDivElement>(null);
   const isAdmin = role === "admin";
   const [chatOpen, setChatOpen] = useState(false);
@@ -206,6 +206,11 @@ export default function OperationsLayout() {
 
   return (
     <div className="ops-shell">
+      {/* GS-070: skip-to-main for keyboard users */}
+      <a href="#ops-main-content" className="skip-to-main">
+        Ana içeriğe geç
+      </a>
+
       <aside className="ops-sidebar" aria-label="Operasyon gezintisi">
         <div className="ops-brand">
           <div className="ops-mark">GS</div>
@@ -259,7 +264,7 @@ export default function OperationsLayout() {
       <div className="ops-workspace">
         <header className="ops-topbar">
           <div className="topbar-brand">
-            <div className="ops-mark">GS</div>
+            <div className="ops-mark" aria-hidden="true">GS</div>
             <span>GeoSafe</span>
           </div>
 
@@ -377,11 +382,22 @@ export default function OperationsLayout() {
               Sohbet
             </button>
             <button
+              className={`ops-button secondary${highContrast ? " active" : ""}`}
+              onClick={toggleHighContrast}
+              type="button"
+              aria-pressed={highContrast}
+              title={highContrast ? "Normal görünüme dön" : "Yüksek kontrast modunu etkinleştir"}
+              aria-label={highContrast ? "Yüksek kontrast modu etkin — devre dışı bırak" : "Yüksek kontrast modunu etkinleştir"}
+            >
+              {highContrast ? "◑ Y.Kontrast" : "◑"}
+            </button>
+            <button
               className={`ops-button secondary${lowPower ? " active" : ""}`}
               onClick={togglePower}
               type="button"
               aria-pressed={lowPower}
               title={lowPower ? "Normal moda dön" : "Düşük güç modunu etkinleştir"}
+              aria-label={lowPower ? "Düşük güç modu etkin — devre dışı bırak" : "Düşük güç modunu etkinleştir"}
             >
               {lowPower ? "⚡ Düşük Güç" : "⚡"}
             </button>
@@ -394,7 +410,7 @@ export default function OperationsLayout() {
           </div>
         </header>
 
-        <main className="ops-main">
+        <main className="ops-main" id="ops-main-content" tabIndex={-1}>
           <Outlet />
         </main>
       </div>
@@ -404,6 +420,8 @@ export default function OperationsLayout() {
         onClick={() => setSosOpen((open) => !open)}
         type="button"
         aria-expanded={sosOpen}
+        aria-label="Acil durum SOS panelini aç"
+        aria-haspopup="dialog"
       >
         SOS
       </button>

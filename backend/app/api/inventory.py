@@ -149,6 +149,9 @@ async def _upsert_warehouse_inventory(
             ),
         })
 
+    # GS-022: broadcast every inventory change so the live logistics dashboard refreshes
+    await sse_broadcaster.broadcast_inventory_update(result_data)
+
     return result_data
 
 
