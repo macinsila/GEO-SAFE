@@ -36,6 +36,11 @@
       "react-app"
     ]
   },
+  "jest": {
+    "moduleNameMapper": {
+      "^@changey/react-leaflet-markercluster(/.*)?$": "<rootDir>/src/__mocks__/leafletMarkerCluster.js"
+    }
+  },
   "browserslist": {
     "production": [
       ">0.2%",

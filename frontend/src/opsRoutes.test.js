@@ -86,7 +86,13 @@ jest.mock("react-leaflet", () => {
     Popup: ({ children }) => <div>{children}</div>,
     Polygon: () => null,
     Polyline: () => null,
-    useMapEvents: () => null,
+    useMap: () => ({
+      flyTo: jest.fn(),
+      getBounds: () => ({
+        pad: () => ({ contains: () => true }),
+      }),
+    }),
+    useMapEvents: jest.fn(),
   };
 });
 

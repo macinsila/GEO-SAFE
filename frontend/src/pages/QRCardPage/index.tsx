@@ -14,7 +14,7 @@ interface QRPayload {
   issued: string;
 }
 
-function encode(obj: object): string {
+export function encode(obj: object): string {
   return btoa(unescape(encodeURIComponent(JSON.stringify(obj))));
 }
 

@@ -22,7 +22,7 @@ interface LoginLocationState {
 const LOGIN_TIMEOUT_MS = 60000;
 const AUTH_NOTICE_KEY = "geosafe_auth_notice";
 
-function withTimeout<T>(promise: Promise<T>, timeoutMessage: string): Promise<T> {
+export function withTimeout<T>(promise: Promise<T>, timeoutMessage: string): Promise<T> {
   let timeoutId: ReturnType<typeof setTimeout>;
 
   const timeout = new Promise<never>((_, reject) => {
@@ -32,7 +32,7 @@ function withTimeout<T>(promise: Promise<T>, timeoutMessage: string): Promise<T>
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
 }
 
-function getErrorMessage(error: unknown, fallback: string): string {
+export function getErrorMessage(error: unknown, fallback: string): string {
   if (axios.isAxiosError(error)) {
     if (error.code === "ECONNABORTED") {
       return "Backend 60 saniye içinde yanıt vermedi. Servis uyanıyor olabilir; biraz sonra tekrar deneyin.";
@@ -64,7 +64,7 @@ function getErrorMessage(error: unknown, fallback: string): string {
   return fallback;
 }
 
-function getReturnPath(state: unknown): string {
+export function getReturnPath(state: unknown): string {
   const loginState = state as LoginLocationState | null;
   const pathname = loginState?.from?.pathname;
   if (!pathname || pathname === "/login") return "/ops";
