@@ -18,7 +18,7 @@ const CATEGORIES = [
   { label: "Diğer Acil", value: "Diger Acil" },
 ];
 
-function validateManualCoordinates(latValue: string, lonValue: string) {
+export function validateManualCoordinates(latValue: string, lonValue: string) {
   const errors: EmergencyErrors = {};
   const lat = Number(latValue);
   const lon = Number(lonValue);

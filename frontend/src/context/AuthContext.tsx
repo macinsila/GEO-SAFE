@@ -19,7 +19,7 @@ const decodeBase64Url = (value: string): string => {
   return atob(padded);
 };
 
-const extractRole = (token: string | null): string | null => {
+export const extractRole = (token: string | null): string | null => {
   if (!token) return null;
   const parts = token.split(".");
   if (parts.length < 2) return null;

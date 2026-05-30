@@ -191,7 +191,7 @@ GS-130+131+132 (S9) ──► GS-137 (S9)   — spike'lar ADR'dan önce bitmeli
 |----|------|-----|-----:|-------|
 | GS-100 | Deprem bildirim tercihleri (mag, mesafe, derinlik kuralları) | Must | 5 | ✅ Migration 021; `GET/PUT /earthquakes/preferences`; `core/eq_matching.py` saf yüklem; feed'e lat/lon eklendi |
 | GS-101 | Kullanıcı bazlı kural & eşleştirme motoru | Should | 3 | ✅ Migration 022; `core/eq_notify.py` (find_matches + dispatch + dedup); `POST /earthquakes/dispatch-notifications` (admin, Web Push) |
-| GS-003 | Frontend kritik akış testleri (≥%60 kapsam) | Should | 8 | ⏳ |
+| GS-003 | Frontend kritik akış testleri (≥%60 kapsam) | Should | 8 | ✅ 103 test (13 suite): login · emergency · QRCard · AuthContext · API methods · offline context |
 | GS-017 | Halkın formlarına abuse koruması (rate-limit + bot mitigasyon) | Should | 3 | ⏳ |
 | GS-007 | `/ready` + `/metrics` endpoint | Could | 2 | ⏳ |
 
