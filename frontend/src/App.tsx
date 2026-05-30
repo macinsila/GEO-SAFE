@@ -22,6 +22,7 @@ import OperationsMapPage from "./pages/Operations/MapPage";
 import OperationsEarthquakesPage from "./pages/Operations/EarthquakesPage";
 import OperationsLogisticsPage from "./pages/Operations/LogisticsPage";
 import OperationsAnnouncementsPage from "./pages/Operations/OperationsAnnouncementsPage";
+import TasksPage from "./pages/Operations/TasksPage";
 
 function ProtectedRoute({
   children,
@@ -69,6 +70,7 @@ export function AppRoutes() {
         <Route path="earthquakes" element={<OperationsEarthquakesPage />} />
         <Route path="logistics" element={<OperationsLogisticsPage />} />
         <Route path="announcements" element={<OperationsAnnouncementsPage />} />
+        <Route path="tasks" element={<TasksPage />} />
       </Route>
       <Route path="/emergency" element={<EmergencyPage />} />
       <Route path="/volunteer" element={<VolunteerPage />} />

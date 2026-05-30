@@ -18,6 +18,8 @@ import {
   VolunteerApplicationAdmin,
   VolunteerApplicationPayload,
   VolunteerApplicationPublic,
+  VolunteerTask,
+  VolunteerTaskCreate,
   Warehouse,
   WarehouseInventoryAdminRow,
   WarehouseInventoryData,
@@ -462,6 +464,63 @@ class GeoSafeAPI {
 
   async deleteAnnouncement(id: number): Promise<void> {
     await this.client.delete(`/api/v1/announcements/${id}`);
+  }
+
+  // ── Volunteer Tasks (GS-050) ─────────────────────────────────────────
+  async fetchVolunteerTasksAdmin(status?: string, urgency?: string): Promise<VolunteerTask[]> {
+    const params: Record<string, string> = {};
+    if (status) params.status = status;
+    if (urgency) params.urgency = urgency;
+    const res = await this.client.get<ApiEnvelope<VolunteerTask[]>>(
+      "/api/v1/volunteer-tasks/admin",
+      { params: Object.keys(params).length ? params : undefined }
+    );
+    return this.unwrap(res.data);
+  }
+
+  async fetchOpenVolunteerTasks(): Promise<VolunteerTask[]> {
+    const res = await this.client.get<ApiEnvelope<VolunteerTask[]>>("/api/v1/volunteer-tasks");
+    return this.unwrap(res.data);
+  }
+
+  async fetchMyVolunteerTasks(): Promise<VolunteerTask[]> {
+    const res = await this.client.get<ApiEnvelope<VolunteerTask[]>>("/api/v1/volunteer-tasks/my");
+    return this.unwrap(res.data);
+  }
+
+  async createVolunteerTask(payload: VolunteerTaskCreate): Promise<VolunteerTask> {
+    const res = await this.client.post<ApiEnvelope<VolunteerTask>>("/api/v1/volunteer-tasks", payload);
+    return this.unwrap(res.data);
+  }
+
+  async assignVolunteerTask(taskId: number, assignedToId: number | null): Promise<VolunteerTask> {
+    const res = await this.client.patch<ApiEnvelope<VolunteerTask>>(
+      `/api/v1/volunteer-tasks/admin/${taskId}/assign`,
+      { assigned_to_id: assignedToId }
+    );
+    return this.unwrap(res.data);
+  }
+
+  async updateVolunteerTaskStatus(taskId: number, status: string): Promise<VolunteerTask> {
+    const res = await this.client.patch<ApiEnvelope<VolunteerTask>>(
+      `/api/v1/volunteer-tasks/admin/${taskId}/status`,
+      { status }
+    );
+    return this.unwrap(res.data);
+  }
+
+  async claimVolunteerTask(taskId: number): Promise<VolunteerTask> {
+    const res = await this.client.patch<ApiEnvelope<VolunteerTask>>(
+      `/api/v1/volunteer-tasks/${taskId}/claim`
+    );
+    return this.unwrap(res.data);
+  }
+
+  async completeVolunteerTask(taskId: number): Promise<VolunteerTask> {
+    const res = await this.client.patch<ApiEnvelope<VolunteerTask>>(
+      `/api/v1/volunteer-tasks/${taskId}/complete`
+    );
+    return this.unwrap(res.data);
   }
 
   // ── Health ────────────────────────────────────────────────────────────

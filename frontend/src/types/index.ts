@@ -286,3 +286,30 @@ export interface AnnouncementUpdate {
   status?: string;
 }
 
+// ── GS-050: Volunteer Task Board ──────────────────────────────────────────
+
+export type TaskUrgency = "low" | "medium" | "high" | "critical";
+export type TaskStatus = "open" | "in_progress" | "done" | "cancelled";
+
+export interface VolunteerTask {
+  id: number;
+  title: string;
+  description?: string | null;
+  location?: string | null;
+  skill_required?: string | null;
+  urgency: TaskUrgency;
+  status: TaskStatus;
+  assigned_to_id?: number | null;
+  created_by_id: number;
+  created_at: string;
+  updated_at?: string | null;
+}
+
+export interface VolunteerTaskCreate {
+  title: string;
+  description?: string;
+  location?: string;
+  skill_required?: string;
+  urgency: TaskUrgency;
+}
+

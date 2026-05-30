@@ -29,7 +29,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.middleware.base import BaseHTTPMiddleware
-from app.api import warehouses, safe_zones, auth, emergency, inventory, earthquakes, profile, spatial, volunteers, shelter_offers, qr, announcements, sse, checkin, routing, transfers, zone_needs, push, reports, admin as admin_api
+from app.api import warehouses, safe_zones, auth, emergency, inventory, earthquakes, profile, spatial, volunteers, shelter_offers, qr, announcements, sse, checkin, routing, transfers, zone_needs, push, reports, admin as admin_api, volunteer_tasks
 from app.api.observability import MetricsMiddleware, collector
 from app.db import get_db
 from app.db.session import engine
@@ -54,6 +54,7 @@ from app.models.push_subscription import PushSubscription
 from app.models.audit_log import AuditLog
 from app.models.earthquake_notification_pref import EarthquakeNotificationPref
 from app.models.earthquake_notification_sent import EarthquakeNotificationSent
+from app.models.volunteer_task import VolunteerTask
 
 app = FastAPI(title="GeoSafe API")
 
@@ -173,6 +174,7 @@ app.include_router(zone_needs.router, prefix="/api/v1/zone-needs", tags=["zone-n
 app.include_router(push.router, prefix="/api/v1/push", tags=["push"])
 app.include_router(reports.router, prefix="/api/v1/reports", tags=["reports"])
 app.include_router(admin_api.router, prefix="/api/v1/admin", tags=["admin"])
+app.include_router(volunteer_tasks.router, prefix="/api/v1/volunteer-tasks", tags=["volunteer-tasks"])
 
 
 @app.exception_handler(HTTPException)

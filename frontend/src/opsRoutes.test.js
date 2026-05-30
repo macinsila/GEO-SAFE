@@ -42,6 +42,9 @@ jest.mock("./services", () => ({
     fetchNearestDepot: () => Promise.resolve([]),
     sendEmergency: () => Promise.resolve(),
     updateProfile: () => Promise.resolve(),
+    fetchOpenVolunteerTasks: () => Promise.resolve([]),
+    fetchMyVolunteerTasks: () => Promise.resolve([]),
+    fetchVolunteerTasksAdmin: () => Promise.resolve([]),
   },
 }));
 
@@ -137,6 +140,7 @@ describe("/ops nested routes", () => {
     ["/ops/earthquakes", ".ops-table", "Depremler"],
     ["/ops/logistics", ".ops-logistics-grid", "Lojistik"],
     ["/ops/announcements", ".ops-announcement-toolbar", "Duyurular"],
+    ["/ops/tasks", ".ops-announcement-toolbar", "Görev"],
   ])("renders %s inside the shared operations layout", async (path, childSelector, childText) => {
     await renderRoute(path);
 
