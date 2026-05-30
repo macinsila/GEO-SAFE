@@ -346,8 +346,9 @@ class GeoSafeAPI {
   }
 
   // ── Emergency ─────────────────────────────────────────────────────────
-  async sendEmergency(payload: EmergencyPayload): Promise<void> {
-    await this.publicClient.post("/api/v1/emergency", payload);
+  async sendEmergency(payload: EmergencyPayload): Promise<{ id: number }> {
+    const res = await this.publicClient.post<ApiEnvelope<{ id: number }>>("/api/v1/emergency", payload);
+    return this.unwrap(res.data);
   }
 
   async fetchEmergenciesAdmin(status?: string): Promise<EmergencyAdminRecord[]> {
@@ -464,6 +465,17 @@ class GeoSafeAPI {
 
   async deleteAnnouncement(id: number): Promise<void> {
     await this.client.delete(`/api/v1/announcements/${id}`);
+  }
+
+  // ── Emergency Photo Upload (GS-042) ─────────────────────────────────
+  async uploadEmergencyImage(reportId: number, file: File): Promise<string> {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await this.publicClient.post<ApiEnvelope<{ id: number; image_url: string }>>(
+      `/api/v1/emergency/${reportId}/image`,
+      formData,
+    );
+    return this.unwrap(res.data).image_url;
   }
 
   // ── Volunteer Tasks (GS-050) ─────────────────────────────────────────

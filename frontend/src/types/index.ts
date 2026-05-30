@@ -242,6 +242,7 @@ export interface EmergencyAdminRecord {
   enlem?: number;
   boylam?: number;
   status: string;
+  image_url?: string | null;
   created_at?: string;
 }
 

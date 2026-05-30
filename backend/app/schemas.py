@@ -401,6 +401,7 @@ class EmergencyAdminResponse(BaseModel):
     enlem: float
     boylam: float
     status: str
+    image_url: Optional[str] = None
     created_at: datetime
 
     class Config:

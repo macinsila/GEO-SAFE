@@ -8,7 +8,10 @@ import {
 import { geoSafeAPI } from "../../services";
 
 type Phase = "form" | "loading" | "done" | "error";
-type EmergencyErrors = Partial<Record<"kategori" | "manualLat" | "manualLon" | "queue", string>>;
+type EmergencyErrors = Partial<Record<"kategori" | "manualLat" | "manualLon" | "queue" | "photo", string>>;
+
+const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
+const ALLOWED_PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 const CATEGORIES = [
   { label: "Enkaz Altındayım", value: "Enkaz Altindayim" },
@@ -46,6 +49,24 @@ export default function EmergencyPage() {
   const [needManual, setNeedManual] = useState(false);
   const [queueConsent, setQueueConsent] = useState(false);
   const [needsConsent, setNeedsConsent] = useState(false);
+  const [photo, setPhoto] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+
+  const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null;
+    setErrors((prev) => ({ ...prev, photo: undefined }));
+    if (!file) { setPhoto(null); setPhotoPreview(null); return; }
+    if (!ALLOWED_PHOTO_TYPES.includes(file.type)) {
+      setErrors((prev) => ({ ...prev, photo: "Yalnızca JPEG, PNG veya WebP yükleyebilirsiniz." }));
+      return;
+    }
+    if (file.size > MAX_PHOTO_BYTES) {
+      setErrors((prev) => ({ ...prev, photo: "Fotoğraf 10 MB'dan küçük olmalıdır." }));
+      return;
+    }
+    setPhoto(file);
+    setPhotoPreview(URL.createObjectURL(file));
+  };
 
   const send = async (lat: number, lon: number) => {
     setPhase("loading");
@@ -53,6 +74,7 @@ export default function EmergencyPage() {
     const saat = new Date().toLocaleString("tr-TR");
     const haritaLink = `https://www.google.com/maps?q=${lat},${lon}`;
     try {
+      let reportId: number | null = null;
       const result = await submitOrQueue({
         type: "emergency",
         payload: {
@@ -66,7 +88,8 @@ export default function EmergencyPage() {
         },
         hasConsent: isOnline ? true : queueConsent,
         submitOnline: async (payload) => {
-          await geoSafeAPI.sendEmergency(payload);
+          const res = await geoSafeAPI.sendEmergency(payload);
+          reportId = (res as { id?: number })?.id ?? null;
         },
       });
 
@@ -77,14 +100,25 @@ export default function EmergencyPage() {
         return;
       }
 
+      // Upload photo after successful online submit
+      if (result !== "queued" && photo && reportId) {
+        try {
+          await geoSafeAPI.uploadEmergencyImage(reportId, photo);
+        } catch {
+          // Photo upload failure does not block the emergency submission
+        }
+      }
+
       setSentQueued(result === "queued");
       setSentMsg(
         result === "queued"
-          ? `${kategori} bildirimi internet gelince gönderilecek.`
+          ? `${kategori} bildirimi internet gelince gönderilecek. Fotoğraf çevrimiçi olduğunuzda eklenebilir.`
           : `${kategori} bildirimi operasyon ekibine iletildi.`
       );
       setNeedsConsent(false);
       setQueueConsent(false);
+      setPhoto(null);
+      setPhotoPreview(null);
       setPhase("done");
     } catch {
       setErrors({ queue: "Sunucuya bağlanılamadı. Konum ve bağlantıyı kontrol edip tekrar deneyin." });
@@ -253,6 +287,25 @@ export default function EmergencyPage() {
                   </label>
                 </div>
               ) : null}
+
+              <label className="form-field" htmlFor="emergency-photo">
+                <span>Fotoğraf <small>(isteğe bağlı — max 10 MB)</small></span>
+                <input
+                  id="emergency-photo"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  capture="environment"
+                  onChange={handlePhotoChange}
+                />
+                {errors.photo ? <FieldError id="emergency-photo-error" message={errors.photo} /> : null}
+                {photoPreview ? (
+                  <img
+                    className="emergency-photo-preview"
+                    src={photoPreview}
+                    alt="Seçilen fotoğraf önizlemesi"
+                  />
+                ) : null}
+              </label>
 
               <button className="ops-button danger public-form-submit" type="submit">
                 Yardım Çağır

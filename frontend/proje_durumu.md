@@ -205,8 +205,8 @@ GS-130+131+132 (S9) ──► GS-137 (S9)   — spike'lar ADR'dan önce bitmeli
 
 | ID | Konu | Pri | Puan | Durum |
 |----|------|-----|-----:|-------|
-| GS-050 | Gönüllü görev panosu & atama (open→in-progress→done) | Should | 8 | ⏳ |
-| GS-042 | Fotoğraflı + konumlu hasar bildirimi (obje depolama) | Should | 5 | ⏳ |
+| GS-050 | Gönüllü görev panosu & atama (open→in-progress→done) | Should | 8 | ✅ Migration 023; `VolunteerTask` model; 8 endpoints (`/volunteer-tasks`); `TasksPage` at `/ops/tasks` (tabs: open/my/all, claim/complete/cancel, coordinator create form); 20 backend tests |
+| GS-042 | Fotoğraflı + konumlu hasar bildirimi (obje depolama) | Should | 5 | ✅ Migration 024 (`image_url`); `storage.py` (Supabase REST, httpx, env-gated); `POST /emergency/{id}/image` (10MB, JPEG/PNG/WebP, 503 if unconfigured); EmergencyPage photo input + preview; `test_emergency_image.py` (8 tests) |
 | GS-004 | E2E smoke testler — Playwright, headless CI | Should | 8 | ⏳ |
 
 **Toplam:** 21 puan | **Bağımlılık:** GS-004 → GS-003 (S6)
