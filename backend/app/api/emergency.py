@@ -12,7 +12,7 @@ from sqlalchemy import select
 
 from app.db import get_db
 from app.api.auth import require_roles
-from app.api.rate_limit import emergency_limiter
+from app.api.rate_limit import emergency_limiter, public_form_dedup
 from app.models.emergency_report import EmergencyReport
 from app.api.response import success_response
 from app.models.user import User
@@ -50,6 +50,7 @@ async def acil_bildirim_gonder(
     db: AsyncSession = Depends(get_db),
 ):
     await emergency_limiter.check(request)
+    await public_form_dedup.check(request, payload.model_dump())
     bildirim = EmergencyReport(
         durum=payload.kategori or payload.durum,
         kategori=payload.kategori,

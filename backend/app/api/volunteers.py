@@ -4,11 +4,12 @@ Volunteer intake API endpoints
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.api.auth import require_roles
+from app.api.rate_limit import volunteer_limiter, public_form_dedup
 from app.api.response import success_response
 from app.db import get_db
 from app.models.user import User
@@ -34,8 +35,11 @@ def _serialize_admin(volunteer: VolunteerApplication) -> dict:
 @router.post("", status_code=201)
 async def create_volunteer_application(
     payload: VolunteerCreate,
+    request: Request,
     db: AsyncSession = Depends(get_db),
 ):
+    await volunteer_limiter.check(request)
+    await public_form_dedup.check(request, payload.model_dump())
     volunteer = VolunteerApplication(
         full_name=payload.full_name,
         contact_info=payload.contact_info,

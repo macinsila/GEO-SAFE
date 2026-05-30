@@ -1,7 +1,7 @@
 # GeoSafe — Proje Durumu
 
-**Son güncelleme:** 2026-05-29
-**Aktif sprint:** Sprint 6 devam ediyor — GS-100 ✅ + GS-101 ✅ (8/21 puan) · Sprint 1–5 tamamlandı (113 / 355 backlog puanı — %32)
+**Son güncelleme:** 2026-05-31
+**Aktif sprint:** Sprint 6 TAMAMLANDI ✅ — GS-100 ✅ + GS-101 ✅ + GS-003 ✅ + GS-017 ✅ + GS-007 ✅ (21/21 puan) · Sprint 1–6 tamamlandı (134 / 355 backlog puanı — %38)
 
 ---
 
@@ -192,8 +192,8 @@ GS-130+131+132 (S9) ──► GS-137 (S9)   — spike'lar ADR'dan önce bitmeli
 | GS-100 | Deprem bildirim tercihleri (mag, mesafe, derinlik kuralları) | Must | 5 | ✅ Migration 021; `GET/PUT /earthquakes/preferences`; `core/eq_matching.py` saf yüklem; feed'e lat/lon eklendi |
 | GS-101 | Kullanıcı bazlı kural & eşleştirme motoru | Should | 3 | ✅ Migration 022; `core/eq_notify.py` (find_matches + dispatch + dedup); `POST /earthquakes/dispatch-notifications` (admin, Web Push) |
 | GS-003 | Frontend kritik akış testleri (≥%60 kapsam) | Should | 8 | ✅ 103 test (13 suite): login · emergency · QRCard · AuthContext · API methods · offline context |
-| GS-017 | Halkın formlarına abuse koruması (rate-limit + bot mitigasyon) | Should | 3 | ⏳ |
-| GS-007 | `/ready` + `/metrics` endpoint | Could | 2 | ⏳ |
+| GS-017 | Halkın formlarına abuse koruması (rate-limit + bot mitigasyon) | Should | 3 | ✅ `DuplicateFilter` (SHA-256 hash/IP/60s) + `volunteer_limiter` + `shelter_limiter` (5/60s); `blocked_count`/`rejected_count`; `GET /api/v1/admin/abuse-metrics`; `test_public_form_abuse.py` (13 tests) |
+| GS-007 | `/ready` + `/metrics` endpoint | Could | 2 | ✅ `GET /ready` (DB SELECT 1, 503 on fail); `GET /metrics` (Prometheus text — `http_requests_total`, `http_request_duration_seconds_sum/count`); `MetricsMiddleware` (path normalization `/{id}`); `test_observability.py` (12 tests) |
 
 **Toplam:** 21 puan | **GS-003 biter → GS-004 açılır**
 

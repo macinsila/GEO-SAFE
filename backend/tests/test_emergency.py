@@ -4,7 +4,7 @@ Covers Sprint 1 (create, rate limit, admin list security) and
 Sprint 3A (status field, status filter, status update, admin-only enforcement).
 """
 
-from app.api.rate_limit import emergency_limiter
+from app.api.rate_limit import emergency_limiter, public_form_dedup
 from app.api.auth import get_current_user
 from app.main import app
 from app.models.user import User
@@ -59,13 +59,14 @@ def test_emergency_reports_persist(client):
 
 def test_emergency_rate_limited(client):
     emergency_limiter._buckets.clear()
-    payload = {**_PAYLOAD, "durum": "Rate Limit Test"}
+    public_form_dedup._seen.clear()
 
-    for _ in range(emergency_limiter.max_requests):
+    for i in range(emergency_limiter.max_requests):
+        payload = {**_PAYLOAD, "durum": f"Rate Limit Test {i}"}
         response = client.post("/api/v1/emergency", json=payload)
         assert response.status_code == 201
 
-    blocked = client.post("/api/v1/emergency", json=payload)
+    blocked = client.post("/api/v1/emergency", json={**_PAYLOAD, "durum": "Rate Limit Test extra"})
     assert blocked.status_code == 429
 
 

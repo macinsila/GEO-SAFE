@@ -4,11 +4,12 @@ Shelter offer intake API endpoints
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.api.auth import require_roles
+from app.api.rate_limit import shelter_limiter, public_form_dedup
 from app.api.response import success_response
 from app.db import get_db
 from app.models.user import User
@@ -34,8 +35,11 @@ def _serialize_admin(offer: ShelterOffer) -> dict:
 @router.post("", status_code=201)
 async def create_shelter_offer(
     payload: ShelterOfferCreate,
+    request: Request,
     db: AsyncSession = Depends(get_db),
 ):
+    await shelter_limiter.check(request)
+    await public_form_dedup.check(request, payload.model_dump())
     offer = ShelterOffer(
         host_name=payload.host_name,
         contact_info=payload.contact_info,

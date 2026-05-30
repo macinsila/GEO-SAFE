@@ -23,11 +23,15 @@ if _sentry_dsn:
         environment=os.getenv("ENVIRONMENT", "development"),
         send_default_pii=False,
     )
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.middleware.base import BaseHTTPMiddleware
-from app.api import warehouses, safe_zones, auth, emergency, inventory, earthquakes, profile, spatial, volunteers, shelter_offers, qr, announcements, sse, checkin, routing, transfers, zone_needs, push, reports
+from app.api import warehouses, safe_zones, auth, emergency, inventory, earthquakes, profile, spatial, volunteers, shelter_offers, qr, announcements, sse, checkin, routing, transfers, zone_needs, push, reports, admin as admin_api
+from app.api.observability import MetricsMiddleware, collector
+from app.db import get_db
 from app.db.session import engine
 from app.models.base import Base
 from app.api.response import success_response, error_response
@@ -82,6 +86,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(RequestIDMiddleware)
+app.add_middleware(MetricsMiddleware)
 
 # CORS: read allowed origins from env. Vercel preview/production URLs are
 # supported by default because this project deploys the frontend on Vercel.
@@ -167,6 +172,7 @@ app.include_router(transfers.router, prefix="/api/v1/transfers", tags=["transfer
 app.include_router(zone_needs.router, prefix="/api/v1/zone-needs", tags=["zone-needs"])
 app.include_router(push.router, prefix="/api/v1/push", tags=["push"])
 app.include_router(reports.router, prefix="/api/v1/reports", tags=["reports"])
+app.include_router(admin_api.router, prefix="/api/v1/admin", tags=["admin"])
 
 
 @app.exception_handler(HTTPException)
@@ -193,3 +199,20 @@ async def root():
 @app.get("/health")
 async def health():
     return success_response(data={"health": "healthy"}, message="Service is healthy")
+
+
+@app.get("/ready")
+async def ready(db: AsyncSession = Depends(get_db)):
+    try:
+        await db.execute(text("SELECT 1"))
+        return success_response(data={"ready": True}, message="Service is ready")
+    except Exception:
+        raise HTTPException(status_code=503, detail="Database not reachable")
+
+
+@app.get("/metrics", response_class=PlainTextResponse)
+async def metrics():
+    return PlainTextResponse(
+        collector.prometheus_text(),
+        media_type="text/plain; version=0.0.4; charset=utf-8",
+    )
