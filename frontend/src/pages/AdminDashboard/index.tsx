@@ -7,16 +7,19 @@ import {
   AnnouncementCreate,
   CriticalStockRecord,
   EmergencyAdminRecord,
+  ImportReport,
   InventoryItemAdmin,
   InventoryMovementAdminRecord,
   SafeZone,
+  SafeZoneImportRow,
   ShelterOfferAdmin,
   VolunteerApplicationAdmin,
   Warehouse,
+  WarehouseImportRow,
   WarehouseInventoryData,
 } from "../../types";
 
-type AdminTab = "warehouses" | "safezones" | "emergency" | "volunteers" | "shelters" | "announcements";
+type AdminTab = "warehouses" | "safezones" | "emergency" | "volunteers" | "shelters" | "announcements" | "import";
 
 type InventoryEditRow = {
   item_id: number;
@@ -234,6 +237,13 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
   const [annPriority, setAnnPriority] = useState("normal");
   const [annCreateBusy, setAnnCreateBusy] = useState(false);
   const [annCreateMsg, setAnnCreateMsg] = useState("");
+
+  // GS-061: Bulk import state
+  const [importType, setImportType] = useState<"warehouses" | "safe-zones">("warehouses");
+  const [importJson, setImportJson] = useState("");
+  const [importBusy, setImportBusy] = useState(false);
+  const [importReport, setImportReport] = useState<ImportReport | null>(null);
+  const [importMsg, setImportMsg] = useState("");
 
   const loadWarehouseOverview = useCallback(async () => {
     setLoading(true);
@@ -612,6 +622,36 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
     await loadAnnouncements();
   };
 
+  // GS-061: Bulk import handler
+  const runImport = async (dryRun: boolean) => {
+    setImportMsg("");
+    setImportReport(null);
+    let rows: unknown[];
+    try {
+      rows = JSON.parse(importJson);
+      if (!Array.isArray(rows)) throw new Error("JSON bir dizi (array) olmalıdır");
+    } catch (e) {
+      setImportMsg(`JSON ayrıştırma hatası: ${String(e)}`);
+      return;
+    }
+    setImportBusy(true);
+    try {
+      let report: ImportReport;
+      if (importType === "warehouses") {
+        report = await geoSafeAPI.importWarehouses(rows as WarehouseImportRow[], dryRun);
+      } else {
+        report = await geoSafeAPI.importSafeZones(rows as SafeZoneImportRow[], dryRun);
+      }
+      setImportReport(report);
+      setImportMsg(dryRun ? "Ön izleme tamamlandı (kayıt yapılmadı)." : "İçe aktarma başarıyla tamamlandı.");
+      if (!dryRun) void loadWarehouseOverview();
+    } catch (e) {
+      setImportMsg(`Hata: ${String(e)}`);
+    } finally {
+      setImportBusy(false);
+    }
+  };
+
   const activeWarehouses = warehouses.filter((warehouse) => warehouse.status === "active").length;
   const inactiveWarehouses = warehouses.filter((warehouse) => warehouse.status === "inactive").length;
   const riskyWarehouses = warehouses.filter((warehouse) => warehouse.status === "risky").length;
@@ -716,6 +756,7 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
           <TabBtn id="volunteers" label="Gönüllüler" />
           <TabBtn id="shelters" label="Barınma Teklifleri" />
           <TabBtn id="announcements" label="Duyurular" />
+          <TabBtn id="import" label="Toplu İçe Aktar" />
         </div>
 
         {activeTab === "warehouses" && (
@@ -1586,6 +1627,109 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
                 </table>
               </div>
             )}
+          </SectionCard>
+        )}
+
+        {/* GS-061: Bulk import tab */}
+        {activeTab === "import" && (
+          <SectionCard title="Toplu İçe Aktarma — Depo & Toplanma Alanı">
+            <p style={{ fontSize: 13, color: "#555", marginBottom: 16 }}>
+              Depo veya toplanma alanı listesini JSON dizisi olarak yapıştırın. <strong>Ön İzleme</strong> seçeneği
+              veri tabanına kayıt yapmaz; üretim öncesi kontrol için kullanın.
+            </p>
+
+            <div style={{ display: "flex", gap: 12, marginBottom: 12, flexWrap: "wrap" }}>
+              <label style={{ fontWeight: 600, fontSize: 13 }}>
+                <span style={{ marginRight: 6 }}>Tür:</span>
+                <select
+                  value={importType}
+                  onChange={(e) => setImportType(e.target.value as "warehouses" | "safe-zones")}
+                  style={{ padding: "4px 8px", borderRadius: 6, border: "1px solid #d1d5db", fontSize: 13 }}
+                >
+                  <option value="warehouses">Depolar</option>
+                  <option value="safe-zones">Toplanma Alanları</option>
+                </select>
+              </label>
+            </div>
+
+            <details style={{ marginBottom: 12, fontSize: 12, color: "#666" }}>
+              <summary style={{ cursor: "pointer", fontWeight: 600 }}>JSON formatı (örnek)</summary>
+              <pre style={{ background: "#f8f8f8", padding: 12, borderRadius: 6, marginTop: 8, overflowX: "auto" }}>
+                {importType === "warehouses"
+                  ? `[\n  { "name": "Depo Adı", "address": "Adres", "lat": 41.01, "lon": 29.02, "capacity": 500, "status": "active" }\n]`
+                  : `[\n  { "name": "Toplanma Alanı", "capacity": 300, "capacity_type": "persons", "status": "active", "lat": 41.01, "lon": 29.02 }\n]`}
+              </pre>
+            </details>
+
+            <textarea
+              aria-label="İçe aktarılacak JSON verisi"
+              value={importJson}
+              onChange={(e) => setImportJson(e.target.value)}
+              placeholder={`[\n  { "name": "...", ... }\n]`}
+              rows={10}
+              style={{
+                width: "100%", fontFamily: "monospace", fontSize: 12,
+                padding: 12, border: "1px solid #d1d5db", borderRadius: 8,
+                resize: "vertical", boxSizing: "border-box",
+              }}
+            />
+
+            <div style={{ display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
+              <button
+                onClick={() => void runImport(true)}
+                disabled={importBusy || !importJson.trim()}
+                style={{ padding: "8px 18px", background: "#e0f2fe", border: "1px solid #0284c7", color: "#0369a1", borderRadius: 7, fontWeight: 600, fontSize: 13, cursor: "pointer" }}
+              >
+                {importBusy ? "İşleniyor..." : "Ön İzleme"}
+              </button>
+              <button
+                onClick={() => void runImport(false)}
+                disabled={importBusy || !importJson.trim()}
+                style={{ padding: "8px 18px", background: "#1a237e", color: "#fff", border: "none", borderRadius: 7, fontWeight: 600, fontSize: 13, cursor: "pointer" }}
+              >
+                {importBusy ? "İşleniyor..." : "İçe Aktar"}
+              </button>
+            </div>
+
+            {importMsg ? (
+              <p style={{ marginTop: 12, fontSize: 13, color: importMsg.startsWith("Hata") ? "#dc2626" : "#16a34a", fontWeight: 600 }}>
+                {importMsg}
+              </p>
+            ) : null}
+
+            {importReport ? (
+              <div style={{ marginTop: 16, padding: 16, background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 8 }}>
+                <strong style={{ fontSize: 14 }}>İçe Aktarma Raporu</strong>
+                <div style={{ display: "flex", gap: 24, marginTop: 10, flexWrap: "wrap" }}>
+                  <span style={{ color: "#16a34a", fontWeight: 700, fontSize: 20 }}>{importReport.created} <small style={{ fontWeight: 400, fontSize: 13 }}>oluşturuldu</small></span>
+                  <span style={{ color: "#2563eb", fontWeight: 700, fontSize: 20 }}>{importReport.updated} <small style={{ fontWeight: 400, fontSize: 13 }}>güncellendi</small></span>
+                  <span style={{ color: "#6b7280", fontWeight: 700, fontSize: 20 }}>{importReport.skipped} <small style={{ fontWeight: 400, fontSize: 13 }}>atlandı</small></span>
+                  {importReport.errors.length > 0 && (
+                    <span style={{ color: "#dc2626", fontWeight: 700, fontSize: 20 }}>{importReport.errors.length} <small style={{ fontWeight: 400, fontSize: 13 }}>hata</small></span>
+                  )}
+                </div>
+                {importReport.errors.length > 0 ? (
+                  <table style={{ marginTop: 12, width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                    <thead>
+                      <tr>
+                        <th style={TH}>Satır</th>
+                        <th style={TH}>Ad</th>
+                        <th style={TH}>Hata</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {importReport.errors.map((err) => (
+                        <tr key={`${err.row}-${err.name}`}>
+                          <td style={TD}>{err.row}</td>
+                          <td style={TD}>{err.name}</td>
+                          <td style={{ ...TD, color: "#dc2626" }}>{err.reason}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : null}
+              </div>
+            ) : null}
           </SectionCard>
         )}
       </main>

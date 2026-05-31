@@ -242,6 +242,7 @@ export interface EmergencyAdminRecord {
   enlem?: number;
   boylam?: number;
   status: string;
+  image_url?: string | null;
   created_at?: string;
 }
 
@@ -284,5 +285,92 @@ export interface AnnouncementUpdate {
   kategori?: string;
   priority?: string;
   status?: string;
+}
+
+// ── GS-050: Volunteer Task Board ──────────────────────────────────────────
+
+export type TaskUrgency = "low" | "medium" | "high" | "critical";
+export type TaskStatus = "open" | "in_progress" | "done" | "cancelled";
+
+export interface VolunteerTask {
+  id: number;
+  title: string;
+  description?: string | null;
+  location?: string | null;
+  skill_required?: string | null;
+  urgency: TaskUrgency;
+  status: TaskStatus;
+  assigned_to_id?: number | null;
+  created_by_id: number;
+  created_at: string;
+  updated_at?: string | null;
+}
+
+export interface VolunteerTaskCreate {
+  title: string;
+  description?: string;
+  location?: string;
+  skill_required?: string;
+  urgency: TaskUrgency;
+}
+
+// ── GS-110: Chat ──────────────────────────────────────────────────────────────
+
+export interface ChatMessage {
+  id: number;
+  user_id: number | null;
+  user_name: string;
+  room: string;
+  body: string;
+  created_at: string;
+}
+
+export interface ChatMessageCreate {
+  body: string;
+  room?: string;
+}
+
+// ── GS-061: Bulk import ───────────────────────────────────────────────────────
+
+export interface WarehouseImportRow {
+  name: string;
+  address?: string;
+  lat?: number;
+  lon?: number;
+  capacity?: number;
+  status?: "active" | "inactive" | "maintenance";
+}
+
+export interface SafeZoneImportRow {
+  name: string;
+  capacity?: number;
+  capacity_type?: string;
+  status?: "active" | "inactive" | "closed";
+  lat?: number;
+  lon?: number;
+}
+
+export interface ImportError {
+  row: number;
+  name: string;
+  reason: string;
+}
+
+export interface ImportReport {
+  created: number;
+  updated: number;
+  skipped: number;
+  errors: ImportError[];
+}
+
+// ── GS-080: KPI ───────────────────────────────────────────────────────────────
+
+export interface KPISummary {
+  emergencies: { total: number; new: number; resolved: number };
+  tasks: { total: number; open: number; done: number };
+  warehouses: { total: number; active: number };
+  safe_zones: { total: number; active: number; total_capacity: number };
+  critical_stock_count: number;
+  volunteer_applications_pending: number;
 }
 

@@ -6,9 +6,11 @@ import {
   Announcement,
   CriticalStockRecord,
   EmergencyAdminRecord,
+  KPISummary,
   SafeZone,
   Warehouse,
 } from "../../types";
+import { useSSEStream } from "../../hooks/useSSEStream";
 import {
   ANNOUNCEMENT_PRIORITY_LABELS,
   EmptyState,
@@ -81,6 +83,7 @@ export default function OperationsDashboardPage() {
   const { role } = useAuth();
   const navigate = useNavigate();
   const cachedAnnouncements = loadAnnouncementCache();
+  const lastSSEEvent = useSSEStream();
 
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [safeZones, setSafeZones] = useState<SafeZone[]>([]);
@@ -92,6 +95,7 @@ export default function OperationsDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [loadErrors, setLoadErrors] = useState<string[]>([]);
   const [selectedBriefTag, setSelectedBriefTag] = useState(VIDEO_CARDS[0].tag);
+  const [kpi, setKpi] = useState<KPISummary | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -106,11 +110,12 @@ export default function OperationsDashboardPage() {
         role === "admin" ? geoSafeAPI.fetchCriticalStockAdmin() : Promise.resolve([]),
         role === "admin" ? geoSafeAPI.fetchEmergenciesAdmin("new") : Promise.resolve([]),
         geoSafeAPI.fetchAnnouncements(),
+        geoSafeAPI.fetchKPISummary(),
       ]);
 
       if (!mounted) return;
 
-      const [warehouseResult, zoneResult, stockResult, emergencyResult, announcementResult] = results;
+      const [warehouseResult, zoneResult, stockResult, emergencyResult, announcementResult, kpiResult] = results;
       const nextErrors: string[] = [];
 
       if (warehouseResult.status === "fulfilled") setWarehouses(warehouseResult.value);
@@ -131,6 +136,8 @@ export default function OperationsDashboardPage() {
       } else {
         nextErrors.push("Duyuru akışı güncellenemedi.");
       }
+
+      if (kpiResult.status === "fulfilled") setKpi(kpiResult.value);
 
       setLoadErrors(nextErrors);
       setLoading(false);
@@ -154,6 +161,23 @@ export default function OperationsDashboardPage() {
     hour: "2-digit",
     minute: "2-digit",
   });
+
+  // GS-120: live announcement updates via SSE (replaces re-fetch polling)
+  useEffect(() => {
+    if (!lastSSEEvent) return;
+    if (lastSSEEvent.type === "announcement") {
+      geoSafeAPI
+        .fetchAnnouncements()
+        .then((items) => {
+          saveAnnouncementCache(items);
+          setAnnouncements(items.slice(0, 3));
+        })
+        .catch(() => {});
+    }
+    if (lastSSEEvent.type === "low_stock_alert" || lastSSEEvent.type === "announcement") {
+      geoSafeAPI.fetchKPISummary().then(setKpi).catch(() => {});
+    }
+  }, [lastSSEEvent]);
 
   const readinessScore = useMemo(() => {
     if (loading) return null;
@@ -277,6 +301,36 @@ export default function OperationsDashboardPage() {
           tone={activeWarehouses ? "info" : "warning"}
         />
       </section>
+
+      {kpi ? (
+        <section className="ops-kpi-grid" aria-label="KPI özeti">
+          <div className="ops-kpi-card">
+            <span>Gönüllü Görevleri</span>
+            <strong>{kpi.tasks.open}</strong>
+            <small>açık / {kpi.tasks.total} toplam · {kpi.tasks.done} tamamlandı</small>
+          </div>
+          <div className="ops-kpi-card">
+            <span>Acil Bildirim</span>
+            <strong>{kpi.emergencies.new}</strong>
+            <small>yeni / {kpi.emergencies.total} toplam · {kpi.emergencies.resolved} kapandı</small>
+          </div>
+          <div className="ops-kpi-card">
+            <span>Barınma Kapasitesi</span>
+            <strong>{kpi.safe_zones.total_capacity.toLocaleString("tr-TR")}</strong>
+            <small>{kpi.safe_zones.active} aktif alan</small>
+          </div>
+          <div className="ops-kpi-card">
+            <span>Kritik Stok Kalemi</span>
+            <strong>{kpi.critical_stock_count}</strong>
+            <small>eşik altı / {kpi.warehouses.active} aktif depo</small>
+          </div>
+          <div className="ops-kpi-card">
+            <span>Bekleyen Gönüllü</span>
+            <strong>{kpi.volunteer_applications_pending}</strong>
+            <small>onay bekliyor</small>
+          </div>
+        </section>
+      ) : null}
 
       {loadErrors.length ? (
         <section className="decision-data-alert" role="status">

@@ -338,6 +338,59 @@ class EmergencyStatusUpdate(BaseModel):
         return v
 
 
+# ===== GS-050 — Volunteer Task Board =====
+
+_TASK_URGENCIES = {"low", "medium", "high", "critical"}
+_TASK_STATUSES = {"open", "in_progress", "done", "cancelled"}
+
+
+class VolunteerTaskCreate(BaseModel):
+    title: str
+    description: Optional[str] = None
+    location: Optional[str] = None
+    skill_required: Optional[str] = None
+    urgency: str = "medium"
+
+    @field_validator("urgency")
+    @classmethod
+    def validate_urgency(cls, v: str) -> str:
+        if v not in _TASK_URGENCIES:
+            raise ValueError(f"Invalid urgency '{v}'. Allowed: {sorted(_TASK_URGENCIES)}")
+        return v
+
+
+class VolunteerTaskResponse(BaseModel):
+    id: int
+    title: str
+    description: Optional[str] = None
+    location: Optional[str] = None
+    skill_required: Optional[str] = None
+    urgency: str
+    status: str
+    assigned_to_id: Optional[int] = None
+    created_by_id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class VolunteerTaskStatusUpdate(BaseModel):
+    status: str
+
+    @field_validator("status")
+    @classmethod
+    def validate_status(cls, v: str) -> str:
+        if v not in _TASK_STATUSES:
+            raise ValueError(f"Invalid task status '{v}'. Allowed: {sorted(_TASK_STATUSES)}")
+        return v
+
+
+class VolunteerTaskAssign(BaseModel):
+    assigned_to_id: Optional[int] = None
+
+
 class EmergencyAdminResponse(BaseModel):
     id: int
     durum: str
@@ -348,6 +401,7 @@ class EmergencyAdminResponse(BaseModel):
     enlem: float
     boylam: float
     status: str
+    image_url: Optional[str] = None
     created_at: datetime
 
     class Config:

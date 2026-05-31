@@ -4,21 +4,29 @@ import {
   AnnouncementAdmin,
   AnnouncementCreate,
   AnnouncementUpdate,
+  ChatMessage,
+  ChatMessageCreate,
   CriticalStockRecord,
   EmergencyAdminRecord,
   EmergencyPayload,
+  ImportReport,
   InventoryItemAdmin,
   InventoryMovementAdminRecord,
+  KPISummary,
   NearestDepotResult,
   ReliefItemName,
   SafeZone,
+  SafeZoneImportRow,
   ShelterOfferAdmin,
   ShelterOfferPayload,
   ShelterOfferPublic,
   VolunteerApplicationAdmin,
   VolunteerApplicationPayload,
   VolunteerApplicationPublic,
+  VolunteerTask,
+  VolunteerTaskCreate,
   Warehouse,
+  WarehouseImportRow,
   WarehouseInventoryAdminRow,
   WarehouseInventoryData,
 } from "../types";
@@ -344,8 +352,9 @@ class GeoSafeAPI {
   }
 
   // ── Emergency ─────────────────────────────────────────────────────────
-  async sendEmergency(payload: EmergencyPayload): Promise<void> {
-    await this.publicClient.post("/api/v1/emergency", payload);
+  async sendEmergency(payload: EmergencyPayload): Promise<{ id: number }> {
+    const res = await this.publicClient.post<ApiEnvelope<{ id: number }>>("/api/v1/emergency", payload);
+    return this.unwrap(res.data);
   }
 
   async fetchEmergenciesAdmin(status?: string): Promise<EmergencyAdminRecord[]> {
@@ -462,6 +471,114 @@ class GeoSafeAPI {
 
   async deleteAnnouncement(id: number): Promise<void> {
     await this.client.delete(`/api/v1/announcements/${id}`);
+  }
+
+  // ── Emergency Photo Upload (GS-042) ─────────────────────────────────
+  async uploadEmergencyImage(reportId: number, file: File): Promise<string> {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await this.publicClient.post<ApiEnvelope<{ id: number; image_url: string }>>(
+      `/api/v1/emergency/${reportId}/image`,
+      formData,
+    );
+    return this.unwrap(res.data).image_url;
+  }
+
+  // ── Volunteer Tasks (GS-050) ─────────────────────────────────────────
+  async fetchVolunteerTasksAdmin(status?: string, urgency?: string): Promise<VolunteerTask[]> {
+    const params: Record<string, string> = {};
+    if (status) params.status = status;
+    if (urgency) params.urgency = urgency;
+    const res = await this.client.get<ApiEnvelope<VolunteerTask[]>>(
+      "/api/v1/volunteer-tasks/admin",
+      { params: Object.keys(params).length ? params : undefined }
+    );
+    return this.unwrap(res.data);
+  }
+
+  async fetchOpenVolunteerTasks(): Promise<VolunteerTask[]> {
+    const res = await this.client.get<ApiEnvelope<VolunteerTask[]>>("/api/v1/volunteer-tasks");
+    return this.unwrap(res.data);
+  }
+
+  async fetchMyVolunteerTasks(): Promise<VolunteerTask[]> {
+    const res = await this.client.get<ApiEnvelope<VolunteerTask[]>>("/api/v1/volunteer-tasks/my");
+    return this.unwrap(res.data);
+  }
+
+  async createVolunteerTask(payload: VolunteerTaskCreate): Promise<VolunteerTask> {
+    const res = await this.client.post<ApiEnvelope<VolunteerTask>>("/api/v1/volunteer-tasks", payload);
+    return this.unwrap(res.data);
+  }
+
+  async assignVolunteerTask(taskId: number, assignedToId: number | null): Promise<VolunteerTask> {
+    const res = await this.client.patch<ApiEnvelope<VolunteerTask>>(
+      `/api/v1/volunteer-tasks/admin/${taskId}/assign`,
+      { assigned_to_id: assignedToId }
+    );
+    return this.unwrap(res.data);
+  }
+
+  async updateVolunteerTaskStatus(taskId: number, status: string): Promise<VolunteerTask> {
+    const res = await this.client.patch<ApiEnvelope<VolunteerTask>>(
+      `/api/v1/volunteer-tasks/admin/${taskId}/status`,
+      { status }
+    );
+    return this.unwrap(res.data);
+  }
+
+  async claimVolunteerTask(taskId: number): Promise<VolunteerTask> {
+    const res = await this.client.patch<ApiEnvelope<VolunteerTask>>(
+      `/api/v1/volunteer-tasks/${taskId}/claim`
+    );
+    return this.unwrap(res.data);
+  }
+
+  async completeVolunteerTask(taskId: number): Promise<VolunteerTask> {
+    const res = await this.client.patch<ApiEnvelope<VolunteerTask>>(
+      `/api/v1/volunteer-tasks/${taskId}/complete`
+    );
+    return this.unwrap(res.data);
+  }
+
+  // ── Chat (GS-110) ────────────────────────────────────────────────────
+  async fetchChatHistory(room = "ops", limit = 50): Promise<ChatMessage[]> {
+    const res = await this.client.get<ApiEnvelope<ChatMessage[]>>(
+      "/api/v1/chat/messages",
+      { params: { room, limit } }
+    );
+    return this.unwrap(res.data);
+  }
+
+  async sendChatMessage(payload: ChatMessageCreate): Promise<ChatMessage> {
+    const res = await this.client.post<ApiEnvelope<ChatMessage>>(
+      "/api/v1/chat/messages",
+      payload
+    );
+    return this.unwrap(res.data);
+  }
+
+  // ── KPI (GS-080) ─────────────────────────────────────────────────────
+  async fetchKPISummary(): Promise<KPISummary> {
+    const res = await this.client.get<ApiEnvelope<KPISummary>>("/api/v1/kpi/summary");
+    return this.unwrap(res.data);
+  }
+
+  // ── GS-061: Bulk import ────────────────────────────────────────────────
+  async importWarehouses(rows: WarehouseImportRow[], dryRun = false): Promise<ImportReport> {
+    const res = await this.client.post<ApiEnvelope<ImportReport>>(
+      `/api/v1/admin/import/warehouses${dryRun ? "?dry_run=true" : ""}`,
+      rows
+    );
+    return this.unwrap(res.data);
+  }
+
+  async importSafeZones(rows: SafeZoneImportRow[], dryRun = false): Promise<ImportReport> {
+    const res = await this.client.post<ApiEnvelope<ImportReport>>(
+      `/api/v1/admin/import/safe-zones${dryRun ? "?dry_run=true" : ""}`,
+      rows
+    );
+    return this.unwrap(res.data);
   }
 
   // ── Health ────────────────────────────────────────────────────────────

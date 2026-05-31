@@ -1,9 +1,11 @@
 import React, { FormEvent, useEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { usePowerMode } from "../../context/PowerModeContext";
 import { geoSafeAPI } from "../../services";
 import { EmergencyPayload } from "../../types";
 import { ResourceBadge } from "./opsUi";
+import ChatPanel from "./ChatPanel";
 
 interface Profile {
   name?: string;
@@ -27,6 +29,7 @@ const OPERATION_NAV_ITEMS: OperationNavItem[] = [
   { label: "Depremler", icon: "S", path: "/ops/earthquakes" },
   { label: "Lojistik", icon: "L", path: "/ops/logistics" },
   { label: "Duyurular", icon: "A", path: "/ops/announcements" },
+  { label: "Görev Panosu", icon: "G", path: "/ops/tasks" },
 ];
 
 const IDENTITY_NAV_ITEMS: OperationNavItem[] = [
@@ -71,8 +74,10 @@ function NavItem({ item }: { item: OperationNavItem }) {
 export default function OperationsLayout() {
   const { role, logout } = useAuth();
   const navigate = useNavigate();
+  const { lowPower, toggle: togglePower, highContrast, toggleHighContrast } = usePowerMode();
   const profileRef = useRef<HTMLDivElement>(null);
   const isAdmin = role === "admin";
+  const [chatOpen, setChatOpen] = useState(false);
 
   const [profile, setProfile] = useState<Profile>({});
   const [profileOpen, setProfileOpen] = useState(false);
@@ -201,6 +206,11 @@ export default function OperationsLayout() {
 
   return (
     <div className="ops-shell">
+      {/* GS-070: skip-to-main for keyboard users */}
+      <a href="#ops-main-content" className="skip-to-main">
+        Ana içeriğe geç
+      </a>
+
       <aside className="ops-sidebar" aria-label="Operasyon gezintisi">
         <div className="ops-brand">
           <div className="ops-mark">GS</div>
@@ -254,7 +264,7 @@ export default function OperationsLayout() {
       <div className="ops-workspace">
         <header className="ops-topbar">
           <div className="topbar-brand">
-            <div className="ops-mark">GS</div>
+            <div className="ops-mark" aria-hidden="true">GS</div>
             <span>GeoSafe</span>
           </div>
 
@@ -362,6 +372,35 @@ export default function OperationsLayout() {
               ) : null}
             </div>
 
+            <button
+              className={`ops-button secondary${chatOpen ? " active" : ""}`}
+              onClick={() => setChatOpen((o) => !o)}
+              type="button"
+              aria-pressed={chatOpen}
+              title="Ops sohbet kanalını aç/kapat"
+            >
+              Sohbet
+            </button>
+            <button
+              className={`ops-button secondary${highContrast ? " active" : ""}`}
+              onClick={toggleHighContrast}
+              type="button"
+              aria-pressed={highContrast}
+              title={highContrast ? "Normal görünüme dön" : "Yüksek kontrast modunu etkinleştir"}
+              aria-label={highContrast ? "Yüksek kontrast modu etkin — devre dışı bırak" : "Yüksek kontrast modunu etkinleştir"}
+            >
+              {highContrast ? "◑ Y.Kontrast" : "◑"}
+            </button>
+            <button
+              className={`ops-button secondary${lowPower ? " active" : ""}`}
+              onClick={togglePower}
+              type="button"
+              aria-pressed={lowPower}
+              title={lowPower ? "Normal moda dön" : "Düşük güç modunu etkinleştir"}
+              aria-label={lowPower ? "Düşük güç modu etkin — devre dışı bırak" : "Düşük güç modunu etkinleştir"}
+            >
+              {lowPower ? "⚡ Düşük Güç" : "⚡"}
+            </button>
             <button className="ops-button danger" onClick={() => navigate("/emergency")} type="button">
               Acil Durum
             </button>
@@ -371,7 +410,7 @@ export default function OperationsLayout() {
           </div>
         </header>
 
-        <main className="ops-main">
+        <main className="ops-main" id="ops-main-content" tabIndex={-1}>
           <Outlet />
         </main>
       </div>
@@ -381,9 +420,13 @@ export default function OperationsLayout() {
         onClick={() => setSosOpen((open) => !open)}
         type="button"
         aria-expanded={sosOpen}
+        aria-label="Acil durum SOS panelini aç"
+        aria-haspopup="dialog"
       >
         SOS
       </button>
+
+      <ChatPanel open={chatOpen} onClose={() => setChatOpen(false)} />
 
       {sosOpen ? (
         <div className="sos-panel" role="dialog" aria-label="Acil durum eylem paneli">

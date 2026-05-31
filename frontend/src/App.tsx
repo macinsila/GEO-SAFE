@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { PowerModeProvider } from "./context/PowerModeContext";
 import {
   OfflineQueuePanel,
   OfflineQueueProvider,
@@ -22,6 +23,7 @@ import OperationsMapPage from "./pages/Operations/MapPage";
 import OperationsEarthquakesPage from "./pages/Operations/EarthquakesPage";
 import OperationsLogisticsPage from "./pages/Operations/LogisticsPage";
 import OperationsAnnouncementsPage from "./pages/Operations/OperationsAnnouncementsPage";
+import TasksPage from "./pages/Operations/TasksPage";
 
 function ProtectedRoute({
   children,
@@ -69,6 +71,7 @@ export function AppRoutes() {
         <Route path="earthquakes" element={<OperationsEarthquakesPage />} />
         <Route path="logistics" element={<OperationsLogisticsPage />} />
         <Route path="announcements" element={<OperationsAnnouncementsPage />} />
+        <Route path="tasks" element={<TasksPage />} />
       </Route>
       <Route path="/emergency" element={<EmergencyPage />} />
       <Route path="/volunteer" element={<VolunteerPage />} />
@@ -95,11 +98,13 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <OfflineQueueProvider>
-          <OfflineStatusBanner />
-          <AppRoutes />
-          <OfflineQueuePanel />
-        </OfflineQueueProvider>
+        <PowerModeProvider>
+          <OfflineQueueProvider>
+            <OfflineStatusBanner />
+            <AppRoutes />
+            <OfflineQueuePanel />
+          </OfflineQueueProvider>
+        </PowerModeProvider>
       </AuthProvider>
     </BrowserRouter>
   );

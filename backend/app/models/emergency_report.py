@@ -21,6 +21,7 @@ class EmergencyReport(Base):
     kategori = Column(String(100), nullable=True)
     aciklama = Column(Text, nullable=True)
     status = Column(String(50), default="new", nullable=False)
+    image_url = Column(String(500), nullable=True)
     created_at = Column(DateTime, server_default=func.now())
 
     def __repr__(self) -> str:

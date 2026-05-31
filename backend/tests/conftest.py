@@ -132,6 +132,8 @@ def setup_test_database() -> Generator[None, None, None]:
 
 @pytest.fixture(autouse=True)
 def clean_database(setup_test_database):
+    from app.api.rate_limit import public_form_dedup
+    public_form_dedup._seen.clear()
     _truncate_all_tables()
 
 

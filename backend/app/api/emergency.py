@@ -6,13 +6,14 @@ Admin: GET (list + filter), PATCH /{id}/status, DELETE (bulk clear).
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.db import get_db
 from app.api.auth import require_roles
-from app.api.rate_limit import emergency_limiter
+from app.api.rate_limit import emergency_limiter, public_form_dedup
+from app.api.storage import upload_image, ALLOWED_TYPES, MAX_UPLOAD_BYTES
 from app.models.emergency_report import EmergencyReport
 from app.api.response import success_response
 from app.models.user import User
@@ -50,6 +51,7 @@ async def acil_bildirim_gonder(
     db: AsyncSession = Depends(get_db),
 ):
     await emergency_limiter.check(request)
+    await public_form_dedup.check(request, payload.model_dump())
     bildirim = EmergencyReport(
         durum=payload.kategori or payload.durum,
         kategori=payload.kategori,
@@ -123,6 +125,49 @@ async def update_emergency_status(
     return success_response(
         data=_serialize_admin(report),
         message="Emergency status updated",
+    )
+
+
+# ── Public: attach photo to an existing emergency report ────────────────────
+@router.post("/{report_id}/image", status_code=200)
+async def upload_emergency_image(
+    report_id: int,
+    request: Request,
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(EmergencyReport).where(EmergencyReport.id == report_id)
+    )
+    report = result.scalars().first()
+    if report is None:
+        raise HTTPException(status_code=404, detail="Emergency report not found")
+
+    content_type = (file.content_type or "").lower()
+    if content_type not in ALLOWED_TYPES:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Unsupported file type '{content_type}'. Allowed: {sorted(ALLOWED_TYPES)}",
+        )
+
+    file_bytes = await file.read()
+    if len(file_bytes) > MAX_UPLOAD_BYTES:
+        raise HTTPException(
+            status_code=422,
+            detail=f"File too large ({len(file_bytes) // 1024} KB). Maximum is {MAX_UPLOAD_BYTES // (1024*1024)} MB.",
+        )
+
+    image_url = await upload_image(file_bytes, content_type)
+    report.image_url = image_url
+    await db.flush()
+    await db.commit()
+    result = await db.execute(
+        select(EmergencyReport).where(EmergencyReport.id == report_id)
+    )
+    report = result.scalar_one()
+    return success_response(
+        data={"id": report.id, "image_url": report.image_url},
+        message="Image uploaded",
     )
 
 
