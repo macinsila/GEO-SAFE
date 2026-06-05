@@ -70,8 +70,43 @@ async def acil_bildirim_gonder(
         select(EmergencyReport).where(EmergencyReport.id == bildirim_id)
     )
     bildirim = result.scalar_one()
+
+    # GS-023: yakındaki geofence abonelerini best-effort uyar. Push yapılandırılmamışsa
+    # veya herhangi bir hata olursa rapor akışını ASLA bozma.
+    await _notify_geofenced_subscribers(db, bildirim)
+
     # Intentionally minimal response — avoids giving false confidence to sender.
     return success_response(data={"id": bildirim.id}, message="Bildirim alındı")
+
+
+async def _notify_geofenced_subscribers(
+    db: AsyncSession, report: EmergencyReport
+) -> None:
+    """GS-023: acil bildirim konumunun yakınındaki abonelere Web Push gönder.
+
+    Best-effort: VAPID yoksa veya herhangi bir hata olursa sessizce geç."""
+    try:
+        from app.api.push import _vapid_configured
+        from app.core.geofence import dispatch_geofenced_alert
+
+        if not _vapid_configured():
+            return
+        if report.enlem is None or report.boylam is None:
+            return
+
+        kategori = report.kategori or report.durum or "Acil durum"
+        await dispatch_geofenced_alert(
+            db,
+            lat=float(report.enlem),
+            lon=float(report.boylam),
+            title="Yakınınızda acil durum",
+            body=f"{kategori} bildirimi yakınınızda alındı.",
+            url="/",
+            tag="geosafe-geofence",
+        )
+    except Exception:
+        # Bildirim sevkiyatı asla acil rapor kaydını etkilemez.
+        pass
 
 
 # ── Admin: list emergency reports (with optional status filter) ─────────────

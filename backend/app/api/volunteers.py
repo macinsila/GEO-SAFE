@@ -46,6 +46,7 @@ async def create_volunteer_application(
         district=payload.district,
         neighborhood=payload.neighborhood,
         skills=payload.skills,
+        primary_role=payload.primary_role,
         availability_note=payload.availability_note,
         status="pending",
     )

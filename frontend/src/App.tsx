@@ -17,6 +17,7 @@ import ProfilePage from "./pages/ProfilePage";
 import QRCardPage from "./pages/QRCardPage";
 import QRScanResultPage from "./pages/QRScanResultPage";
 import AnnouncementsPage from "./pages/AnnouncementsPage";
+import ChannelsPage from "./pages/ChannelsPage";
 import OperationsLayout from "./pages/Operations/OperationsLayout";
 import OperationsDashboardPage from "./pages/Operations/DashboardPage";
 import OperationsMapPage from "./pages/Operations/MapPage";
@@ -89,6 +90,7 @@ export function AppRoutes() {
       <Route path="/qr-card" element={<ProtectedRoute><QRCardPage /></ProtectedRoute>} />
       <Route path="/qr-result" element={<QRScanResultPage />} />
       <Route path="/duyurular" element={<AnnouncementsPage />} />
+      <Route path="/channels" element={<ProtectedRoute><ChannelsPage /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

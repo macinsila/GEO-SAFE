@@ -1,11 +1,15 @@
 """
-Deprem ↔ kullanıcı tercihi eşleştirme — GS-100.
+Deprem ↔ kullanıcı tercihi eşleştirme — GS-100 + GS-102.
 
 Saf (yan etkisiz) yüklem ve mesafe yardımcı fonksiyonu. GS-101 bildirim motoru
 bu modülü import ederek eşleşen kullanıcıları bulur.
+
+GS-102 quiet hours: bildirimler [quiet_hours_start, quiet_hours_end) aralığında
+susturulur; deprem büyüklüğü >= critical_override_magnitude ise kural devre dışı kalır.
 """
 
 import math
+from datetime import datetime, timezone
 from typing import Any
 
 
@@ -29,6 +33,27 @@ def _to_float(value: Any) -> float | None:
         return float(value)
     except (TypeError, ValueError):
         return None
+
+
+def _in_quiet_window(pref: Any, mag: float, now_hour: int | None = None) -> bool:
+    """True if the current time is in the pref's quiet window AND magnitude does not override it."""
+    start = getattr(pref, "quiet_hours_start", None)
+    end = getattr(pref, "quiet_hours_end", None)
+    if start is None or end is None:
+        return False
+
+    override_mag = getattr(pref, "critical_override_magnitude", None)
+    if override_mag is not None and mag >= override_mag:
+        return False  # critical — always break through
+
+    hour = now_hour if now_hour is not None else datetime.now(timezone.utc).hour
+
+    if start <= end:
+        # same-day window e.g. 22-06 wrapping midnight handled below
+        return start <= hour < end
+    else:
+        # wraps midnight: e.g. start=23, end=7 → quiet from 23:00 to 07:00
+        return hour >= start or hour < end
 
 
 def earthquake_matches_preference(eq: dict, pref: Any) -> bool:
@@ -71,5 +96,9 @@ def earthquake_matches_preference(eq: dict, pref: Any) -> bool:
             return False
         if haversine_km(pref.reference_lat, pref.reference_lon, eq_lat, eq_lon) > pref.radius_km:
             return False
+
+    # GS-102: suppress during quiet hours unless magnitude overrides
+    if _in_quiet_window(pref, mag):
+        return False
 
     return True

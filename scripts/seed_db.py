@@ -1,9 +1,8 @@
 """
-GeoSafe database seeding script.
+GeoSafe database seeding script (PostgreSQL).
 
-This script is intentionally idempotent:
-- Existing warehouses/safe zones/items are updated in place.
-- Existing warehouse inventory rows are updated instead of duplicated.
+DEPRECATED — use scripts/seed.py instead (GS-090).
+This file is kept for reference only.
 """
 
 import asyncio

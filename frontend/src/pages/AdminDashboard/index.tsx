@@ -19,7 +19,7 @@ import {
   WarehouseInventoryData,
 } from "../../types";
 
-type AdminTab = "warehouses" | "safezones" | "emergency" | "volunteers" | "shelters" | "announcements" | "import";
+type AdminTab = "warehouses" | "safezones" | "emergency" | "volunteers" | "shelters" | "announcements" | "import" | "activity";
 
 type InventoryEditRow = {
   item_id: number;
@@ -244,6 +244,20 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
   const [importBusy, setImportBusy] = useState(false);
   const [importReport, setImportReport] = useState<ImportReport | null>(null);
   const [importMsg, setImportMsg] = useState("");
+
+  // GS-083: Activity timeline state
+  type AuditEntry = {
+    id: number;
+    user_email: string | null;
+    user_role: string | null;
+    action: string;
+    resource_type: string;
+    resource_id: string | null;
+    created_at: string | null;
+  };
+  const [auditLog, setAuditLog] = useState<AuditEntry[]>([]);
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [auditFilter, setAuditFilter] = useState("");
 
   const loadWarehouseOverview = useCallback(async () => {
     setLoading(true);
@@ -622,6 +636,28 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
     await loadAnnouncements();
   };
 
+  // GS-083: Load audit log
+  const loadAuditLog = useCallback(async () => {
+    setAuditLoading(true);
+    try {
+      const apiBase = process.env.REACT_APP_API_URL || "http://localhost:8000";
+      const token = localStorage.getItem("access_token") || "";
+      const res = await fetch(`${apiBase}/api/v1/admin/audit-log?limit=100`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const json = await res.json();
+      setAuditLog(json.data ?? []);
+    } catch {
+      setAuditLog([]);
+    } finally {
+      setAuditLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === "activity") void loadAuditLog();
+  }, [activeTab, loadAuditLog]);
+
   // GS-061: Bulk import handler
   const runImport = async (dryRun: boolean) => {
     setImportMsg("");
@@ -757,6 +793,7 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
           <TabBtn id="shelters" label="Barınma Teklifleri" />
           <TabBtn id="announcements" label="Duyurular" />
           <TabBtn id="import" label="Toplu İçe Aktar" />
+          <TabBtn id="activity" label="Aktivite" />
         </div>
 
         {activeTab === "warehouses" && (
@@ -1625,6 +1662,75 @@ export default function AdminDashboard({ onNavigateToMap }: Props) {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            )}
+          </SectionCard>
+        )}
+
+        {/* GS-083: Activity timeline tab */}
+        {activeTab === "activity" && (
+          <SectionCard title="Aktivite Zaman Çizelgesi">
+            <div style={{ display: "flex", gap: 10, marginBottom: 14, flexWrap: "wrap", alignItems: "center" }}>
+              <input
+                placeholder="Kaynak veya eylem filtrele..."
+                value={auditFilter}
+                onChange={(e) => setAuditFilter(e.target.value)}
+                style={{ padding: "7px 12px", border: "1px solid #ddd", borderRadius: 6, fontSize: 13, minWidth: 220 }}
+              />
+              <button
+                onClick={() => void loadAuditLog()}
+                disabled={auditLoading}
+                style={{ padding: "7px 14px", background: "#1a237e", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 13 }}
+              >
+                {auditLoading ? "Yükleniyor…" : "Yenile"}
+              </button>
+            </div>
+            {auditLoading ? (
+              <div style={{ textAlign: "center", padding: 40, color: "#666" }}>Yükleniyor…</div>
+            ) : auditLog.length === 0 ? (
+              <div style={{ color: "#666", padding: "20px 0" }}>Kayıt bulunamadı.</div>
+            ) : (
+              <div style={{ position: "relative", paddingLeft: 24 }}>
+                <div style={{ position: "absolute", left: 8, top: 0, bottom: 0, width: 2, background: "#e0e0e0" }} />
+                {auditLog
+                  .filter((e) =>
+                    !auditFilter ||
+                    e.resource_type.includes(auditFilter) ||
+                    e.action.includes(auditFilter) ||
+                    (e.user_email ?? "").includes(auditFilter)
+                  )
+                  .map((entry) => (
+                    <div key={entry.id} style={{ display: "flex", gap: 12, marginBottom: 14, position: "relative" }}>
+                      <div
+                        style={{
+                          position: "absolute",
+                          left: -20,
+                          top: 4,
+                          width: 10,
+                          height: 10,
+                          borderRadius: "50%",
+                          background: entry.action === "delete" ? "#C62828" : entry.action === "create" ? "#2E7D32" : "#1565C0",
+                          border: "2px solid #fff",
+                          boxShadow: "0 0 0 2px #e0e0e0",
+                        }}
+                      />
+                      <div style={{ flex: 1, background: "#fafafa", border: "1px solid #eee", borderRadius: 8, padding: "10px 14px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 4 }}>
+                          <span style={{ fontWeight: 600, fontSize: 13 }}>
+                            <StatusBadge status={entry.action} /> {entry.resource_type}
+                            {entry.resource_id ? <span style={{ color: "#888", marginLeft: 6 }}>#{entry.resource_id}</span> : null}
+                          </span>
+                          <span style={{ fontSize: 12, color: "#999" }}>
+                            {entry.created_at ? new Date(entry.created_at).toLocaleString("tr-TR") : "—"}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: 12, color: "#555", marginTop: 4 }}>
+                          {entry.user_email ?? "Anonim"}
+                          {entry.user_role ? <span style={{ marginLeft: 6, color: "#888" }}>({entry.user_role})</span> : null}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
               </div>
             )}
           </SectionCard>

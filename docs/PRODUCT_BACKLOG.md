@@ -2,7 +2,7 @@
 
 **Product:** GeoSafe — Neighborhood-scale Smart Disaster Logistics & Decision Support System
 **Document type:** Engineering product backlog (epics, user stories, acceptance criteria, estimates)
-**Last updated:** 2026-05-24
+**Last updated:** 2026-06-04
 **Owner:** Product / Engineering team
 
 ---
@@ -26,25 +26,27 @@ Story IDs (`GS-0xx`) are stable and referenced by the companion `SPRINT_PLAN.md`
 
 ---
 
-## 2. Current state snapshot (baseline)
+## 2. Current state snapshot (as of 2026-06-05 — S1–S12 complete)
 
-What already exists, so the backlog only proposes *net-new* work:
+**257 of 350 backlog points shipped (73%). All 8 Must items done.**
 
-- **Backend** — FastAPI + SQLAlchemy 2.0 (async) + PostGIS/GeoAlchemy2, Alembic migrations. Standardized `{status, data, message}` responses. Routers: `auth` (JWT, register/login), `warehouses` (CRUD), `safe-zones` (CRUD), `inventory`, `emergency`, `earthquakes`, `profile` (health fields), `spatial` (nearest-depot), `volunteers`, `shelter-offers`, `qr` (disaster-ID card), `announcements`, plus a `rate_limit` module. ~67 backend test functions across 8 test files.
-- **Frontend** — React 18 + TypeScript + Leaflet. Pages: Login, Emergency, Profile, QR card / QR scan result, Volunteer, Shelter offer, Announcements, Psychological support, Admin dashboard, and a routed Operations console (Dashboard / Map / Logistics / Earthquakes / Announcements). Map layers split into `WarehouseLayer`, `SafeZoneLayer`, `RouteLayer`. Offline form queue (localStorage) for public submissions; PWA service-worker foundation. ~7 frontend test files (light).
-- **Delivery** — Docker / docker-compose, Render blueprint (`render.yaml`), Supabase Postgres, Vercel frontend.
-- **Sprints completed** — S1 (backend), S2 (frontend map/citizen/admin), S3 (QR identity, offline foundation, offline queue sync).
+> **S11 (26 pts):** GS-094 docs, GS-043 signed offline QR, GS-102 EQ quiet hours, GS-090 seed consolidation, GS-083 activity timeline, GS-031 capacity routing, GS-122 low-power location, GS-044 multi-language QR.
+> **S12 (21 pts):** GS-023 geofenced incident alerts (opt-in geofence + auto-dispatch on emergency), GS-033 offline base-map tile cache (SW cache-first + LRU + area download), GS-111 neighborhood channels + moderation (report/remove/mute + rate limit). Migrations 027–028.
 
-**Confirmed gaps that drive this backlog**
+### What's built
+- **Backend** — FastAPI + SQLAlchemy 2.0 (async) + PostGIS/GeoAlchemy2. Alembic migrations 001–025. 25+ API routers including: `auth` (JWT + refresh tokens + RBAC + email verify + password reset), `warehouses`, `safe-zones`, `inventory`, `emergency` (+ photo upload), `earthquakes` (Kandilli feed + EQ notification prefs/dispatch), `spatial` (nearest-depot), `qr`, `announcements`, `sse` (live channel), `checkin`, `routing` (ORS + fallback), `transfers`, `zone_needs`, `push` (VAPID Web Push), `reports` (CSV/PDF), `volunteer_tasks`, `chat`, `kpi`, `admin_import` (bulk geo import), `observability` (/ready, /metrics). Structured JSON logging + Sentry + audit log + RBAC + CommsChannel abstraction.
+- **Frontend** — React 18 + TS + Vite + Leaflet + react-i18next (TR/EN). Pages: Login, Emergency (+ photo), Profile, QR card/scan, Volunteer, Shelter, Announcements, Psych support, Admin dashboard (CRUD + bulk import + activity). Operations console: Dashboard (KPI + SSE live), Map (cluster + viewport), Logistics (live SSE inventory), Earthquakes (prefs), Announcements (SSE), Tasks, Chat panel. PWA service worker + Web Push + offline form queue. 103 frontend unit tests + Playwright E2E smoke suite.
+- **Delivery** — Docker / docker-compose, Render (backend), Vercel (frontend), Supabase Postgres. GitHub Actions CI (pytest + ruff + eslint + playwright + pip-audit + gitleaks).
 
-1. **No CI/CD** — `.github/workflows` is absent; tests/lint/build run only locally.
-2. **Light frontend testing** — 7 test files vs 67 backend test functions; no E2E.
-3. **No observability** — no error tracking, no structured logging/metrics.
-4. **Deferred real-time** — push notifications and background sync explicitly out of scope in S3 docs.
-5. **Auth depth** — JWT login exists, but no refresh tokens, password reset, or email verification.
-6. **Data realism** — earthquake/data feeds and bulk geo-data import need productionizing.
-7. **Accessibility & localization** — no i18n framework or formal a11y pass (critical for an emergency app).
-8. **Browser-platform ceiling** — the app is a PWA, so it cannot do Bluetooth mesh, BLE advertising/beacons, device-originated SMS, Wi-Fi Direct, or LoRa. The off-grid/resilient-communications vision (Epic N) requires a **native mobile app**, and long-range off-grid requires **dedicated LoRa hardware**. This is the largest strategic gap and is handled spike-first.
+### Completed stories (55/73)
+All Must items ✅, all S1–S12 Should items ✅. See `proje_durumu.md` for full per-story details.
+
+### Remaining gaps (active backlog — 18 stories, ~93 pts)
+- Skill matching (GS-051) · Donation intake (GS-054) · Missing-persons board (GS-041)
+- Demand/incident heatmap (GS-063) · Accessibility multi-stop routes (GS-032)
+- Presence/read receipts (GS-112) · SMS fallback op→user (GS-024)
+- Typed API client (GS-091) · Prod Docker parity (GS-093) · Load test (GS-008) · Redis cache (GS-064)
+- Native/hardware features (GS-133/134/136/138) pending ADR-001 pilot results
 
 ---
 
@@ -59,14 +61,14 @@ What already exists, so the backlog only proposes *net-new* work:
 | **E** | Citizen Safety & Family Reunification | 5 | 24 |
 | **F** | Volunteer & Resource Coordination | 5 | 31 |
 | **G** | Data Integration & Map Intelligence | 5 | 25 |
-| **H** | Accessibility & Localization | 4 | 21 |
+| **H** | Accessibility & Localization | 3 | 16 |
 | **I** | Admin Analytics & Reporting | 4 | 14 |
 | **J** | Platform & Developer Experience | 6 | 17 |
 | **K** | Smart Earthquake Notifications | 4 | 14 |
 | **L** | In-App Chat & Community Messaging | 3 | 16 |
 | **M** | Battery & Low-Power Resilience | 4 | 14 |
 | **N** | Off-Grid & Resilient Communications | 9 | 55 |
-| | **Total** | **74** | **355** |
+| | **Total** | **73** | **350** |
 
 ---
 
@@ -312,10 +314,6 @@ As a user with disabilities, I want an accessible app so I can use it in an emer
 As a user, I want the app fully in my language so nothing is half-translated.
 - i18n library integrated; all UI strings externalized; language switcher.
 - Complete TR and EN catalogs; missing-key detection in CI.
-
-**GS-072 · Arabic (RTL) support · Could · 5**
-As an Arabic-speaking resident, I want RTL UI and Arabic strings so the app is usable for me.
-- RTL layout support; Arabic catalog; verified on key flows.
 
 **GS-073 · High-contrast / large-text emergency mode · Could · 3**
 As a stressed or low-vision user, I want a high-contrast, large-text mode so I can read quickly.

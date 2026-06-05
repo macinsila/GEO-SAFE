@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { QRCodeCanvas, QRCodeSVG } from "qrcode.react";
 import { geoSafeAPI } from "../../services";
 
@@ -12,6 +13,7 @@ interface QRPayload {
   conditions: string;
   disability: string;
   issued: string;
+  sig?: string;
 }
 
 export function encode(obj: object): string {
@@ -29,6 +31,7 @@ function QRRow({ label, value }: { label: string; value?: string }) {
 }
 
 export default function QRCardPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const canvasRef = useRef<HTMLDivElement>(null);
   const [payload, setPayload] = useState<QRPayload | null>(null);
@@ -69,7 +72,7 @@ export default function QRCardPage() {
     return (
       <div className="identity-shell">
         <main className="identity-main identity-centered">
-          <div className="ops-panel identity-loading">QR kimlik yükleniyor...</div>
+          <div className="ops-panel identity-loading">{t("qr.loading")}</div>
         </main>
       </div>
     );
@@ -80,11 +83,11 @@ export default function QRCardPage() {
       <div className="identity-shell">
         <main className="identity-main identity-centered">
           <section className="ops-panel identity-error-state">
-            <span className="ops-eyebrow">QR Kimlik</span>
-            <h1>Kimlik verisi alınamadı.</h1>
+            <span className="ops-eyebrow">{t("qr.pageTitle")}</span>
+            <h1>{t("qr.errorTitle")}</h1>
             <p>{error || "Veri yüklenemedi."}</p>
             <button className="ops-button primary" type="button" onClick={() => navigate("/profile")}>
-              Profili Düzenle
+              {t("qr.editProfile")}
             </button>
           </section>
         </main>
@@ -115,16 +118,16 @@ export default function QRCardPage() {
         <div className="identity-brand">
           <div className="ops-mark">GS</div>
           <div>
-            <strong>QR Kimlik Kartı</strong>
-            <span>Çevrimdışı okunabilir afet sağlık özeti</span>
+            <strong>{t("qr.pageTitle")}</strong>
+            <span>{t("qr.pageSubtitle")}</span>
           </div>
         </div>
         <div className="identity-topbar-actions">
           <button className="ops-button secondary" onClick={() => navigate("/ops")} type="button">
-            Operasyona dön
+            {t("qr.backToOps")}
           </button>
           <button className="ops-button secondary" onClick={() => navigate("/profile")} type="button">
-            Profili Düzenle
+            {t("qr.editProfile")}
           </button>
         </div>
       </header>
@@ -132,14 +135,14 @@ export default function QRCardPage() {
       <main className="identity-main">
         <section className="identity-hero identity-hero-compact">
           <div>
-            <span className="ops-eyebrow">Afet Kimliği</span>
-            <h1>QR kartınız paylaşmaya hazır.</h1>
+            <span className="ops-eyebrow">{t("qr.cardTitle")}</span>
+            <h1>{t("qr.pageTitle")}</h1>
             <p>
               Kart, acil müdahale için kısa sağlık özetini taşır. Boş profil alanları QR çıktısında
               gösterilmez.
             </p>
           </div>
-          <span className="resource-badge tone-safe">Son üretim {issuedAt}</span>
+          <span className="resource-badge tone-safe">{t("qr.issued")} {issuedAt}</span>
         </section>
 
         <div className="identity-qr-layout">
@@ -147,12 +150,12 @@ export default function QRCardPage() {
             <div
               id="qr-print-card"
               className="identity-qr-card identity-qr-card-large"
-              aria-label="GeoSafe afet kimlik kartı"
+              aria-label={t("qr.cardTitle")}
             >
               <div className="identity-qr-card-head">
                 <div>
-                  <span className="identity-qr-brand">GeoSafe</span>
-                  <span className="identity-qr-title">Afet Kimlik Kartı</span>
+                  <span className="identity-qr-brand">{t("qr.brand")}</span>
+                  <span className="identity-qr-title">{t("qr.cardTitle")}</span>
                   <strong className="identity-qr-name">{displayName}</strong>
                   {payload.blood ? <em>{payload.blood}</em> : null}
                 </div>
@@ -162,11 +165,11 @@ export default function QRCardPage() {
               </div>
 
               <div className="identity-qr-fields">
-                <QRRow label="Alerjiler" value={payload.allergies} />
-                <QRRow label="İlaçlar" value={payload.medications} />
-                <QRRow label="Kronik" value={payload.conditions} />
-                <QRRow label="Kısıt" value={payload.disability} />
-                {!hasHealthInfo ? <p className="identity-qr-empty">Sağlık bilgisi girilmemiş.</p> : null}
+                <QRRow label={t("qr.allergies")} value={payload.allergies} />
+                <QRRow label={t("qr.medications")} value={payload.medications} />
+                <QRRow label={t("qr.conditions")} value={payload.conditions} />
+                <QRRow label={t("qr.disability")} value={payload.disability} />
+                {!hasHealthInfo ? <p className="identity-qr-empty">{t("qr.noHealthInfo")}</p> : null}
               </div>
 
               <p className="identity-qr-footer">QR taranınca bilgiler gösterilir · {issuedAt}</p>
@@ -178,10 +181,10 @@ export default function QRCardPage() {
 
             <div className="identity-card-actions">
               <button className="ops-button primary" type="button" onClick={handleDownload}>
-                PNG İndir
+                {t("qr.downloadPng")}
               </button>
               <button className="ops-button secondary" type="button" onClick={handlePrint}>
-                Yazdır
+                {t("qr.print")}
               </button>
             </div>
           </section>
@@ -205,7 +208,7 @@ export default function QRCardPage() {
                 </div>
                 <div>
                   <strong>Sağlık bilgisi yoksa</strong>
-                  <span>Tarama ekranında “Sağlık bilgisi girilmemiş” mesajı görünür.</span>
+                  <span>Tarama ekranında "Sağlık bilgisi girilmemiş" mesajı görünür.</span>
                 </div>
                 <div>
                   <strong>Telefon ve yakın kişi</strong>
@@ -214,7 +217,7 @@ export default function QRCardPage() {
               </div>
 
               <button className="ops-button secondary" type="button" onClick={() => navigate("/profile")}>
-                Bilgileri Güncelle
+                {t("qr.editProfile")}
               </button>
             </div>
           </aside>

@@ -29,7 +29,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.middleware.base import BaseHTTPMiddleware
-from app.api import warehouses, safe_zones, auth, emergency, inventory, earthquakes, profile, spatial, volunteers, shelter_offers, qr, announcements, sse, checkin, routing, transfers, zone_needs, push, reports, admin as admin_api, volunteer_tasks, chat, kpi, admin_import
+from app.api import warehouses, safe_zones, auth, emergency, inventory, earthquakes, profile, spatial, volunteers, shelter_offers, qr, announcements, sse, checkin, routing, transfers, zone_needs, push, reports, admin as admin_api, volunteer_tasks, chat, kpi, admin_import, geofence, channels
 from app.api.observability import MetricsMiddleware, collector
 from app.db import get_db
 from app.db.session import engine
@@ -56,6 +56,8 @@ from app.models.earthquake_notification_pref import EarthquakeNotificationPref
 from app.models.earthquake_notification_sent import EarthquakeNotificationSent
 from app.models.volunteer_task import VolunteerTask
 from app.models.chat_message import ChatMessage
+from app.models.geofence_subscription import GeofenceSubscription
+from app.models.chat_channel import ChatChannel, ChatChannelMembership, ChatMessageReport
 
 app = FastAPI(title="GeoSafe API")
 
@@ -179,6 +181,8 @@ app.include_router(volunteer_tasks.router, prefix="/api/v1/volunteer-tasks", tag
 app.include_router(chat.router, prefix="/api/v1/chat", tags=["chat"])
 app.include_router(kpi.router, prefix="/api/v1/kpi", tags=["kpi"])
 app.include_router(admin_import.router, prefix="/api/v1/admin/import", tags=["admin-import"])
+app.include_router(geofence.router, prefix="/api/v1/geofence", tags=["geofence"])
+app.include_router(channels.router, prefix="/api/v1/channels", tags=["channels"])
 
 
 @app.exception_handler(HTTPException)

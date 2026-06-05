@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import { FieldError, FormStatus } from "../../components/FormUX";
 import { geoSafeAPI } from "../../services";
+import { GeofenceAlertCard } from "../../components/GeofenceAlertCard";
 
 interface ProfileForm {
   name: string;
@@ -456,6 +457,10 @@ export default function ProfilePage() {
                   <span>Önizleme canlıdır; gerçek QR kart için önce profili kaydedin.</span>
                 </div>
               </div>
+            </div>
+
+            <div style={{ marginTop: "18px" }}>
+              <GeofenceAlertCard />
             </div>
           </aside>
         </div>

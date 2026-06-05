@@ -87,7 +87,7 @@ async def get_messages(
 
     stmt = (
         select(ChatMessage)
-        .where(ChatMessage.room == room)
+        .where(ChatMessage.room == room, ChatMessage.is_removed.is_(False))
         .order_by(ChatMessage.created_at.desc())
         .limit(limit)
     )

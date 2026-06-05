@@ -11,6 +11,16 @@ jest.mock("../../services", () => {
   mockGeoSafeAPI = {
     fetchProfile: jest.fn(),
     updateProfile: jest.fn(),
+    // GS-023: ProfilePage embeds GeofenceAlertCard, which loads the subscription on mount.
+    fetchGeofenceSubscription: jest.fn().mockResolvedValue({
+      id: null,
+      user_id: 1,
+      enabled: false,
+      center_lat: null,
+      center_lon: null,
+      radius_km: 5,
+    }),
+    updateGeofenceSubscription: jest.fn(),
   };
 
   return {
@@ -67,6 +77,15 @@ describe("profile save flow", () => {
   beforeEach(() => {
     mockGeoSafeAPI.fetchProfile.mockResolvedValue(profile);
     mockGeoSafeAPI.updateProfile.mockResolvedValue(undefined);
+    // GS-023: GeofenceAlertCard (embedded in ProfilePage) loads its subscription on mount.
+    mockGeoSafeAPI.fetchGeofenceSubscription.mockResolvedValue({
+      id: null,
+      user_id: 1,
+      enabled: false,
+      center_lat: null,
+      center_lon: null,
+      radius_km: 5,
+    });
     container = document.createElement("div");
     document.body.appendChild(container);
   });

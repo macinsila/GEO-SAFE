@@ -18,6 +18,7 @@ class VolunteerApplication(Base):
     district = Column(String(255), nullable=True)
     neighborhood = Column(String(255), nullable=True)
     skills = Column(JSON, nullable=True)
+    primary_role = Column(String(50), nullable=True)
     availability_note = Column(String(500), nullable=True)
     status = Column(String(50), default="pending", nullable=False)
 

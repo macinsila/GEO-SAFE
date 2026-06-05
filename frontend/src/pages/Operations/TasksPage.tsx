@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { geoSafeAPI } from "../../services";
-import { VolunteerTask, VolunteerTaskCreate } from "../../types";
+import { VolunteerMatchCandidate, VolunteerTask, VolunteerTaskCreate } from "../../types";
 import { EmptyState, ResourceBadge, SectionHeader, Tone } from "./opsUi";
 
 const URGENCY_LABELS: Record<string, string> = {
@@ -39,6 +39,11 @@ const EMPTY_FORM: VolunteerTaskCreate = {
 
 type Tab = "open" | "my" | "all";
 
+interface CandidatesModal {
+  task: VolunteerTask;
+  candidates: VolunteerMatchCandidate[] | null;
+}
+
 export default function TasksPage() {
   const { role } = useAuth();
   const isCoordinator = role === "admin" || role === "operator";
@@ -53,6 +58,8 @@ export default function TasksPage() {
   const [form, setForm] = useState<VolunteerTaskCreate>(EMPTY_FORM);
   const [creating, setCreating] = useState(false);
   const [formError, setFormError] = useState("");
+
+  const [candidatesModal, setCandidatesModal] = useState<CandidatesModal | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -131,6 +138,16 @@ export default function TasksPage() {
       setFormError("Görev oluşturulamadı.");
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleShowCandidates = async (task: VolunteerTask) => {
+    setCandidatesModal({ task, candidates: null });
+    try {
+      const candidates = await geoSafeAPI.fetchTaskCandidates(task.id);
+      setCandidatesModal({ task, candidates });
+    } catch {
+      setCandidatesModal({ task, candidates: [] });
     }
   };
 
@@ -289,6 +306,16 @@ export default function TasksPage() {
                   </button>
                 ) : null}
 
+                {isCoordinator && task.skill_required ? (
+                  <button
+                    className="ops-button secondary"
+                    onClick={() => void handleShowCandidates(task)}
+                    type="button"
+                  >
+                    Eşleşen Gönüllüler
+                  </button>
+                ) : null}
+
                 {isCoordinator && task.status !== "done" && task.status !== "cancelled" ? (
                   <button
                     className="ops-button danger"
@@ -303,6 +330,77 @@ export default function TasksPage() {
           ))}
         </div>
       )}
+
+      {candidatesModal ? (
+        <CandidatesOverlay
+          modal={candidatesModal}
+          onClose={() => setCandidatesModal(null)}
+        />
+      ) : null}
     </section>
+  );
+}
+
+function CandidatesOverlay({
+  modal,
+  onClose,
+}: {
+  modal: CandidatesModal;
+  onClose: () => void;
+}) {
+  const { task, candidates } = modal;
+
+  return (
+    <div className="ops-modal-backdrop" role="dialog" aria-modal="true">
+      <div className="ops-modal">
+        <div className="ops-modal-header">
+          <div>
+            <span className="ops-eyebrow">Eşleşen Gönüllüler</span>
+            <h2 className="ops-modal-title">{task.title}</h2>
+            {task.skill_required ? (
+              <p className="ops-modal-subtitle">Aranan beceri: <strong>{task.skill_required}</strong></p>
+            ) : null}
+          </div>
+          <button className="ops-button secondary" onClick={onClose} type="button">
+            Kapat
+          </button>
+        </div>
+
+        <div className="ops-modal-body">
+          {candidates === null ? (
+            <p className="ops-modal-loading">Yükleniyor...</p>
+          ) : candidates.length === 0 ? (
+            <p className="ops-modal-empty">Bu beceriye uygun onaylı gönüllü bulunamadı.</p>
+          ) : (
+            <ul className="ops-candidate-list">
+              {candidates.map((c) => (
+                <li key={c.id} className="ops-candidate-card">
+                  <div className="ops-candidate-name">{c.full_name}</div>
+                  <div className="ops-candidate-contact">{c.contact_info}</div>
+                  {(c.district || c.neighborhood) ? (
+                    <div className="ops-candidate-location">
+                      📍 {[c.neighborhood, c.district].filter(Boolean).join(", ")}
+                    </div>
+                  ) : null}
+                  {c.primary_role ? (
+                    <div className="ops-candidate-role">Birincil Rol: {c.primary_role}</div>
+                  ) : null}
+                  {c.skills && c.skills.length > 0 ? (
+                    <div className="ops-candidate-skills">
+                      {c.skills.map((s) => (
+                        <span key={s} className="form-chip selected">{s}</span>
+                      ))}
+                    </div>
+                  ) : null}
+                  {c.availability_note ? (
+                    <div className="ops-candidate-note">{c.availability_note}</div>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }

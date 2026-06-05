@@ -3576,3 +3576,466 @@ code {
 :root[data-high-contrast="true"] .resource-badge[data-tone="warning"]  { background: #664400; color: #fff; }
 :root[data-high-contrast="true"] .resource-badge[data-tone="safe"]     { background: #006600; color: #fff; }
 :root[data-high-contrast="true"] .resource-badge[data-tone="neutral"]  { background: #333333; color: #fff; }
+
+/* ── GS-033 Offline map (tile cache control + status) ──────────────────────── */
+.offline-indicator {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1100;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: #7a1f1f;
+  color: #fff;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+.offline-indicator .offline-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #ffce54;
+}
+.offline-map-control {
+  position: absolute;
+  bottom: 18px;
+  left: 12px;
+  z-index: 1000;
+  width: 230px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #c7d2dd;
+  border-radius: 10px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+  font-size: 0.85rem;
+}
+.offline-map-title {
+  display: block;
+  margin-bottom: 8px;
+  color: #1f3346;
+}
+.offline-map-btn,
+.offline-map-clear {
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.offline-map-btn {
+  background: #0057b8;
+  color: #fff;
+}
+.offline-map-btn:disabled {
+  background: #9bb4d0;
+  cursor: not-allowed;
+}
+.offline-map-clear {
+  margin-top: 8px;
+  background: #eef1f5;
+  color: #5a3030;
+}
+.offline-progress {
+  margin-top: 8px;
+  height: 6px;
+  border-radius: 4px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+.offline-progress-bar {
+  height: 100%;
+  background: #2e8b57;
+  transition: width 0.2s ease;
+}
+.offline-map-info {
+  margin: 8px 0 0;
+  color: #44566a;
+  line-height: 1.4;
+}
+.offline-map-status {
+  margin: 8px 0 0;
+  color: #1f3346;
+  font-weight: 600;
+}
+
+/* ── GS-111 Neighborhood channels ─────────────────────────────────────────── */
+.channels-page {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 18px;
+  padding: 18px;
+  min-height: 70vh;
+}
+.channels-sidebar h2 {
+  margin: 0 0 4px;
+}
+.channels-sidebar .channels-subtitle {
+  margin: 0 0 14px;
+  color: #5a6b7b;
+  font-size: 0.9rem;
+}
+.channel-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.channel-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid #d4dde6;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+}
+.channel-item.active {
+  border-color: #0057b8;
+  box-shadow: 0 0 0 2px rgba(0, 87, 184, 0.15);
+}
+.channel-item .channel-name {
+  font-weight: 600;
+}
+.channel-item .channel-meta {
+  display: block;
+  font-size: 0.78rem;
+  color: #6a7888;
+}
+.channel-suggested-badge {
+  font-size: 0.72rem;
+  background: #2e8b57;
+  color: #fff;
+  border-radius: 999px;
+  padding: 2px 8px;
+  margin-left: 6px;
+}
+.channel-join-btn,
+.channel-leave-btn {
+  border: none;
+  border-radius: 6px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.channel-join-btn { background: #0057b8; color: #fff; }
+.channel-leave-btn { background: #eef1f5; color: #5a3030; }
+.channel-view {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #d4dde6;
+  border-radius: 10px;
+  background: #fff;
+  overflow: hidden;
+}
+.channel-view-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e3e9ef;
+  font-weight: 700;
+}
+.channel-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 56vh;
+}
+.channel-msg {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #f4f7fa;
+}
+.channel-msg .channel-msg-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: #66788a;
+  margin-bottom: 2px;
+}
+.channel-msg-report {
+  border: none;
+  background: transparent;
+  color: #9a6a6a;
+  cursor: pointer;
+  font-size: 0.72rem;
+}
+.channel-input {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid #e3e9ef;
+}
+.channel-input input {
+  flex: 1;
+  padding: 9px 12px;
+  border: 1px solid #c7d2dd;
+  border-radius: 7px;
+}
+.channel-input button {
+  padding: 9px 16px;
+  border: none;
+  border-radius: 7px;
+  background: #0057b8;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ── GS-023 Geofence alert card ───────────────────────────────────────────── */
+.geofence-card {
+  padding: 14px 16px;
+  border: 1px solid #d4dde6;
+  border-radius: 10px;
+  background: #fff;
+}
+.geofence-card h3 { margin: 0 0 4px; }
+.geofence-card .geofence-desc {
+  margin: 0 0 12px;
+  color: #5a6b7b;
+  font-size: 0.88rem;
+}
+.geofence-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.geofence-card .geofence-status {
+  font-size: 0.85rem;
+  color: #2e6b3f;
+  font-weight: 600;
+}
+.geofence-card .geofence-status.off { color: #8a5a5a; }
+
+/* ── GS-050/GS-051 Volunteer Task Board ─────────────────────────────────── */
+.ops-tab-row {
+  display: flex;
+  gap: 4px;
+  padding: 12px 16px 0;
+}
+
+.ops-tab {
+  min-height: 34px;
+  padding: 0 14px;
+  border: 1px solid var(--ops-border);
+  border-bottom: none;
+  border-radius: 7px 7px 0 0;
+  background: var(--ops-surface-2);
+  color: var(--ops-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.ops-tab.active,
+.ops-tab:hover {
+  background: #fff;
+  color: var(--ops-ink);
+}
+
+.ops-action-msg {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ops-green);
+}
+
+.ops-task-list {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+}
+
+.ops-task-card {
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  border: 1px solid var(--ops-border);
+  border-radius: 9px;
+  background: #fff;
+}
+
+.ops-task-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ops-task-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ops-task-card-desc {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ops-slate);
+}
+
+.ops-task-card-meta {
+  display: flex;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--ops-muted);
+}
+
+.ops-task-card-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ops-task-form {
+  margin: 12px 16px;
+  padding: 16px;
+  border: 1px solid var(--ops-border);
+  border-radius: 9px;
+  background: var(--ops-surface-2);
+  display: grid;
+  gap: 12px;
+}
+
+.ops-task-form-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.ops-task-form-desc {
+  grid-column: 1 / -1;
+}
+
+.ops-task-form-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.ops-form-error {
+  font-size: 12px;
+  color: var(--ops-red);
+}
+
+/* ── GS-051 Candidates modal ─────────────────────────────────────────────── */
+.ops-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.ops-modal {
+  width: 100%;
+  max-width: 560px;
+  max-height: 80vh;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+}
+
+.ops-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 20px 14px;
+  border-bottom: 1px solid var(--ops-border);
+}
+
+.ops-modal-title {
+  margin: 2px 0 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ops-navy);
+}
+
+.ops-modal-subtitle {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--ops-slate);
+}
+
+.ops-modal-body {
+  padding: 16px 20px 20px;
+  overflow-y: auto;
+}
+
+.ops-modal-loading,
+.ops-modal-empty {
+  text-align: center;
+  color: var(--ops-muted);
+  font-size: 14px;
+  padding: 20px 0;
+}
+
+.ops-candidate-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.ops-candidate-card {
+  display: grid;
+  gap: 5px;
+  padding: 12px 14px;
+  border: 1px solid var(--ops-border);
+  border-radius: 8px;
+  background: var(--ops-surface-2);
+}
+
+.ops-candidate-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ops-ink);
+}
+
+.ops-candidate-contact {
+  font-size: 13px;
+  color: var(--ops-blue);
+}
+
+.ops-candidate-location,
+.ops-candidate-role {
+  font-size: 12px;
+  color: var(--ops-muted);
+}
+
+.ops-candidate-skills {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.ops-candidate-note {
+  font-size: 12px;
+  color: var(--ops-slate);
+  font-style: italic;
+  border-top: 1px solid var(--ops-soft);
+  padding-top: 5px;
+  margin-top: 2px;
+}

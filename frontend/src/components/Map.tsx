@@ -13,6 +13,8 @@ import { CitizenSearch } from "./CitizenSearch";
 import { RouteLayer } from "./RouteLayer";
 import { WarehouseLayer } from "./WarehouseLayer";
 import { SafeZoneLayer } from "./SafeZoneLayer";
+import { OfflineMapControl } from "./OfflineMapControl";
+import { OfflineIndicator } from "./OfflineIndicator";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -124,6 +126,8 @@ export const Map: React.FC<MapProps> = ({ onClickCoordinates }) => {
     <div className="geosafe-map">
       <div className="map-wrapper">
         <CitizenSearch onSearchResult={handleCitizenSearchResult} />
+        <OfflineIndicator />
+        <OfflineMapControl map={mapInstance} />
 
         <MapContainer
           ref={handleMapRef}

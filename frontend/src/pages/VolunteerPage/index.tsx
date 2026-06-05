@@ -18,6 +18,18 @@ const SKILLS = [
   "Diğer",
 ];
 
+const ROLES: { value: string; label: string }[] = [
+  { value: "", label: "— Seçiniz —" },
+  { value: "İlk yardım", label: "İlk yardım" },
+  { value: "Araç desteği", label: "Araç desteği" },
+  { value: "Taşımacılık/lojistik", label: "Taşımacılık / Lojistik" },
+  { value: "Çeviri", label: "Çeviri" },
+  { value: "Psikolojik destek", label: "Psikolojik destek" },
+  { value: "Teknik destek", label: "Teknik destek" },
+  { value: "Koordinatör", label: "Koordinatör" },
+  { value: "Diğer", label: "Diğer" },
+];
+
 type VolunteerErrors = Partial<Record<keyof VolunteerApplicationPayload | "queue", string>>;
 type SubmitState = "idle" | "submitting" | "submitted" | "queued" | "error";
 
@@ -27,6 +39,7 @@ const emptyForm: VolunteerApplicationPayload = {
   district: "",
   neighborhood: "",
   skills: [],
+  primary_role: "",
   availability_note: "",
 };
 
@@ -82,6 +95,7 @@ export default function VolunteerPage() {
         ...form,
         district: form.district?.trim() || undefined,
         neighborhood: form.neighborhood?.trim() || undefined,
+        primary_role: form.primary_role?.trim() || undefined,
         availability_note: form.availability_note?.trim() || undefined,
       };
       const result = await submitOrQueue({
@@ -225,6 +239,19 @@ export default function VolunteerPage() {
               </div>
               <FieldError id="volunteer-skills-error" message={errors.skills} />
             </fieldset>
+
+            <label className="form-field" htmlFor="volunteer-primary-role">
+              <span>Birincil Rol</span>
+              <select
+                id="volunteer-primary-role"
+                value={form.primary_role ?? ""}
+                onChange={(event) => update("primary_role", event.target.value || undefined)}
+              >
+                {ROLES.map((r) => (
+                  <option key={r.value} value={r.value}>{r.label}</option>
+                ))}
+              </select>
+            </label>
 
             <label className="form-field" htmlFor="volunteer-note">
               <span>Müsaitlik Notu</span>
