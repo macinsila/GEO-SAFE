@@ -12,8 +12,10 @@ from app.api.auth import get_current_user, require_roles
 from app.api.response import success_response
 from app.db import get_db
 from app.models.user import User
+from app.models.volunteer_application import VolunteerApplication
 from app.models.volunteer_task import VolunteerTask
 from app.schemas import (
+    VolunteerMatchCandidate,
     VolunteerTaskCreate,
     VolunteerTaskResponse,
     VolunteerTaskStatusUpdate,
@@ -206,3 +208,37 @@ async def complete_task(
     result = await db.execute(select(VolunteerTask).where(VolunteerTask.id == task_id))
     task = result.scalar_one()
     return success_response(data=_serialize(task), message="Task completed")
+
+
+# ── Coordinator: matching volunteer candidates for a task ────────────────────
+
+@router.get("/{task_id}/candidates")
+async def get_task_candidates(
+    task_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_roles("admin", "operator")),
+):
+    result = await db.execute(select(VolunteerTask).where(VolunteerTask.id == task_id))
+    task = result.scalars().first()
+    if task is None:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    result = await db.execute(
+        select(VolunteerApplication).where(VolunteerApplication.status == "approved")
+    )
+    volunteers = result.scalars().all()
+
+    skill = (task.skill_required or "").strip().lower()
+    if skill:
+        matched = [
+            v for v in volunteers
+            if skill in [s.lower() for s in (v.skills or [])]
+            or skill == (v.primary_role or "").lower()
+        ]
+    else:
+        matched = list(volunteers)
+
+    return success_response(
+        data=[VolunteerMatchCandidate.model_validate(v).model_dump() for v in matched],
+        message=f"{len(matched)} candidate(s) found",
+    )

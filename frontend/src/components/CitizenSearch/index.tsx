@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { NearestDepotResult, ReliefItemName } from "../../types";
+import { NearestDepotResult, NearestSafeZoneResult, ReliefItemName } from "../../types";
 import { geoSafeAPI } from "../../services";
 
 const itemOptions: ReliefItemName[] = [
@@ -25,6 +25,10 @@ export const CitizenSearch: React.FC<CitizenSearchProps> = ({ onSearchResult }) 
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<NearestDepotResult | null>(null);
 
+  const [safeZoneLoading, setSafeZoneLoading] = useState(false);
+  const [safeZoneResults, setSafeZoneResults] = useState<NearestSafeZoneResult[]>([]);
+  const [safeZoneError, setSafeZoneError] = useState("");
+
   const handleUseMyLocation = () => {
     if (!navigator.geolocation) {
       alert("Tarayıcı konum servisini desteklemiyor.");
@@ -41,9 +45,9 @@ export const CitizenSearch: React.FC<CitizenSearchProps> = ({ onSearchResult }) 
           alert("Konum erişimi reddedildi.");
           return;
         }
-
         alert("Konum alınamadı.");
-      }
+      },
+      { enableHighAccuracy: false, timeout: 10000 }
     );
   };
 
@@ -81,6 +85,25 @@ export const CitizenSearch: React.FC<CitizenSearchProps> = ({ onSearchResult }) 
     }
   };
 
+  const handleSearchNearestSafeZone = async () => {
+    if (!userPosition) {
+      alert("Önce konumunuzu alın.");
+      return;
+    }
+    setSafeZoneLoading(true);
+    setSafeZoneError("");
+    setSafeZoneResults([]);
+    try {
+      const zones = await geoSafeAPI.fetchNearestSafeZone(userPosition[0], userPosition[1], 5);
+      setSafeZoneResults(zones);
+      if (!zones.length) setSafeZoneError("Yakında aktif toplanma alanı bulunamadı.");
+    } catch {
+      setSafeZoneError("Toplanma alanı araması başarısız oldu.");
+    } finally {
+      setSafeZoneLoading(false);
+    }
+  };
+
   return (
     <div className="citizen-search-panel">
       <h3>Vatandaş Araması</h3>
@@ -89,6 +112,13 @@ export const CitizenSearch: React.FC<CitizenSearchProps> = ({ onSearchResult }) 
         Konumumu Kullan
       </button>
 
+      {userPosition && (
+        <p style={{ fontSize: 12, color: "#4caf50", margin: "4px 0 8px" }}>
+          Konum alındı ({userPosition[0].toFixed(4)}, {userPosition[1].toFixed(4)})
+        </p>
+      )}
+
+      {/* Depot search */}
       <label className="citizen-label" htmlFor="item-select">
         Malzeme
       </label>
@@ -131,6 +161,61 @@ export const CitizenSearch: React.FC<CitizenSearchProps> = ({ onSearchResult }) 
           <p>Henüz sonuç yok.</p>
         )}
       </div>
+
+      <hr style={{ margin: "12px 0", border: "none", borderTop: "1px solid #ddd" }} />
+
+      {/* Safe zone search — GS-031 */}
+      <button
+        className="citizen-button"
+        onClick={handleSearchNearestSafeZone}
+        type="button"
+        disabled={safeZoneLoading}
+        style={{ width: "100%", marginBottom: 8 }}
+      >
+        {safeZoneLoading ? "Aranıyor..." : "En Yakın Toplanma Alanını Bul"}
+      </button>
+
+      {safeZoneError && (
+        <p style={{ fontSize: 12, color: "#e53935", margin: "4px 0" }}>{safeZoneError}</p>
+      )}
+
+      {safeZoneResults.length > 0 && (
+        <div className="citizen-result" style={{ marginTop: 8 }}>
+          <strong style={{ fontSize: 13 }}>Toplanma Alanları</strong>
+          {safeZoneResults.map((zone) => (
+            <div
+              key={zone.id}
+              style={{
+                padding: "6px 0",
+                borderBottom: "1px solid #f0f0f0",
+                opacity: zone.is_full ? 0.6 : 1,
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontWeight: 600, fontSize: 13 }}>{zone.name}</span>
+                {zone.is_full && (
+                  <span
+                    style={{
+                      fontSize: 11,
+                      background: "#f44336",
+                      color: "#fff",
+                      borderRadius: 4,
+                      padding: "2px 6px",
+                    }}
+                  >
+                    Dolu
+                  </span>
+                )}
+              </div>
+              <div style={{ fontSize: 12, color: "#666", marginTop: 2 }}>
+                {zone.distance_km.toFixed(2)} km
+                {zone.capacity != null ? ` · Kapasite: ${zone.capacity.toLocaleString("tr-TR")}` : ""}
+                {zone.is_full ? " — Alternatif alan önerilmektedir" : ""}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

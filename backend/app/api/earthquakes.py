@@ -134,15 +134,23 @@ class EarthquakePreferenceUpdate(BaseModel):
     reference_lat: Optional[float] = Field(default=None, ge=-90, le=90)
     reference_lon: Optional[float] = Field(default=None, ge=-180, le=180)
     radius_km: Optional[float] = Field(default=None, gt=0)
+    # GS-102: quiet hours (UTC hour 0-23). None = no quiet window.
+    quiet_hours_start: Optional[int] = Field(default=None, ge=0, le=23)
+    quiet_hours_end: Optional[int] = Field(default=None, ge=0, le=23)
+    critical_override_magnitude: Optional[float] = Field(default=None, ge=0, le=10)
 
     @model_validator(mode="after")
-    def _require_reference_with_radius(self) -> "EarthquakePreferenceUpdate":
+    def _validate(self) -> "EarthquakePreferenceUpdate":
         if self.radius_km is not None and (
             self.reference_lat is None or self.reference_lon is None
         ):
             raise ValueError(
                 "radius_km verildiğinde reference_lat ve reference_lon zorunludur"
             )
+        has_start = self.quiet_hours_start is not None
+        has_end = self.quiet_hours_end is not None
+        if has_start != has_end:
+            raise ValueError("quiet_hours_start ve quiet_hours_end birlikte verilmelidir")
         return self
 
 
@@ -157,6 +165,9 @@ class EarthquakePreferenceResponse(BaseModel):
     reference_lat: Optional[float] = None
     reference_lon: Optional[float] = None
     radius_km: Optional[float] = None
+    quiet_hours_start: Optional[int] = None
+    quiet_hours_end: Optional[int] = None
+    critical_override_magnitude: Optional[float] = None
 
 
 def _default_preference_response(user_id: int) -> dict:
@@ -213,6 +224,9 @@ async def upsert_preferences(
     pref.reference_lat = payload.reference_lat
     pref.reference_lon = payload.reference_lon
     pref.radius_km = payload.radius_km
+    pref.quiet_hours_start = payload.quiet_hours_start
+    pref.quiet_hours_end = payload.quiet_hours_end
+    pref.critical_override_magnitude = payload.critical_override_magnitude
 
     await db.flush()
     pref_id = pref.id

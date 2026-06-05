@@ -229,6 +229,7 @@ class VolunteerCreate(BaseModel):
     district: Optional[str] = None
     neighborhood: Optional[str] = None
     skills: list[str] = Field(default_factory=list)
+    primary_role: Optional[str] = None
     availability_note: Optional[str] = None
 
 
@@ -247,8 +248,23 @@ class VolunteerAdminResponse(VolunteerPublicResponse):
     district: Optional[str] = None
     neighborhood: Optional[str] = None
     skills: list[str] | None = None
+    primary_role: Optional[str] = None
     availability_note: Optional[str] = None
     updated_at: Optional[datetime] = None
+
+
+class VolunteerMatchCandidate(BaseModel):
+    id: int
+    full_name: str
+    contact_info: str
+    district: Optional[str] = None
+    neighborhood: Optional[str] = None
+    skills: list[str] | None = None
+    primary_role: Optional[str] = None
+    availability_note: Optional[str] = None
+
+    class Config:
+        from_attributes = True
 
 
 # ===== Shelter Offer Schemas =====

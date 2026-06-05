@@ -3,7 +3,7 @@ Chat message model — GS-110.
 Stores ops-room messages. user_id is SET NULL on user deletion (preserves history).
 """
 
-from sqlalchemy import Column, DateTime, ForeignKey, Index, Integer, String
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Index, Integer, String
 from sqlalchemy.sql import func
 
 from .base import Base
@@ -17,6 +17,8 @@ class ChatMessage(Base):
     user_name = Column(String(255), nullable=False)
     room = Column(String(50), nullable=False, default="ops")
     body = Column(String(1000), nullable=False)
+    # GS-111: moderasyon — kaldırılmış mesajlar geçmişte gizlenir (soft delete).
+    is_removed = Column(Boolean, nullable=False, default=False, server_default="false")
     created_at = Column(DateTime, server_default=func.now())
 
     __table_args__ = (

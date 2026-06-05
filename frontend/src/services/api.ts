@@ -4,9 +4,13 @@ import {
   AnnouncementAdmin,
   AnnouncementCreate,
   AnnouncementUpdate,
+  Channel,
+  ChannelMessage,
   ChatMessage,
   ChatMessageCreate,
   CriticalStockRecord,
+  GeofenceSubscription,
+  GeofenceSubscriptionUpdate,
   EmergencyAdminRecord,
   EmergencyPayload,
   ImportReport,
@@ -23,6 +27,7 @@ import {
   VolunteerApplicationAdmin,
   VolunteerApplicationPayload,
   VolunteerApplicationPublic,
+  VolunteerMatchCandidate,
   VolunteerTask,
   VolunteerTaskCreate,
   Warehouse,
@@ -343,6 +348,14 @@ class GeoSafeAPI {
     return this.unwrap<NearestDepotResult[]>(res.data);
   }
 
+  async fetchNearestSafeZone(lat: number, lon: number, limit = 5): Promise<NearestSafeZoneResult[]> {
+    const res = await this.client.get<NearestSafeZoneResult[] | ApiEnvelope<NearestSafeZoneResult[]>>(
+      "/api/v1/spatial/nearest-safe-zone",
+      { params: { lat, lon, limit } }
+    );
+    return this.unwrap<NearestSafeZoneResult[]>(res.data);
+  }
+
   // ── Earthquakes ───────────────────────────────────────────────────────
   async fetchEarthquakes(): Promise<{ result: EarthquakeItem[] }> {
     const res = await this.client.get<ApiEnvelope<{ result: EarthquakeItem[] }>>(
@@ -541,6 +554,13 @@ class GeoSafeAPI {
     return this.unwrap(res.data);
   }
 
+  async fetchTaskCandidates(taskId: number): Promise<VolunteerMatchCandidate[]> {
+    const res = await this.client.get<ApiEnvelope<VolunteerMatchCandidate[]>>(
+      `/api/v1/volunteer-tasks/${taskId}/candidates`
+    );
+    return this.unwrap(res.data);
+  }
+
   // ── Chat (GS-110) ────────────────────────────────────────────────────
   async fetchChatHistory(room = "ops", limit = 50): Promise<ChatMessage[]> {
     const res = await this.client.get<ApiEnvelope<ChatMessage[]>>(
@@ -556,6 +576,71 @@ class GeoSafeAPI {
       payload
     );
     return this.unwrap(res.data);
+  }
+
+  // ── Geofence alerts (GS-023) ──────────────────────────────────────────
+  async fetchGeofenceSubscription(): Promise<GeofenceSubscription> {
+    const res = await this.client.get<ApiEnvelope<GeofenceSubscription>>(
+      "/api/v1/geofence/subscription"
+    );
+    return this.unwrap(res.data);
+  }
+
+  async updateGeofenceSubscription(
+    payload: GeofenceSubscriptionUpdate
+  ): Promise<GeofenceSubscription> {
+    const res = await this.client.put<ApiEnvelope<GeofenceSubscription>>(
+      "/api/v1/geofence/subscription",
+      payload
+    );
+    return this.unwrap(res.data);
+  }
+
+  // ── Neighborhood channels (GS-111) ────────────────────────────────────
+  async fetchChannels(lat?: number, lon?: number): Promise<Channel[]> {
+    const params: Record<string, number> = {};
+    if (lat !== undefined && lon !== undefined) {
+      params.lat = lat;
+      params.lon = lon;
+    }
+    const res = await this.client.get<ApiEnvelope<Channel[]>>("/api/v1/channels", {
+      params,
+    });
+    return this.unwrap(res.data);
+  }
+
+  async joinChannel(slug: string): Promise<void> {
+    await this.client.post(`/api/v1/channels/${slug}/join`);
+  }
+
+  async leaveChannel(slug: string): Promise<void> {
+    await this.client.post(`/api/v1/channels/${slug}/leave`);
+  }
+
+  async fetchChannelMessages(slug: string, limit = 50): Promise<ChannelMessage[]> {
+    const res = await this.client.get<ApiEnvelope<ChannelMessage[]>>(
+      `/api/v1/channels/${slug}/messages`,
+      { params: { limit } }
+    );
+    return this.unwrap(res.data);
+  }
+
+  async sendChannelMessage(slug: string, body: string): Promise<ChannelMessage> {
+    const res = await this.client.post<ApiEnvelope<ChannelMessage>>(
+      `/api/v1/channels/${slug}/messages`,
+      { body }
+    );
+    return this.unwrap(res.data);
+  }
+
+  async reportChannelMessage(messageId: number, reason?: string): Promise<void> {
+    await this.client.post(`/api/v1/channels/messages/${messageId}/report`, {
+      reason: reason ?? null,
+    });
+  }
+
+  async removeChannelMessage(messageId: number): Promise<void> {
+    await this.client.delete(`/api/v1/channels/messages/${messageId}`);
   }
 
   // ── KPI (GS-080) ─────────────────────────────────────────────────────

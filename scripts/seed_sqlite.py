@@ -1,6 +1,8 @@
 """
-GeoSafe SQLite Seeding Script
-Simple data seeding for SQLite testing (without PostGIS geometry)
+GeoSafe SQLite Seeding Script.
+
+DEPRECATED — use scripts/seed.py --mode sqlite instead (GS-090).
+This file is kept for reference only.
 """
 
 import asyncio

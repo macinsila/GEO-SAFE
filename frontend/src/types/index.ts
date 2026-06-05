@@ -95,6 +95,15 @@ export interface NearestDepotResult {
   item: NearestDepotItemInfo;
 }
 
+export interface NearestSafeZoneResult {
+  id: number;
+  name: string;
+  capacity: number | null;
+  status: string;
+  distance_km: number;
+  is_full: boolean;
+}
+
 export interface WarehouseInventoryItem {
   id: number;
   item_id: number;
@@ -173,6 +182,7 @@ export interface VolunteerApplicationPayload {
   district?: string;
   neighborhood?: string;
   skills: string[];
+  primary_role?: string;
   availability_note?: string;
 }
 
@@ -188,8 +198,20 @@ export interface VolunteerApplicationAdmin extends VolunteerApplicationPublic {
   district?: string;
   neighborhood?: string;
   skills?: string[] | null;
+  primary_role?: string | null;
   availability_note?: string;
   updated_at?: string;
+}
+
+export interface VolunteerMatchCandidate {
+  id: number;
+  full_name: string;
+  contact_info: string;
+  district?: string | null;
+  neighborhood?: string | null;
+  skills?: string[] | null;
+  primary_role?: string | null;
+  availability_note?: string | null;
 }
 
 export interface ShelterOfferPayload {
@@ -328,6 +350,47 @@ export interface ChatMessage {
 export interface ChatMessageCreate {
   body: string;
   room?: string;
+}
+
+// ── GS-023: Geofenced incident alerts ─────────────────────────────────────────
+
+export interface GeofenceSubscription {
+  id: number | null;
+  user_id: number;
+  enabled: boolean;
+  center_lat: number | null;
+  center_lon: number | null;
+  radius_km: number;
+}
+
+export interface GeofenceSubscriptionUpdate {
+  enabled: boolean;
+  center_lat?: number | null;
+  center_lon?: number | null;
+  radius_km: number;
+}
+
+// ── GS-111: Neighborhood channels ─────────────────────────────────────────────
+
+export interface Channel {
+  id: number;
+  slug: string;
+  name: string;
+  center_lat: number | null;
+  center_lon: number | null;
+  radius_km: number;
+  joined: boolean;
+  distance_km: number | null;
+  suggested: boolean;
+}
+
+export interface ChannelMessage {
+  id: number;
+  user_id: number | null;
+  user_name: string;
+  room: string;
+  body: string;
+  created_at: string;
 }
 
 // ── GS-061: Bulk import ───────────────────────────────────────────────────────

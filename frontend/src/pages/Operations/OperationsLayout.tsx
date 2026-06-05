@@ -30,6 +30,7 @@ const OPERATION_NAV_ITEMS: OperationNavItem[] = [
   { label: "Lojistik", icon: "L", path: "/ops/logistics" },
   { label: "Duyurular", icon: "A", path: "/ops/announcements" },
   { label: "Görev Panosu", icon: "G", path: "/ops/tasks" },
+  { label: "Mahalle Kanalları", icon: "K", path: "/channels" },
 ];
 
 const IDENTITY_NAV_ITEMS: OperationNavItem[] = [
