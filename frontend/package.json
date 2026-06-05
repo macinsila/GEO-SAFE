@@ -6,14 +6,15 @@
   "dependencies": {
     "@changey/react-leaflet-markercluster": "^4.0.0-rc1",
     "@sentry/react": "^7.99.0",
-    "i18next": "^23.10.0",
-    "react-i18next": "^14.1.0",
     "ajv": "^8.17.1",
     "axios": "^1.6.2",
+    "i18next": "^23.10.0",
     "leaflet": "^1.9.4",
+    "leaflet.heat": "^0.2.0",
     "qrcode.react": "^4.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-i18next": "^14.1.0",
     "react-leaflet": "^4.2.1",
     "react-router-dom": "^6.30.3",
     "typescript": "4.9.5"
@@ -23,13 +24,16 @@
     "@types/node": "^20.10.0",
     "@types/react": "^18.2.37",
     "@types/react-dom": "^18.2.15",
+    "openapi-typescript": "^6.7.6",
     "react-scripts": "5.0.1"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --passWithNoTests --runInBand",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "fetch:schema": "node -e \"const h=require('http');const f=require('fs');const req=h.get('http://localhost:8000/openapi.json',r=>{let d='';r.on('data',c=>d+=c);r.on('end',()=>{f.writeFileSync('src/api-schema.json',d);console.log('Schema saved to src/api-schema.json')})});req.on('error',e=>{console.error('Backend not running?',e.message);process.exit(1)})\"",
+    "gen:api": "openapi-typescript src/api-schema.json -o src/types/api.generated.ts"
   },
   "eslintConfig": {
     "extends": [

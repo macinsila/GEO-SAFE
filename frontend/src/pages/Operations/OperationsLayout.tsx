@@ -79,6 +79,7 @@ export default function OperationsLayout() {
   const profileRef = useRef<HTMLDivElement>(null);
   const isAdmin = role === "admin";
   const [chatOpen, setChatOpen] = useState(false);
+  const [chatUnread, setChatUnread] = useState(0);
 
   const [profile, setProfile] = useState<Profile>({});
   const [profileOpen, setProfileOpen] = useState(false);
@@ -375,12 +376,17 @@ export default function OperationsLayout() {
 
             <button
               className={`ops-button secondary${chatOpen ? " active" : ""}`}
-              onClick={() => setChatOpen((o) => !o)}
+              onClick={() => { setChatOpen((o) => !o); setChatUnread(0); }}
               type="button"
               aria-pressed={chatOpen}
               title="Ops sohbet kanalını aç/kapat"
             >
               Sohbet
+              {chatUnread > 0 && (
+                <b className="chat-unread-badge" aria-label={`${chatUnread} okunmamış mesaj`}>
+                  {chatUnread > 9 ? "9+" : chatUnread}
+                </b>
+              )}
             </button>
             <button
               className={`ops-button secondary${highContrast ? " active" : ""}`}
@@ -427,7 +433,11 @@ export default function OperationsLayout() {
         SOS
       </button>
 
-      <ChatPanel open={chatOpen} onClose={() => setChatOpen(false)} />
+      <ChatPanel
+        open={chatOpen}
+        onClose={() => setChatOpen(false)}
+        onUnreadChange={setChatUnread}
+      />
 
       {sosOpen ? (
         <div className="sos-panel" role="dialog" aria-label="Acil durum eylem paneli">

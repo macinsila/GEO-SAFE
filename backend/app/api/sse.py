@@ -65,6 +65,11 @@ async def broadcast_inventory_update(update: dict) -> None:
     await _broadcast("inventory_update", update)
 
 
+async def broadcast_presence_update(presence: dict) -> None:
+    """Push a chat-room presence change to all connected SSE clients (GS-112)."""
+    await _broadcast("presence_update", presence)
+
+
 async def _event_stream(q: asyncio.Queue) -> AsyncGenerator[str, None]:
     """Yield SSE-formatted strings; sends a heartbeat comment every 25 s."""
     try:

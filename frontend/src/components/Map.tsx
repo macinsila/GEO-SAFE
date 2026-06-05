@@ -15,6 +15,7 @@ import { WarehouseLayer } from "./WarehouseLayer";
 import { SafeZoneLayer } from "./SafeZoneLayer";
 import { OfflineMapControl } from "./OfflineMapControl";
 import { OfflineIndicator } from "./OfflineIndicator";
+import { HeatmapLayer } from "./HeatmapLayer";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -153,6 +154,12 @@ export const Map: React.FC<MapProps> = ({ onClickCoordinates }) => {
             <LayersControl.Overlay checked name="Depolar">
               <LayerGroup>
                 <WarehouseLayer />
+              </LayerGroup>
+            </LayersControl.Overlay>
+
+            <LayersControl.Overlay name="Olay Yoğunluk Haritası">
+              <LayerGroup>
+                <HeatmapLayer />
               </LayerGroup>
             </LayersControl.Overlay>
           </LayersControl>

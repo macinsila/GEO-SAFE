@@ -2,16 +2,22 @@
 Spatial query endpoints.
 """
 
+from datetime import datetime, timedelta, timezone
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import cast, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from geoalchemy2 import Geometry, Geography
 
+from app.api.auth import require_roles
 from app.api.response import success_response
 from app.api.rate_limit import nearest_depot_limiter
 from app.db import get_db
+from app.models.emergency_report import EmergencyReport
 from app.models.item import Item
+from app.models.safe_checkin import SafeCheckin
 from app.models.safe_zone import SafeZone
+from app.models.user import User
 from app.models.warehouse import Warehouse
 from app.models.warehouse_inventory import WarehouseInventory
 
@@ -169,3 +175,51 @@ async def nearest_safe_zone(
             status_code=500,
             detail=f"Nearest safe zone query failed: {str(exc)}",
         )
+
+
+# ── GS-063 — Demand/incident heatmap ────────────────────────────────────────
+
+_INCIDENT_WEIGHTS = {"verified": 1.0, "reviewing": 0.7, "new": 0.5}
+
+
+@router.get("/heatmap")
+async def incident_heatmap(
+    source: str = Query("incidents", description="incidents | checkins | both"),
+    days: int = Query(30, ge=1, le=365, description="Include records from the last N days"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_roles("admin", "operator")),
+):
+    """
+    GS-063 — Returns heatmap intensity points as [[lat, lon, weight], ...].
+    Incidents are weighted by status; check-ins carry uniform weight 0.5.
+    Records marked spam/dismissed are excluded.
+    """
+    since = datetime.now(timezone.utc) - timedelta(days=days)
+    points: list[tuple[float, float, float]] = []
+
+    if source in ("incidents", "both"):
+        result = await db.execute(
+            select(EmergencyReport.enlem, EmergencyReport.boylam, EmergencyReport.status)
+            .where(EmergencyReport.created_at >= since)
+            .where(EmergencyReport.status.notin_(["spam", "dismissed"]))
+        )
+        for row in result.all():
+            lat, lon, status = row.enlem, row.boylam, row.status
+            if lat is None or lon is None:
+                continue
+            points.append((lat, lon, _INCIDENT_WEIGHTS.get(status, 0.5)))
+
+    if source in ("checkins", "both"):
+        result = await db.execute(
+            select(SafeCheckin.lat, SafeCheckin.lon)
+            .where(SafeCheckin.created_at >= since)
+            .where(SafeCheckin.lat.isnot(None))
+            .where(SafeCheckin.lon.isnot(None))
+        )
+        for row in result.all():
+            points.append((row.lat, row.lon, 0.5))
+
+    return success_response(
+        data=points,
+        message=f"{len(points)} heatmap point(s) returned",
+    )

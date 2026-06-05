@@ -352,6 +352,14 @@ export interface ChatMessageCreate {
   room?: string;
 }
 
+// ── GS-112: Presence & read receipts ──────────────────────────────────────────
+
+export interface ChatPresence {
+  room: string;
+  count: number;
+  users: string[];
+}
+
 // ── GS-023: Geofenced incident alerts ─────────────────────────────────────────
 
 export interface GeofenceSubscription {

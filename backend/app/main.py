@@ -58,6 +58,7 @@ from app.models.volunteer_task import VolunteerTask
 from app.models.chat_message import ChatMessage
 from app.models.geofence_subscription import GeofenceSubscription
 from app.models.chat_channel import ChatChannel, ChatChannelMembership, ChatMessageReport
+from app.models.chat_read_receipt import ChatReadReceipt
 
 app = FastAPI(title="GeoSafe API")
 

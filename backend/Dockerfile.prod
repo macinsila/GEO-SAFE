@@ -1,0 +1,46 @@
+# ── Stage 1: dependency builder ───────────────────────────────────────────────
+FROM python:3.11-slim AS builder
+
+WORKDIR /build
+
+# Install build tools needed for some C-extension packages
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc libpq-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+
+# ── Stage 2: runtime image ─────────────────────────────────────────────────────
+FROM python:3.11-slim
+
+# Runtime shared library for libpq (psycopg2 / asyncpg)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 curl && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy installed packages from builder
+COPY --from=builder /install /usr/local
+
+WORKDIR /app
+COPY . .
+
+# Non-root user for least-privilege execution
+RUN addgroup --system geosafe && adduser --system --ingroup geosafe geosafe && \
+    chown -R geosafe:geosafe /app
+USER geosafe
+
+EXPOSE 8000
+
+# gunicorn with UvicornWorker: 2 workers per CPU core is the standard starting point.
+# Adjust WEB_CONCURRENCY via env (default 2).
+CMD ["sh", "-c", \
+     "python -m alembic -c alembic/alembic.ini upgrade head && \
+      exec gunicorn app.main:app \
+        --workers ${WEB_CONCURRENCY:-2} \
+        --worker-class uvicorn.workers.UvicornWorker \
+        --bind 0.0.0.0:8000 \
+        --timeout 60 \
+        --keep-alive 5 \
+        --access-logfile - \
+        --error-logfile -"]

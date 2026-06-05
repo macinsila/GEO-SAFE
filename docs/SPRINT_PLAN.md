@@ -1,7 +1,7 @@
 # GeoSafe — Sprint Plan
 
 **Product:** GeoSafe — Neighborhood-scale Smart Disaster Logistics & Decision Support System
-**Last updated:** 2026-06-05
+**Last updated:** 2026-06-06
 **Companion doc:** `PRODUCT_BACKLOG.md` (story definitions, acceptance criteria, estimates)
 **Status tracker:** `proje_durumu.md` (detailed per-sprint completion notes)
 
@@ -32,8 +32,8 @@
 | **10** | Accessibility, Live Inventory & Data | 21 | ✅ Done | WCAG 2.1 AA + live SSE inventory + bulk import + high-contrast mode |
 | **11** | Offline QR, Quiet Hours & Seed Consolidation | 26 | ✅ Done | QR signing + EQ quiet hours + activity timeline + capacity routing |
 | **12** | Geofencing, Offline Map & Community | 21 | ✅ Done | Geofenced incident push + offline tile cache + neighborhood channels |
-| **13** | Data Intelligence & DevEx | 19 | 🔄 Active | GS-051 ✅ skill matching — 4 stories remaining |
-| | **Completed total** | **257** | | 73% of backlog (350 pts) |
+| **13** | Data Intelligence & DevEx | 19 | ✅ Done | GS-051 ✅ · GS-063 ✅ · GS-091 ✅ · GS-093 ✅ · GS-112 ✅ |
+| | **Completed total** | **276** | | 79% of backlog (350 pts) |
 
 ---
 
@@ -113,11 +113,11 @@ GS-070 WCAG 2.1 AA audit + fixes, GS-022 live SSE inventory on operations dashbo
 | ID | Story | Pri | Pts | Status |
 |----|-------|-----|----:|--------|
 | GS-051 | Skill/role volunteer matching | Could | 5 | ✅ migration 029; `primary_role` on volunteer apps; `/volunteer-tasks/{id}/candidates`; TasksPage matching modal |
-| GS-063 | Demand/incident heatmap | Could | 5 | ⬜ |
-| GS-091 | Typed API client from OpenAPI | Could | 3 | ⬜ |
-| GS-093 | Production Docker parity + healthchecks | Could | 3 | ⬜ |
-| GS-112 | Presence, read receipts & search (chat) | Could | 3 | ⬜ |
-| | **Total** | | **19** | 5 / 19 pts done |
+| GS-063 | Demand/incident heatmap | Could | 5 | ✅ `GET /spatial/heatmap`; `leaflet.heat`; `HeatmapLayer.tsx`; LayersControl toggle |
+| GS-091 | Typed API client from OpenAPI | Could | 3 | ✅ `backend/export_openapi.py`; `docs/openapi.json` snapshot (95 paths); `src/types/api.generated.ts` (3 583 lines); `npm run gen:api` |
+| GS-093 | Production Docker parity + healthchecks | Could | 3 | ✅ `Dockerfile.prod` (backend+frontend); `nginx/nginx.prod.conf`; `docker-compose.prod.yml`; `/ready` healthcheck; gunicorn workers; `.env.prod.example` |
+| GS-112 | Presence, read receipts & search (chat) | Could | 3 | ✅ migration 030; `chat_read_receipts`; presence in-memory dict + SSE `presence_update`; `GET /messages?q=` ILIKE; unread badge on Sohbet button |
+| | **Total** | | **19** | ✅ 19 / 19 pts — Sprint complete |
 
 **Dependencies:** GS-051 builds on GS-050 (volunteer task board) ✅. GS-112 builds on GS-110 (chat) ✅ + GS-111 (channels) ✅. GS-093 extends GS-007 (/ready + /metrics) ✅.
 
@@ -149,7 +149,7 @@ GS-070 WCAG 2.1 AA audit + fixes, GS-022 live SSE inventory on operations dashbo
 | S10 ✅ | 21 | 210 | 60% |
 | S11 ✅ | 26 | 236 | 67% |
 | S12 ✅ | 21 | 257 | 73% |
-| S13 🔄 | 5 (so far) | 262 | 75% |
+| S13 ✅ | 19 | 276 | 79% |
 
 ---
 

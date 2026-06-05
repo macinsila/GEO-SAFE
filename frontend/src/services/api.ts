@@ -8,6 +8,7 @@ import {
   ChannelMessage,
   ChatMessage,
   ChatMessageCreate,
+  ChatPresence,
   CriticalStockRecord,
   GeofenceSubscription,
   GeofenceSubscriptionUpdate,
@@ -561,6 +562,18 @@ class GeoSafeAPI {
     return this.unwrap(res.data);
   }
 
+  // ── Heatmap (GS-063) ─────────────────────────────────────────────────
+  async fetchHeatmapPoints(
+    source: "incidents" | "checkins" | "both" = "incidents",
+    days = 30,
+  ): Promise<[number, number, number][]> {
+    const res = await this.client.get<ApiEnvelope<[number, number, number][]>>(
+      "/api/v1/spatial/heatmap",
+      { params: { source, days } },
+    );
+    return this.unwrap(res.data);
+  }
+
   // ── Chat (GS-110) ────────────────────────────────────────────────────
   async fetchChatHistory(room = "ops", limit = 50): Promise<ChatMessage[]> {
     const res = await this.client.get<ApiEnvelope<ChatMessage[]>>(
@@ -576,6 +589,38 @@ class GeoSafeAPI {
       payload
     );
     return this.unwrap(res.data);
+  }
+
+  async searchChatMessages(room: string, q: string, limit = 50): Promise<ChatMessage[]> {
+    const res = await this.client.get<ApiEnvelope<ChatMessage[]>>(
+      "/api/v1/chat/messages",
+      { params: { room, limit, q } }
+    );
+    return this.unwrap(res.data);
+  }
+
+  async markChatRead(room: string, lastMessageId: number): Promise<void> {
+    await this.client.post(`/api/v1/chat/messages/${room}/read`, {
+      last_message_id: lastMessageId,
+    });
+  }
+
+  async getChatReadReceipt(room: string): Promise<number> {
+    const res = await this.client.get<ApiEnvelope<{ room: string; last_read_message_id: number }>>(
+      `/api/v1/chat/messages/${room}/read`
+    );
+    return this.unwrap(res.data).last_read_message_id;
+  }
+
+  async joinChatPresence(room: string): Promise<ChatPresence> {
+    const res = await this.client.post<ApiEnvelope<ChatPresence>>(
+      `/api/v1/chat/presence/${room}`
+    );
+    return this.unwrap(res.data);
+  }
+
+  async leaveChatPresence(room: string): Promise<void> {
+    await this.client.delete(`/api/v1/chat/presence/${room}`);
   }
 
   // ── Geofence alerts (GS-023) ──────────────────────────────────────────
