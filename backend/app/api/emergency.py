@@ -6,27 +6,27 @@ Admin: GET (list + filter), PATCH /{id}/status, DELETE (bulk clear).
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, UploadFile, File
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile
+from pydantic import BaseModel
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db import get_db
 from app.api.auth import require_roles
 from app.api.rate_limit import emergency_limiter, public_form_dedup
-from app.api.storage import upload_image, ALLOWED_TYPES, MAX_UPLOAD_BYTES
-from app.models.emergency_report import EmergencyReport
 from app.api.response import success_response
+from app.api.storage import ALLOWED_TYPES, MAX_UPLOAD_BYTES, upload_image
+from app.db import get_db
+from app.models.emergency_report import EmergencyReport
 from app.models.user import User
 from app.schemas import EmergencyAdminResponse, EmergencyStatusUpdate
+
+_Opt = Optional
 
 router = APIRouter(tags=["emergency"])
 
 # Statuses from which a report cannot be moved back into active triage.
 # Prevents re-opening confirmed fake/spam submissions.
 _TERMINAL_STATUSES = frozenset({"spam", "dismissed"})
-
-from typing import Optional as _Opt
-from pydantic import BaseModel
 
 
 class EmergencyCreate(BaseModel):

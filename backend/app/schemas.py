@@ -3,9 +3,10 @@ Pydantic schemas for request/response validation and serialization.
 Includes custom JSON serialization for PostGIS geometries.
 """
 
-from pydantic import BaseModel, Field, field_serializer, field_validator
-from typing import Optional, Any
-from datetime import datetime, date
+from datetime import date, datetime
+from typing import Any, Optional
+
+from pydantic import BaseModel, EmailStr, Field, field_serializer, field_validator
 
 
 # ===== SafeZone Schemas =====
@@ -209,8 +210,6 @@ class CriticalStockResponse(BaseModel):
 
 
 # ===== User Schemas =====
-from pydantic import EmailStr
-
 class UserCreate(BaseModel):
     name: str
     email: EmailStr

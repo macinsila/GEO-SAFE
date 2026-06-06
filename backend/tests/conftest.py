@@ -4,7 +4,6 @@ from collections.abc import Callable, Generator
 from pathlib import Path
 
 import pytest
-from alembic import command
 from alembic.config import Config
 from fastapi.testclient import TestClient
 from geoalchemy2.elements import WKTElement
@@ -14,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 
+from alembic import command
 
 TEST_DB_NAME_MARKERS = ("test", "_test")
 
@@ -77,9 +77,6 @@ from app.models.item import Item  # noqa: E402
 from app.models.user import User  # noqa: E402
 from app.models.warehouse import Warehouse  # noqa: E402
 from app.models.warehouse_inventory import WarehouseInventory  # noqa: E402
-from app.models.volunteer_application import VolunteerApplication  # noqa: E402
-from app.models.shelter_offer import ShelterOffer  # noqa: E402
-
 
 async_engine = create_async_engine(
     ASYNC_DATABASE_URL,

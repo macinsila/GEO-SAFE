@@ -7,7 +7,12 @@ exclude = ["alembic/versions/"]
 select = ["E", "F", "W", "I", "UP"]
 ignore = [
     "E501",   # line too long — handled by formatter
-    "UP007",  # use X | Y for union — requires py310+
+    "UP006",  # List → list — gradual migration; suppress until codebase is updated
+    "UP007",  # Union[X, Y] → X | Y — gradual migration
+    "UP017",  # datetime.UTC alias — gradual migration
+    "UP035",  # typing.List/Optional deprecated — gradual migration
+    "UP041",  # aliased errors → TimeoutError — gradual migration
+    "UP045",  # Optional[X] → X | None — gradual migration
 ]
 
 [tool.pytest.ini_options]
