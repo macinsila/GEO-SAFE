@@ -103,7 +103,8 @@ export default function OperationsLogisticsPage() {
 
   // Cleanup timers on unmount
   useEffect(() => {
-    return () => { timersRef.current.forEach(clearTimeout); };
+    const timers = timersRef.current;
+    return () => { timers.forEach(clearTimeout); };
   }, []);
 
   const activeWarehouses = warehouses.filter((warehouse) => warehouse.status === "active").length;
