@@ -5,13 +5,13 @@ Spatial query endpoints.
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from geoalchemy2 import Geography, Geometry
 from sqlalchemy import cast, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from geoalchemy2 import Geometry, Geography
 
 from app.api.auth import require_roles
-from app.api.response import success_response
 from app.api.rate_limit import nearest_depot_limiter
+from app.api.response import success_response
 from app.db import get_db
 from app.models.emergency_report import EmergencyReport
 from app.models.item import Item

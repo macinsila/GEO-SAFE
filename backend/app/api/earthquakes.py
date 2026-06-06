@@ -11,7 +11,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import push
 from app.api.auth import get_current_user, require_roles
+from app.api.observability import collector
 from app.api.response import success_response
+from app.core import cache
 from app.core.eq_notify import dispatch_earthquake_notifications
 from app.db import get_db
 from app.models.earthquake_notification_pref import EarthquakeNotificationPref
@@ -19,8 +21,10 @@ from app.models.user import User
 
 router = APIRouter(tags=["earthquakes"])
 
-# ── In-memory TTL cache ───────────────────────────────────────────────────────
-_CACHE_TTL_SECONDS = 300  # 5 minutes — refreshes without hammering upstream
+_CACHE_KEY = "earthquakes:feed"
+_CACHE_TTL_SECONDS = 300
+
+# In-memory fallback (used when Redis is unavailable)
 _cache_lock = asyncio.Lock()
 _cached_payload: dict | None = None
 _cache_expires_at: float = 0.0
@@ -93,17 +97,28 @@ async def _fetch_fresh() -> dict:
 async def get_earthquakes():
     global _cached_payload, _cache_expires_at
 
+    # Fast path: Redis hit (checked before acquiring lock)
+    redis_hit = await cache.get(_CACHE_KEY)
+    if redis_hit is not None:
+        collector.record_cache_hit("earthquakes")
+        return success_response(data={**redis_hit, "cached": True}, message="Earthquake feed (cached)")
+
     now = time.monotonic()
 
     async with _cache_lock:
+        # Under lock: re-check in-memory so only one coroutine fetches upstream
+        now = time.monotonic()
         if _cached_payload is not None and now < _cache_expires_at:
+            collector.record_cache_hit("earthquakes")
             return success_response(
                 data={**_cached_payload, "cached": True},
                 message="Earthquake feed (cached)",
             )
 
+        collector.record_cache_miss("earthquakes")
         try:
             payload = await _fetch_fresh()
+            await cache.set(_CACHE_KEY, payload, ttl=_CACHE_TTL_SECONDS)
             _cached_payload = payload
             _cache_expires_at = now + _CACHE_TTL_SECONDS
             return success_response(data=payload, message="Earthquake feed fetched")

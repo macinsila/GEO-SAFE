@@ -3,7 +3,7 @@ Item Model
 Represents supply types (food, medicine, blankets, etc.).
 """
 
-from sqlalchemy import Boolean, Column, Integer, String, DateTime
+from sqlalchemy import Boolean, Column, DateTime, Integer, String
 from sqlalchemy.sql import func
 
 from .base import Base
@@ -19,7 +19,7 @@ class Item(Base):
     unit = Column(String(50), default="unit", comment="unit, kg, liter, box, etc.")
     low_stock_threshold = Column(Integer, nullable=True)
     is_active = Column(Boolean, nullable=False, default=True, server_default="true")
-    
+
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 

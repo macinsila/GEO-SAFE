@@ -2,11 +2,9 @@
 Tests for GS-007: /ready (DB readiness probe) and /metrics (Prometheus text).
 """
 
-from app.api.observability import MetricsCollector, _normalize, collector
-from app.api.auth import get_current_user
+from app.api.observability import MetricsCollector, _normalize
 from app.db import get_db
 from app.main import app
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Unit — path normalization

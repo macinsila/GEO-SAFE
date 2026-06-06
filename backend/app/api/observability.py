@@ -1,6 +1,8 @@
 """
 GS-007: lightweight in-process metrics collector and middleware.
 No external dependencies — exposes Prometheus text format manually.
+
+GS-064: added cache hit/miss/invalidation counters.
 """
 
 import re
@@ -27,11 +29,24 @@ class MetricsCollector:
         # (method, path) -> total seconds
         self._duration_sum: dict[tuple, float] = defaultdict(float)
         self._duration_count: dict[tuple, int] = defaultdict(int)
+        # GS-064: cache counters keyed by resource name
+        self._cache_hits: dict[str, int] = defaultdict(int)
+        self._cache_misses: dict[str, int] = defaultdict(int)
+        self._cache_invalidations: dict[str, int] = defaultdict(int)
 
     def record(self, method: str, path: str, status: int, duration: float) -> None:
         self._requests[(method, path, str(status))] += 1
         self._duration_sum[(method, path)] += duration
         self._duration_count[(method, path)] += 1
+
+    def record_cache_hit(self, resource: str) -> None:
+        self._cache_hits[resource] += 1
+
+    def record_cache_miss(self, resource: str) -> None:
+        self._cache_misses[resource] += 1
+
+    def record_cache_invalidation(self, resource: str) -> None:
+        self._cache_invalidations[resource] += 1
 
     def prometheus_text(self) -> str:
         lines: list[str] = []
@@ -62,6 +77,29 @@ class MetricsCollector:
             lines.append(
                 f'http_request_duration_seconds_count{{method="{method}",path="{path}"}} {count}'
             )
+
+        # GS-064: cache metrics (only emitted after first cache activity)
+        if self._cache_hits or self._cache_misses or self._cache_invalidations:
+            lines += [
+                "# HELP cache_hits_total Cache hits by resource",
+                "# TYPE cache_hits_total counter",
+            ]
+            for resource, count in sorted(self._cache_hits.items()):
+                lines.append(f'cache_hits_total{{resource="{resource}"}} {count}')
+
+            lines += [
+                "# HELP cache_misses_total Cache misses by resource",
+                "# TYPE cache_misses_total counter",
+            ]
+            for resource, count in sorted(self._cache_misses.items()):
+                lines.append(f'cache_misses_total{{resource="{resource}"}} {count}')
+
+            lines += [
+                "# HELP cache_invalidations_total Cache invalidations by resource",
+                "# TYPE cache_invalidations_total counter",
+            ]
+            for resource, count in sorted(self._cache_invalidations.items()):
+                lines.append(f'cache_invalidations_total{{resource="{resource}"}} {count}')
 
         return "\n".join(lines) + "\n"
 

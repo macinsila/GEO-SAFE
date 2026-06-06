@@ -9,7 +9,6 @@ from unittest.mock import AsyncMock, patch
 
 from app.core.geofence import subscription_matches_incident
 
-
 # ─────────────────────────────────────────────────────────────────────────────
 # Pure matching predicate
 # ─────────────────────────────────────────────────────────────────────────────

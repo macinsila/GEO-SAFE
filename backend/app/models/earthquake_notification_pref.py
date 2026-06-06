@@ -5,7 +5,13 @@ Kullanıcının deprem bildirim kuralları: minimum büyüklük, maksimum derinl
 referans noktaya mesafe (yarıçap). Kullanıcı başına tek satır (user_id unique).
 """
 
-from sqlalchemy import Boolean, Column, DateTime, Float, Integer  # noqa: F401 (Integer used for quiet hours)
+from sqlalchemy import (  # noqa: F401 (Integer used for quiet hours)
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    Integer,
+)
 from sqlalchemy.sql import func
 
 from .base import Base

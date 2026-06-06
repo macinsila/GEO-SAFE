@@ -5,8 +5,8 @@ Any authenticated user can view open tasks, claim one, and mark it done.
 """
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth import get_current_user, require_roles
 from app.api.response import success_response
@@ -16,10 +16,10 @@ from app.models.volunteer_application import VolunteerApplication
 from app.models.volunteer_task import VolunteerTask
 from app.schemas import (
     VolunteerMatchCandidate,
+    VolunteerTaskAssign,
     VolunteerTaskCreate,
     VolunteerTaskResponse,
     VolunteerTaskStatusUpdate,
-    VolunteerTaskAssign,
 )
 
 router = APIRouter(tags=["volunteer-tasks"])

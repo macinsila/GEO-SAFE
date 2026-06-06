@@ -1,4 +1,4 @@
 # Database package
-from .session import get_db, engine, AsyncSessionLocal
+from .session import AsyncSessionLocal, engine, get_db
 
 __all__ = ["get_db", "engine", "AsyncSessionLocal"]

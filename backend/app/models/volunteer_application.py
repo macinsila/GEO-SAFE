@@ -3,7 +3,7 @@ Volunteer Application Model
 Stores volunteer intake requests (non-public).
 """
 
-from sqlalchemy import Column, Integer, String, DateTime, JSON
+from sqlalchemy import JSON, Column, DateTime, Integer, String
 from sqlalchemy.sql import func
 
 from .base import Base

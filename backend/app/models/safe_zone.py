@@ -7,9 +7,9 @@ SRID 4326 = WGS84 (latitude/longitude in decimal degrees)
 Geometry type = Polygon (a closed ring of coordinates defining a boundary)
 """
 
-from sqlalchemy import Column, Integer, String, DateTime, JSON
-from sqlalchemy.sql import func
 from geoalchemy2 import Geometry
+from sqlalchemy import JSON, Column, DateTime, Integer, String
+from sqlalchemy.sql import func
 
 from .base import Base
 
@@ -19,19 +19,19 @@ class SafeZone(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(255), nullable=False, unique=True)
-    
+
     # PostGIS geometry: Polygon in lat/lon (SRID 4326)
     # nullable=True for SQLite compatibility (no PostGIS support)
     geometry = Column(Geometry(geometry_type="POLYGON", srid=4326), nullable=True)
     location = Column(Geometry(geometry_type="POINT", srid=4326), nullable=True)
-    
+
     capacity = Column(Integer, nullable=True, comment="Max people this zone can accommodate")
     capacity_type = Column(String(50), default="persons", comment="persons, tons, etc.")
     status = Column(String(50), default="active", comment="active, inactive, closed")
-    
+
     # Flexible metadata storage (e.g., opening hours, contacts, resources)
     data = Column(JSON, nullable=True)
-    
+
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 

@@ -6,7 +6,7 @@ Uses SQLAlchemy async for non-blocking queries.
 import os
 from urllib.parse import quote, unquote, urlsplit, urlunsplit
 
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 SUPABASE_PROJECT_POOLER_HOSTS = {

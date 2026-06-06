@@ -5,19 +5,19 @@ Volunteer intake API endpoints
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth import require_roles
-from app.api.rate_limit import volunteer_limiter, public_form_dedup
+from app.api.rate_limit import public_form_dedup, volunteer_limiter
 from app.api.response import success_response
 from app.db import get_db
 from app.models.user import User
 from app.models.volunteer_application import VolunteerApplication
 from app.schemas import (
+    VolunteerAdminResponse,
     VolunteerCreate,
     VolunteerPublicResponse,
-    VolunteerAdminResponse,
     VolunteerStatusUpdate,
 )
 

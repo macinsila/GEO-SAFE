@@ -60,7 +60,7 @@ def _vapid_configured() -> bool:
 async def _send_one(sub: PushSubscription, payload: dict) -> bool:
     """Send a push message to one subscription. Returns True on success."""
     try:
-        from pywebpush import webpush, WebPushException  # type: ignore
+        from pywebpush import webpush  # type: ignore
 
         webpush(
             subscription_info={

@@ -3,18 +3,24 @@ SafeZone API endpoints
 """
 
 import json
+
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 from geoalchemy2.elements import WKBElement, WKTElement
 from geoalchemy2.shape import to_shape
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.auth import require_roles
+from app.api.observability import collector
+from app.api.response import success_response
+from app.core import cache
 from app.db import get_db
 from app.models import SafeZone
-from app.schemas import SafeZoneCreate
-from app.api.auth import require_roles
-from app.api.response import success_response
 from app.models.user import User
+from app.schemas import SafeZoneCreate
+
+_CACHE_KEY = "safe_zones:list"
+_CACHE_TTL = 300
 
 router = APIRouter(tags=["safe-zones"])
 
@@ -80,14 +86,18 @@ def _serialize_safe_zone(zone: SafeZone, *, include_private: bool = False) -> di
 @router.get("")
 async def list_safe_zones(db: AsyncSession = Depends(get_db)):
     try:
+        cached = await cache.get(_CACHE_KEY)
+        if cached is not None:
+            collector.record_cache_hit("safe_zones")
+            return success_response(data=cached, message="Safe zones listed")
+
+        collector.record_cache_miss("safe_zones")
         stmt = select(SafeZone).order_by(SafeZone.id)
         result = await db.execute(stmt)
         safe_zones = result.scalars().all()
-
-        return success_response(
-            data=[_serialize_safe_zone(zone) for zone in safe_zones],
-            message="Safe zones listed",
-        )
+        data = [_serialize_safe_zone(zone) for zone in safe_zones]
+        await cache.set(_CACHE_KEY, data, ttl=_CACHE_TTL)
+        return success_response(data=data, message="Safe zones listed")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching safe zones: {str(e)}")
 
@@ -146,6 +156,8 @@ async def create_safe_zone(
     await db.flush()
     await db.refresh(zone)
     await db.commit()
+    await cache.delete(_CACHE_KEY)
+    collector.record_cache_invalidation("safe_zones")
     return success_response(data=_serialize_safe_zone(zone, include_private=True), message="Safe zone created")
 
 
@@ -183,6 +195,8 @@ async def update_safe_zone(
     await db.flush()
     await db.refresh(zone)
     await db.commit()
+    await cache.delete(_CACHE_KEY)
+    collector.record_cache_invalidation("safe_zones")
     return success_response(data=_serialize_safe_zone(zone, include_private=True), message="Safe zone updated")
 
 
@@ -201,4 +215,6 @@ async def delete_safe_zone(
 
     await db.delete(zone)
     await db.commit()
+    await cache.delete(_CACHE_KEY)
+    collector.record_cache_invalidation("safe_zones")
     return success_response(data={"id": zone_id}, message="Safe zone deleted")

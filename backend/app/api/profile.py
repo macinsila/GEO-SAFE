@@ -35,7 +35,7 @@ async def get_profile(
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="Kullanıcı bulunamadı")
-    
+
     data = user.data or {}
     return success_response(data={
         "name": data.get("name", ""),

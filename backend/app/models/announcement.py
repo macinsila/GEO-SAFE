@@ -2,7 +2,7 @@
 Announcement model — official published information for citizens.
 """
 
-from sqlalchemy import Column, Integer, String, Text, DateTime
+from sqlalchemy import Column, DateTime, Integer, String, Text
 from sqlalchemy.sql import func
 
 from .base import Base

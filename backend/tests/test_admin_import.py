@@ -1,7 +1,5 @@
 """Tests for GS-061: Bulk import of warehouses and safe zones."""
 
-import pytest
-from unittest.mock import patch
 
 
 # ── Warehouse import ───────────────────────────────────────────────────────────

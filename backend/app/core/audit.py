@@ -6,7 +6,7 @@ bilgisini audit_logs tablosuna yazar.
 """
 
 import logging
-from typing import Any, Optional, Union
+from typing import Optional, Union
 
 from sqlalchemy.ext.asyncio import AsyncSession
 

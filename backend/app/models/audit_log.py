@@ -1,6 +1,6 @@
 """GS-014 — Audit log modeli."""
 
-from sqlalchemy import Column, DateTime, Integer, JSON, String
+from sqlalchemy import JSON, Column, DateTime, Integer, String
 from sqlalchemy.sql import func
 
 from .base import Base

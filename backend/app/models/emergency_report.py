@@ -3,7 +3,7 @@ Emergency Report Model
 Stores incoming emergency notifications from citizens.
 """
 
-from sqlalchemy import Column, Integer, String, Text, Float, DateTime
+from sqlalchemy import Column, DateTime, Float, Integer, String, Text
 from sqlalchemy.sql import func
 
 from .base import Base

@@ -4,9 +4,12 @@ Covers rate limiting on volunteer and shelter-offer endpoints,
 duplicate-submission suppression, and admin abuse-metrics endpoint.
 """
 
-import pytest
-from app.api.rate_limit import volunteer_limiter, shelter_limiter, emergency_limiter, public_form_dedup
-
+from app.api.rate_limit import (
+    emergency_limiter,
+    public_form_dedup,
+    shelter_limiter,
+    volunteer_limiter,
+)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Fixtures / helpers

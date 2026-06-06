@@ -4,25 +4,30 @@ GET /warehouses - List all warehouses with their locations
 """
 
 import json
+from typing import List
+
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_
-from sqlalchemy.orm.attributes import flag_modified
 from geoalchemy2.elements import WKBElement, WKTElement
 from geoalchemy2.shape import to_shape
 from pydantic import BaseModel, Field
-from typing import List
+from sqlalchemy import and_, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.auth import require_roles
+from app.api.observability import collector
+from app.api.response import success_response
+from app.core import cache
+from app.core.audit import log_audit
 from app.db import get_db
 from app.models import Warehouse
 from app.models.inventory_movement import InventoryMovement
 from app.models.item import Item
+from app.models.user import User
 from app.models.warehouse_inventory import WarehouseInventory
 from app.schemas import WarehouseCreate
-from app.api.auth import require_roles
-from app.api.response import success_response
-from app.core.audit import log_audit
-from app.models.user import User
+
+_CACHE_KEY = "warehouses:list"
+_CACHE_TTL = 300
 
 DEFAULT_LOW_STOCK_THRESHOLD = 10
 
@@ -83,14 +88,18 @@ def _serialize_warehouse(warehouse: Warehouse, *, include_private: bool = False)
 @router.get("")
 async def list_warehouses(db: AsyncSession = Depends(get_db)):
     try:
+        cached = await cache.get(_CACHE_KEY)
+        if cached is not None:
+            collector.record_cache_hit("warehouses")
+            return success_response(data=cached, message="Warehouses listed")
+
+        collector.record_cache_miss("warehouses")
         stmt = select(Warehouse).order_by(Warehouse.id)
         result = await db.execute(stmt)
         warehouses = result.scalars().all()
-
-        return success_response(
-            data=[_serialize_warehouse(warehouse) for warehouse in warehouses],
-            message="Warehouses listed",
-        )
+        data = [_serialize_warehouse(warehouse) for warehouse in warehouses]
+        await cache.set(_CACHE_KEY, data, ttl=_CACHE_TTL)
+        return success_response(data=data, message="Warehouses listed")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching warehouses: {str(e)}")
 
@@ -146,6 +155,8 @@ async def create_warehouse(
     await db.refresh(warehouse)
     await log_audit(db, "create", "warehouse", warehouse.id, new_value={"name": payload.name, "status": payload.status}, actor=current_user)
     await db.commit()
+    await cache.delete(_CACHE_KEY)
+    collector.record_cache_invalidation("warehouses")
     return success_response(data=_serialize_warehouse(warehouse, include_private=True), message="Warehouse created")
 
 
@@ -180,6 +191,8 @@ async def update_warehouse(
     await db.refresh(warehouse)
     await log_audit(db, "update", "warehouse", warehouse_id, new_value={"name": payload.name, "status": payload.status}, actor=current_user)
     await db.commit()
+    await cache.delete(_CACHE_KEY)
+    collector.record_cache_invalidation("warehouses")
     return success_response(data=_serialize_warehouse(warehouse, include_private=True), message="Warehouse updated")
 
 
@@ -199,6 +212,8 @@ async def delete_warehouse(
     await log_audit(db, "delete", "warehouse", warehouse_id, old_value={"name": warehouse.name}, actor=current_user)
     await db.delete(warehouse)
     await db.commit()
+    await cache.delete(_CACHE_KEY)
+    collector.record_cache_invalidation("warehouses")
     return success_response(data={"id": warehouse_id}, message="Warehouse deleted")
 
 

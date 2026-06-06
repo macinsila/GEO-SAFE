@@ -1,8 +1,12 @@
+# ruff: noqa: E402
 import os
+
 from dotenv import load_dotenv
+
 load_dotenv()
 
-from app.core.logging_config import configure_logging, RequestIDMiddleware
+from app.core.logging_config import RequestIDMiddleware, configure_logging
+
 configure_logging(os.getenv("LOG_LEVEL", "INFO"))
 
 import sentry_sdk
@@ -23,42 +27,51 @@ if _sentry_dsn:
         environment=os.getenv("ENVIRONMENT", "development"),
         send_default_pii=False,
     )
-from fastapi import FastAPI, HTTPException, Request, Depends
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.middleware.base import BaseHTTPMiddleware
-from app.api import warehouses, safe_zones, auth, emergency, inventory, earthquakes, profile, spatial, volunteers, shelter_offers, qr, announcements, sse, checkin, routing, transfers, zone_needs, push, reports, admin as admin_api, volunteer_tasks, chat, kpi, admin_import, geofence, channels
+
+from app.api import admin as admin_api
+from app.api import (
+    admin_import,
+    announcements,
+    auth,
+    channels,
+    chat,
+    checkin,
+    earthquakes,
+    emergency,
+    geofence,
+    inventory,
+    kpi,
+    missing_persons,
+    profile,
+    push,
+    qr,
+    reports,
+    routing,
+    safe_zones,
+    shelter_offers,
+    spatial,
+    sse,
+    transfers,
+    volunteer_tasks,
+    volunteers,
+    warehouses,
+    zone_needs,
+)
+from app.api.auth import validate_jwt_secret
 from app.api.observability import MetricsMiddleware, collector
+from app.api.response import error_response, success_response
+from app.core import cache as _cache
 from app.db import get_db
 from app.db.session import engine
 from app.models.base import Base
-from app.api.response import success_response, error_response
-from app.api.auth import validate_jwt_secret
+
 # Tüm modelleri import et - Base.metadata.registry'ye kayıtlı olmalarını sağla
-from app.models.user import User
-from app.models.warehouse import Warehouse
-from app.models.safe_zone import SafeZone
-from app.models.item import Item
-from app.models.warehouse_inventory import WarehouseInventory
-from app.models.inventory_movement import InventoryMovement
-from app.models.emergency_report import EmergencyReport
-from app.models.volunteer_application import VolunteerApplication
-from app.models.shelter_offer import ShelterOffer
-from app.models.announcement import Announcement
-from app.models.safe_checkin import SafeCheckin
-from app.models.transfer_request import TransferRequest
-from app.models.zone_need import ZoneNeed
-from app.models.push_subscription import PushSubscription
-from app.models.audit_log import AuditLog
-from app.models.earthquake_notification_pref import EarthquakeNotificationPref
-from app.models.earthquake_notification_sent import EarthquakeNotificationSent
-from app.models.volunteer_task import VolunteerTask
-from app.models.chat_message import ChatMessage
-from app.models.geofence_subscription import GeofenceSubscription
-from app.models.chat_channel import ChatChannel, ChatChannelMembership, ChatMessageReport
-from app.models.chat_read_receipt import ChatReadReceipt
 
 app = FastAPI(title="GeoSafe API")
 
@@ -158,6 +171,13 @@ async def on_startup():
         print(f"⚠️ Veritabanı bağlantı hatası: {e}")
         print("⚠️ Not: API yine de çalışacak, ama veritabanı işlemleri başarısız olacak.")
 
+    await _cache.connect()
+
+
+@app.on_event("shutdown")
+async def on_shutdown():
+    await _cache.disconnect()
+
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(warehouses.router, prefix="/api/v1/warehouses", tags=["warehouses"])
 app.include_router(safe_zones.router, prefix="/api/v1/safe-zones", tags=["safe-zones"])
@@ -184,6 +204,7 @@ app.include_router(kpi.router, prefix="/api/v1/kpi", tags=["kpi"])
 app.include_router(admin_import.router, prefix="/api/v1/admin/import", tags=["admin-import"])
 app.include_router(geofence.router, prefix="/api/v1/geofence", tags=["geofence"])
 app.include_router(channels.router, prefix="/api/v1/channels", tags=["channels"])
+app.include_router(missing_persons.router, prefix="/api/v1/missing-persons", tags=["missing-persons"])
 
 
 @app.exception_handler(HTTPException)

@@ -19,7 +19,6 @@ from app.models.warehouse import Warehouse
 from app.models.warehouse_inventory import WarehouseInventory
 from app.schemas import ItemCreate, ItemUpdate, WarehouseInventoryAdminUpdate
 
-
 router = APIRouter(tags=["inventory"])
 
 DEFAULT_LOW_STOCK_THRESHOLD = 10

@@ -4,9 +4,6 @@ Tests for GS-110: ops chat messages (send + history + SSE broadcast).
 
 from unittest.mock import AsyncMock, patch
 
-import pytest
-
-
 # ─────────────────────────────────────────────────────────────────────────────
 # Happy path
 # ─────────────────────────────────────────────────────────────────────────────

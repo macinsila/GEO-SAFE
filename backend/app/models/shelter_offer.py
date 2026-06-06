@@ -3,7 +3,7 @@ Shelter Offer Model
 Stores housing support offers (non-public address detail).
 """
 
-from sqlalchemy import Column, Integer, String, Date, DateTime
+from sqlalchemy import Column, Date, DateTime, Integer, String
 from sqlalchemy.sql import func
 
 from .base import Base

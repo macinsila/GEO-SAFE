@@ -9,7 +9,7 @@ Roles (GS-013):
   admin     — tam erişim
 """
 
-from sqlalchemy import Boolean, Column, DateTime, Integer, JSON, String
+from sqlalchemy import JSON, Boolean, Column, DateTime, Integer, String
 from sqlalchemy.sql import func
 
 from .base import Base

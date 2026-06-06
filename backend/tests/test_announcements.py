@@ -7,7 +7,6 @@ from app.api.rate_limit import emergency_limiter
 from app.main import app
 from app.models.user import User
 
-
 # ─────────────────────────────────────────────────────────────────────────────
 # Helpers
 # ─────────────────────────────────────────────────────────────────────────────

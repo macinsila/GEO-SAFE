@@ -1,6 +1,6 @@
 """PushSubscription model — GS-021 Web Push."""
 
-from sqlalchemy import Column, DateTime, Integer, JSON, Text
+from sqlalchemy import JSON, Column, DateTime, Integer, Text
 from sqlalchemy.sql import func
 
 from .base import Base
