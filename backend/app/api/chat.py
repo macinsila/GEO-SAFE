@@ -14,7 +14,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
-from sqlalchemy import select, update
+from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -88,7 +88,7 @@ async def send_message(
     event_data = _serialize(msg)
     await broadcast_chat_message(event_data)
 
-    return success_response(data=event_data, message="Mesaj gönderildi", status_code=201)
+    return success_response(data=event_data, message="Mesaj gönderildi")
 
 
 @router.get("/messages")

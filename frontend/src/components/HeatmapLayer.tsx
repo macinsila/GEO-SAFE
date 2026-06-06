@@ -25,10 +25,13 @@ export function HeatmapLayer() {
 
   useEffect(() => {
     let cancelled = false;
-    const container = context.layerContainer ?? context.map;
+    const container = context?.layerContainer ?? context?.map;
+    if (!container) return;
 
-    geoSafeAPI
-      .fetchHeatmapPoints("both", 60)
+    const fetchFn = geoSafeAPI.fetchHeatmapPoints?.bind(geoSafeAPI);
+    if (!fetchFn) return;
+
+    fetchFn("both", 60)
       .then((points) => {
         if (cancelled) return;
         if (layerRef.current) {

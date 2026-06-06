@@ -42,7 +42,9 @@
   },
   "jest": {
     "moduleNameMapper": {
-      "^@changey/react-leaflet-markercluster(/.*)?$": "<rootDir>/src/__mocks__/leafletMarkerCluster.js"
+      "^@changey/react-leaflet-markercluster(/.*)?$": "<rootDir>/src/__mocks__/leafletMarkerCluster.js",
+      "^leaflet\\.heat$": "<rootDir>/src/__mocks__/leafletHeat.js",
+      "^@react-leaflet/core$": "<rootDir>/src/__mocks__/reactLeafletCore.js"
     }
   },
   "browserslist": {

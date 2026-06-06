@@ -114,6 +114,15 @@ def _truncate_all_tables() -> None:
         conn.execute(text(f"TRUNCATE TABLE {table_names} RESTART IDENTITY CASCADE"))
 
 
+def _seed_admin_user() -> None:
+    with sync_engine.begin() as conn:
+        conn.execute(text(
+            "INSERT INTO users (id, name, email, role, email_verified) "
+            "VALUES (1, 'Test Admin', 'admin@test.local', 'admin', true)"
+        ))
+        conn.execute(text("SELECT setval(pg_get_serial_sequence('users', 'id'), 1)"))
+
+
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_database() -> Generator[None, None, None]:
     with sync_engine.begin() as conn:
@@ -129,9 +138,20 @@ def setup_test_database() -> Generator[None, None, None]:
 
 @pytest.fixture(autouse=True)
 def clean_database(setup_test_database):
-    from app.api.rate_limit import public_form_dedup
+    from app.api.rate_limit import (
+        emergency_limiter,
+        nearest_depot_limiter,
+        public_form_dedup,
+        shelter_limiter,
+        volunteer_limiter,
+    )
     public_form_dedup._seen.clear()
+    emergency_limiter._buckets.clear()
+    volunteer_limiter._buckets.clear()
+    shelter_limiter._buckets.clear()
+    nearest_depot_limiter._buckets.clear()
     _truncate_all_tables()
+    _seed_admin_user()
 
 
 @pytest.fixture

@@ -185,7 +185,6 @@ async def create_channel(
             "radius_km": channel.radius_km,
         },
         message="Kanal oluşturuldu",
-        status_code=201,
     )
 
 
@@ -276,7 +275,7 @@ async def send_channel_message(
 
     event_data = _serialize_message(msg)
     await broadcast_chat_message(event_data)
-    return success_response(data=event_data, message="Mesaj gönderildi", status_code=201)
+    return success_response(data=event_data, message="Mesaj gönderildi")
 
 
 # ── Moderasyon ──────────────────────────────────────────────────────────────────
@@ -301,7 +300,7 @@ async def report_message(
     )
     db.add(report)
     await db.commit()
-    return success_response(data={"reported": True}, message="Mesaj bildirildi", status_code=201)
+    return success_response(data={"reported": True}, message="Mesaj bildirildi")
 
 
 @router.delete("/messages/{message_id}")
