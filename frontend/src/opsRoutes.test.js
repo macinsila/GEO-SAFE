@@ -45,6 +45,18 @@ jest.mock("./services", () => ({
     fetchOpenVolunteerTasks: () => Promise.resolve([]),
     fetchMyVolunteerTasks: () => Promise.resolve([]),
     fetchVolunteerTasksAdmin: () => Promise.resolve([]),
+    createVolunteerTask: () => Promise.resolve({}),
+    claimVolunteerTask: () => Promise.resolve({}),
+    completeVolunteerTask: () => Promise.resolve({}),
+    updateVolunteerTaskStatus: () => Promise.resolve({}),
+    fetchTaskCandidates: () => Promise.resolve([]),
+    fetchKPISummary: () => Promise.resolve({}),
+    joinChatPresence: () => Promise.resolve([]),
+    leaveChatPresence: () => Promise.resolve(),
+    markChatRead: () => Promise.resolve(),
+    sendChatMessage: () => Promise.resolve({}),
+    fetchChatHistory: () => Promise.resolve([]),
+    searchChatMessages: () => Promise.resolve([]),
   },
 }));
 

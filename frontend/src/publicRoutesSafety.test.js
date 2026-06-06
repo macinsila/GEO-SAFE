@@ -49,7 +49,7 @@ describe("public route and public client safety", () => {
     expect(apiSource).toContain("timeout: API_TIMEOUT_MS");
     expect(apiSource).toContain('this.publicClient.post<ApiEnvelope<{ access_token: string }>>');
     expect(apiSource).toContain('this.publicClient.post("/api/v1/auth/register"');
-    expect(apiSource).toContain('await this.publicClient.post("/api/v1/emergency", payload);');
+    expect(apiSource).toContain('const res = await this.publicClient.post<ApiEnvelope<{ id: number }>>("/api/v1/emergency", payload);');
     expect(apiSource).toContain('await this.publicClient.post<ApiEnvelope<VolunteerApplicationPublic>>(');
     expect(apiSource).toContain('"/api/v1/volunteers"');
     expect(apiSource).toContain('await this.publicClient.post<ApiEnvelope<ShelterOfferPublic>>(');
